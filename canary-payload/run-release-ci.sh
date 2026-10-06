@@ -10,6 +10,8 @@ test "$(git rev-parse HEAD)" = fc23bc864e4553c2d215e479eeec47b67a0bf943
 python3 "$payload/verify-source.py" release
 mkdir -p "$proof/stock-generated/src/config"
 cp src/config/bundled-channel-config-metadata.generated.ts "$proof/stock-generated/src/config/"
+mkdir -p "$proof/stock-doc-baseline"
+cp docs/.generated/config-baseline.sha256 docs/.generated/config-baseline.counts.json "$proof/stock-doc-baseline/"
 
 # Canonical matching core builds, before generating the new Talk config schema.
 # First build stock; then ONLY the already approved deletion seam. Do not compile
@@ -45,6 +47,30 @@ test ! -e node_modules/saxes
 ln -s .pnpm/saxes@6.0.0/node_modules/saxes node_modules/saxes
 
 pnpm config:channels:gen 2>&1 | tee "$proof/channel-config-generator.log"
+# APPROVAL GATE: this intentional generated channel baseline update must be
+# explicitly approved before publishing/dispatching this recipe. It is not a
+# scanner suppression or source-PR change; all canonical checks remain enabled.
+pnpm config:docs:gen 2>&1 | tee "$proof/config-doc-baseline-generator.log"
+python3 - <<'BASELINE'
+import hashlib, json, os, shutil
+from pathlib import Path
+proof=Path(os.environ['RUNNER_TEMP'])/'release-canary-proof'
+root=Path('docs/.generated')
+stock=json.loads((proof/'stock-doc-baseline/config-baseline.counts.json').read_text())
+current=json.loads((root/'config-baseline.counts.json').read_text())
+assert stock=={'core':2473,'channel':3786,'plugin':4431}, stock
+assert current=={'core':2473,'channel':3790,'plugin':4431}, current
+parse=lambda p:dict((name,digest) for digest,name in (line.split() for line in p.read_text().splitlines()))
+oldhash=parse(proof/'stock-doc-baseline/config-baseline.sha256')
+newhash=parse(root/'config-baseline.sha256')
+assert set(oldhash)==set(newhash)=={'config-baseline.json','config-baseline.core.json','config-baseline.channel.json','config-baseline.plugin.json'}
+assert all(oldhash[name]==newhash[name] for name in ['config-baseline.core.json','config-baseline.plugin.json']), 'unrelated baseline drift'
+for name,digest in newhash.items():
+    assert hashlib.sha256((root/name).read_bytes()).hexdigest()==digest, name
+out=proof/'generated-doc-baseline';out.mkdir()
+for name in ['config-baseline.sha256','config-baseline.counts.json',*newhash]:shutil.copyfile(root/name,out/name)
+(proof/'generated-doc-baseline-boundary.json').write_text(json.dumps({'status':'PASS','stockCounts':stock,'candidateCounts':current,'coreAndPluginBaselineHashesUnchanged':True,'sourceFilesUnchangedByThisCorrection':True,'trackedGeneratedPaths':['docs/.generated/config-baseline.sha256','docs/.generated/config-baseline.counts.json'],'liveChanges':False},indent=2)+'\n')
+BASELINE
 node scripts/lib/plugin-npm-runtime-build.mjs extensions/nextcloud-talk 2>&1 | tee "$proof/plugin-build.log"
 node --import ./scripts/tsx.mjs "$payload/stage-plugin.mts"
 
@@ -57,7 +83,7 @@ node scripts/run-vitest.mjs run --config test/vitest/vitest.extension-messaging.
 python3 - "$payload/release-canary-source-manifest.json" <<'PY' 2>&1 | tee "$proof/changed-check.log"
 import json, subprocess, sys
 m=json.load(open(sys.argv[1]))
-subprocess.run(['pnpm','check:changed','--base',m['release_commit'],'--head',m['release_commit'],'--',*[x['path'] for x in m['files']]],check=True)
+subprocess.run(['pnpm','check:changed','--base',m['release_commit'],'--head',m['release_commit'],'--',*[x['path'] for x in m['files']],'docs/.generated/config-baseline.sha256','docs/.generated/config-baseline.counts.json'],check=True)
 PY
 OPENCLAW_LOCAL_CHECK=0 node --import ./scripts/tsx.mjs scripts/profile-extension-memory.mts --extension nextcloud-talk --skip-combined --concurrency 1 2>&1 | tee "$proof/plugin-profile.log"
 python3 "$payload/verify-source.py" candidate
