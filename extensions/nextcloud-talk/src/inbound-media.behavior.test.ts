@@ -37,9 +37,13 @@ vi.mock("../runtime-api.js", async () => {
   };
 });
 
-vi.mock("./send.js", () => ({
-  sendMessageNextcloudTalk: sendMessageNextcloudTalkMock,
-}));
+vi.mock("./send.js", async () => {
+  const actual = await vi.importActual<typeof import("./send.js")>("./send.js");
+  return {
+    ...actual,
+    sendMessageNextcloudTalk: sendMessageNextcloudTalkMock,
+  };
+});
 
 vi.mock("./inbound-media.js", async () => {
   const actual = await vi.importActual<typeof import("./inbound-media.js")>("./inbound-media.js");
