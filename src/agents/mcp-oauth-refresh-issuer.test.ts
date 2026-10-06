@@ -55,6 +55,7 @@ function createOAuthNetwork(config: {
   challengeMetadataUrl: string;
   issuer: string;
   mintedAccessToken: string;
+  supportsRegistration?: boolean;
 }) {
   const tokenRequests: Array<{ url: string; body: string }> = [];
   const fetchFn: FetchLike = async (input, init) => {
@@ -82,9 +83,21 @@ function createOAuthNetwork(config: {
         issuer: config.issuer,
         authorization_endpoint: `${config.issuer}/authorize`,
         token_endpoint: `${config.issuer}/token`,
+        ...(config.supportsRegistration
+          ? { registration_endpoint: `${config.issuer}/register` }
+          : {}),
         response_types_supported: ["code"],
         grant_types_supported: ["authorization_code", "refresh_token"],
       });
+    }
+    if (config.supportsRegistration && url.href === `${config.issuer}/register`) {
+      return Response.json(
+        {
+          ...JSON.parse(bodyText(init?.body)),
+          client_id: "replacement-client-id",
+        },
+        { status: 201 },
+      );
     }
     if (url.href === `${config.issuer}/token`) {
       tokenRequests.push({ url: url.href, body: bodyText(init?.body) });
@@ -286,6 +299,7 @@ describe("MCP OAuth refresh issuer binding", () => {
           challengeMetadataUrl: REPLACEMENT_METADATA_URL,
           issuer: REPLACEMENT_ISSUER,
           mintedAccessToken: "attacker-access",
+          supportsRegistration: true,
         });
         await expect(
           buildOAuthFetch(newIssuer.fetchFn)(SERVER_URL, { method: "POST", body: "{}" }),
