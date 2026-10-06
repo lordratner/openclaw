@@ -80,7 +80,19 @@ node scripts/run-vitest.mjs run --config test/vitest/vitest.extension-messaging.
 
 # Approval-gated Matrix test fixture compatibility: existing smoke/control tests
 # run only on the disposable GitHub runner; no Matrix production changes.
-node scripts/run-vitest.mjs run --config test/vitest/vitest.extension-messaging.config.ts extensions/matrix/src/test-runtime.test.ts extensions/matrix/src/matrix/monitor/handler.media-failure.test.ts 2>&1 | tee "$proof/matrix-fixture-tests.log"
+node scripts/run-vitest.mjs run --config test/vitest/vitest.extension-matrix.config.ts --passWithNoTests=false extensions/matrix/src/test-runtime.test.ts extensions/matrix/src/matrix/monitor/handler.media-failure.test.ts 2>&1 | tee "$proof/matrix-fixture-tests.log"
+
+python3 - <<'MATRIX_PROOF'
+import json, os, re
+from pathlib import Path
+proof=Path(os.environ['RUNNER_TEMP'])/'release-canary-proof'
+text=re.sub(r'\x1b\[[0-9;]*m','',(proof/'matrix-fixture-tests.log').read_text())
+assert re.search(r'Test Files\s+2 passed',text), 'both selected Matrix controls must execute'
+assert all(n in text for n in ['test-runtime.test.ts','handler.media-failure.test.ts'])
+assert 'no test files found' not in text.lower()
+m=re.search(r'Tests\s+(\d+) passed',text);assert m and int(m[1])>0
+(proof/'matrix-fixture-test-boundary.json').write_text(json.dumps({'status':'PASS','files':2,'tests':int(m[1]),'configuration':'vitest.extension-matrix.config.ts','sourceChanges':False},indent=2)+'\n')
+MATRIX_PROOF
 
 # Explicit paths include added files, not just tracked diff files. Canonical
 # changed-check owns type/lint/format/boundary selection; no hand-selected bypass.
