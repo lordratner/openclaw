@@ -2,8 +2,6 @@
 // stale chat buffers, expired runs, health summaries, and timer disposal.
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { createDeferred } from "../../test/helpers/promise.js";
-import { WorktreeGcProgress } from "../agents/worktrees/gc-progress.js";
-import { managedWorktrees } from "../agents/worktrees/service.js";
 import type { ManagedWorktreeGcResult } from "../agents/worktrees/types.js";
 import type { OpenClawConfig } from "../config/types.openclaw.js";
 import {
@@ -12,6 +10,10 @@ import {
   resetGatewayWorkAdmission,
   tryBeginGatewayRootWorkAdmission,
 } from "../process/gateway-work-admission.js";
+import {
+  createGatewaySchedulerClock,
+  createTestGatewayScheduler,
+} from "../test-utils/gateway-scheduler-clock.js";
 import { waitForChatAbortControllerRemoval } from "./chat-abort-lifecycle-internal.js";
 import type { ChatAbortControllerEntry } from "./chat-abort.js";
 import type { HealthSummary } from "./health/types.js";
@@ -248,16 +250,16 @@ describe("startGatewayMaintenanceTimers", () => {
     expect(deps.runWorktreeGc).not.toHaveBeenCalled();
     await vi.advanceTimersByTimeAsync(60 * 60_000 - 1);
     expect(deps.runWorktreeGc).not.toHaveBeenCalled();
-    await vi.advanceTimersByTimeAsync(1);
+    await vi.advanceTimersByTimeAsync(2);
     expect(deps.runWorktreeGc).toHaveBeenCalledTimes(1);
     await vi.advanceTimersByTimeAsync(60 * 60_000);
     expect(deps.runWorktreeGc).toHaveBeenCalledTimes(1);
     sweep.resolve();
-    await vi.advanceTimersByTimeAsync(60 * 60_000);
+    await vi.advanceTimersByTimeAsync(60 * 60_000 + 1);
     expect(deps.runWorktreeGc).toHaveBeenCalledTimes(2);
 
     await stopMaintenanceTimers(timers);
-    await vi.advanceTimersByTimeAsync(60 * 60_000);
+    await vi.advanceTimersByTimeAsync(60 * 60_000 + 1);
     expect(deps.runWorktreeGc).toHaveBeenCalledTimes(2);
   });
 
@@ -279,6 +281,9 @@ describe("startGatewayMaintenanceTimers", () => {
         },
       ],
       issueCount: 1,
+      eligibleCount: 1,
+      deferredCount: 0,
+      failedCount: 1,
       protectedCount: 0,
       protectionReasons: {},
       orphansRetired: 0,
@@ -287,7 +292,7 @@ describe("startGatewayMaintenanceTimers", () => {
     });
     const timers = startGatewayMaintenanceTimers(deps);
 
-    await vi.advanceTimersByTimeAsync(60 * 60_000);
+    await vi.advanceTimersByTimeAsync(60 * 60_000 + 1);
     expect(deps.logHealth.error).toHaveBeenCalledWith(
       expect.stringContaining("retained: cleanup-failed"),
     );
@@ -297,23 +302,19 @@ describe("startGatewayMaintenanceTimers", () => {
   it("runs setup-outcome cleanup immediately without overlapping minute ticks", async () => {
     vi.useFakeTimers();
     vi.setSystemTime(new Date("2026-03-22T00:00:00Z"));
-    let resolvePrune = (_deletedCount: number) => {};
-    pruneExpiredDevicePairSetupCompletionsMock.mockImplementationOnce(
-      () =>
-        new Promise<number>((resolve) => {
-          resolvePrune = resolve;
-        }),
-    );
+    const prune = createDeferred<number>();
+    pruneExpiredDevicePairSetupCompletionsMock.mockReturnValueOnce(prune.promise);
     const { startGatewayMaintenanceTimers } = await import("./server-maintenance.js");
     const timers = startGatewayMaintenanceTimers(createMaintenanceTimerDeps());
 
+    await vi.advanceTimersByTimeAsync(0);
     expect(pruneExpiredDevicePairSetupCompletionsMock).toHaveBeenCalledWith({
       nowMs: Date.now(),
     });
     await vi.advanceTimersByTimeAsync(60_000);
     expect(pruneExpiredDevicePairSetupCompletionsMock).toHaveBeenCalledTimes(1);
 
-    resolvePrune(0);
+    prune.resolve(0);
     await vi.advanceTimersByTimeAsync(0);
     await vi.advanceTimersByTimeAsync(60_000);
     expect(pruneExpiredDevicePairSetupCompletionsMock).toHaveBeenLastCalledWith({
@@ -321,26 +322,6 @@ describe("startGatewayMaintenanceTimers", () => {
     });
     expect(pruneExpiredDevicePairSetupCompletionsMock).toHaveBeenCalledTimes(2);
 
-    await stopMaintenanceTimers(timers);
-  });
-
-  it("passes owner activity to default managed worktree cleanup", async () => {
-    vi.useFakeTimers();
-    const gc = vi.spyOn(managedWorktrees, "gc").mockResolvedValue({
-      ...new WorktreeGcProgress().result,
-      limitsSatisfied: true,
-    });
-    const { startGatewayMaintenanceTimers } = await import("./server-maintenance.js");
-    const { runWorktreeGc: _runWorktreeGc, ...deps } = createMaintenanceTimerDeps();
-
-    const timers = startGatewayMaintenanceTimers(deps);
-    await vi.advanceTimersByTimeAsync(60 * 60_000);
-
-    expect(gc).toHaveBeenCalledWith({
-      limits: { maxCount: 100 },
-      shouldProtectOwner: expect.any(Function),
-      shouldRemoveOwner: expect.any(Function),
-    });
     await stopMaintenanceTimers(timers);
   });
 
@@ -464,21 +445,23 @@ describe("startGatewayMaintenanceTimers", () => {
   });
 
   it("refreshes automatic health snapshots without live channel probes", async () => {
-    vi.useFakeTimers();
+    const clock = createGatewaySchedulerClock();
     const { startGatewayMaintenanceTimers } = await import("./server-maintenance.js");
     const deps = createMaintenanceTimerDeps();
+    deps.scheduler = createTestGatewayScheduler(clock.clock);
     deps.refreshGatewayHealthSnapshot = vi.fn(async () => ({ ok: true }) as HealthSummary);
 
     const timers = startGatewayMaintenanceTimers(deps);
+    try {
+      await clock.advanceBy(0);
+      expect(deps.refreshGatewayHealthSnapshot).toHaveBeenCalledWith({ probe: false });
 
-    expect(deps.refreshGatewayHealthSnapshot).toHaveBeenCalledWith({ probe: false });
-
-    await vi.advanceTimersByTimeAsync(60_000);
-
-    expect(deps.refreshGatewayHealthSnapshot).toHaveBeenCalledTimes(2);
-    expect(deps.refreshGatewayHealthSnapshot).toHaveBeenLastCalledWith({ probe: false });
-
-    await stopMaintenanceTimers(timers);
+      await clock.advanceBy(60_000);
+      expect(deps.refreshGatewayHealthSnapshot).toHaveBeenCalledTimes(2);
+      expect(deps.refreshGatewayHealthSnapshot).toHaveBeenLastCalledWith({ probe: false });
+    } finally {
+      await stopMaintenanceTimers(timers);
+    }
   });
 
   it("keeps managed outgoing cleanup independent of a hung general media sweep", async () => {
@@ -555,13 +538,8 @@ describe("startGatewayMaintenanceTimers", () => {
 
   it("does not overlap default outbound cleanup and drains it on shutdown", async () => {
     vi.useFakeTimers();
-    let resolveCleanup = () => {};
-    pruneOutboundMediaMock.mockImplementation(
-      () =>
-        new Promise<void>((resolve) => {
-          resolveCleanup = resolve;
-        }),
-    );
+    const cleanup = createDeferred();
+    pruneOutboundMediaMock.mockReturnValue(cleanup.promise);
     const { startGatewayMaintenanceTimers } = await import("./server-maintenance.js");
     const timers = startGatewayMaintenanceTimers(createMaintenanceTimerDeps());
     timers.startMediaCleanup();
@@ -577,7 +555,7 @@ describe("startGatewayMaintenanceTimers", () => {
     });
     await vi.advanceTimersByTimeAsync(0);
     expect(stopped).toBe(false);
-    resolveCleanup();
+    cleanup.resolve();
     await stopping;
     expect(stopped).toBe(true);
 

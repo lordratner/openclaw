@@ -461,15 +461,15 @@ describe("channel ingress monitor", () => {
 
         const { promise: pendingScanStarted, resolve: markPendingScanStarted } = createDeferred();
         const { promise: pendingScanGate, resolve: releasePendingScan } = createDeferred();
-        const listPending = queue.listPending.bind(queue);
+        const listUnsettled = queue.listUnsettled!.bind(queue);
         let gateNextPendingScan = true;
-        queue.listPending = async (...args) => {
+        queue.listUnsettled = async (...args) => {
           if (gateNextPendingScan) {
             gateNextPendingScan = false;
             markPendingScanStarted();
             await pendingScanGate;
           }
-          return await listPending(...args);
+          return await listUnsettled(...args);
         };
 
         oldMonitor.requestDrain();
@@ -655,15 +655,15 @@ describe("channel ingress monitor", () => {
       const monitor = createMonitor(queue, deliver, {}, undefined, undefined, 60_000);
       const { promise: pendingScanStarted, resolve: markPendingScanStarted } = createDeferred();
       const { promise: pendingScanGate, resolve: releasePendingScan } = createDeferred();
-      const listPending = queue.listPending.bind(queue);
+      const listUnsettled = queue.listUnsettled!.bind(queue);
       let gateNextPendingScan = true;
-      queue.listPending = async (...args) => {
+      queue.listUnsettled = async (...args) => {
         if (gateNextPendingScan) {
           gateNextPendingScan = false;
           markPendingScanStarted();
           await pendingScanGate;
         }
-        return await listPending(...args);
+        return await listUnsettled(...args);
       };
       monitor.start();
       try {
@@ -926,9 +926,7 @@ describe("channel ingress monitor", () => {
   });
 
   it("fails start once when the durable queue cannot be opened", async () => {
-    const denial = new Error(
-      'openChannelIngressQueue is only available for trusted plugins in this release. Plugin "slack" loaded with origin "config"',
-    );
+    const denial = new Error("Cannot open the channel ingress database: disk is full");
     const queueFactory = vi.fn((): ChannelIngressQueue<StoredEvent> => {
       throw denial;
     });

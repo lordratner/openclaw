@@ -1,5 +1,5 @@
 import { createPluginRuntimeMock } from "openclaw/plugin-sdk/channel-test-helpers";
-import { describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { createRuntimeSpies } from "../../test-support/runtime-spies.js";
 import type { PluginRuntime, RuntimeEnv } from "../runtime-api.js";
 import type { ResolvedNextcloudTalkAccount } from "./accounts.js";
@@ -8,6 +8,20 @@ import { setNextcloudTalkRuntime } from "./runtime.js";
 import type { CoreConfig, NextcloudTalkInboundMessage } from "./types.js";
 
 const resolveNextcloudTalkAuthenticatedMediaSourceMock = vi.hoisted(() => vi.fn());
+const beforeEnvelopePreparation = vi.hoisted(() => vi.fn(async () => {}));
+
+vi.mock("openclaw/plugin-sdk/channel-inbound", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("openclaw/plugin-sdk/channel-inbound")>();
+  return {
+    ...actual,
+    createChannelInboundEnvelopeBuilderAsync: async (
+      params: Parameters<typeof actual.createChannelInboundEnvelopeBuilderAsync>[0],
+    ) => {
+      await beforeEnvelopePreparation();
+      return actual.createChannelInboundEnvelopeBuilderAsync(params);
+    },
+  };
+});
 
 vi.mock("./inbound-media.js", async () => {
   const actual = await vi.importActual<typeof import("./inbound-media.js")>("./inbound-media.js");
@@ -98,6 +112,67 @@ function createAccount(
 }
 
 describe("nextcloud-talk inbound authz", () => {
+  beforeEach(() => {
+    beforeEnvelopePreparation.mockReset();
+  });
+
+  it.each(["revoked", "cancelled", "failed"] as const)(
+    "does not fetch or stage media when envelope preparation is %s",
+    async (outcome) => {
+      resolveNextcloudTalkAuthenticatedMediaSourceMock.mockReset();
+      let paired = true;
+      const abortController = new AbortController();
+      const preparationError = new Error("envelope preparation retired");
+      const coreRuntime = createPluginRuntimeMock();
+      coreRuntime.channel.pairing.readAllowFromStore = vi.fn(async () =>
+        paired ? ["paired-user"] : [],
+      );
+      setNextcloudTalkRuntime(coreRuntime as unknown as PluginRuntime);
+      beforeEnvelopePreparation.mockImplementationOnce(async () => {
+        if (outcome === "revoked") {
+          paired = false;
+        } else if (outcome === "cancelled") {
+          abortController.abort(preparationError);
+        } else {
+          throw preparationError;
+        }
+      });
+      const account = {
+        ...createAccount({ mediaAllowFrom: ["paired-user"] }),
+        baseUrl: "https://cloud.example.com",
+      };
+      const inbound = handleNextcloudTalkInbound({
+        message: createMessage({
+          senderId: "paired-user",
+          isGroupChat: false,
+          attachment: TEST_ATTACHMENT,
+        }),
+        account,
+        config: { channels: { "nextcloud-talk": account.config } },
+        runtime: createTestRuntimeEnv(),
+        turnAdoptionLifecycle: {
+          abortSignal: abortController.signal,
+          onAdopted: vi.fn(),
+          onDeferred: vi.fn(),
+          onAdoptionFinalizing: vi.fn(),
+          onAbandoned: vi.fn(),
+        },
+      });
+
+      if (outcome === "revoked") {
+        await inbound;
+      } else {
+        await expect(inbound).rejects.toBe(preparationError);
+      }
+
+      expect(beforeEnvelopePreparation).toHaveBeenCalledOnce();
+      expect(resolveNextcloudTalkAuthenticatedMediaSourceMock).not.toHaveBeenCalled();
+      expect(coreRuntime.channel.media.saveRemoteMedia).not.toHaveBeenCalled();
+      expect(coreRuntime.channel.inbound.buildContext).not.toHaveBeenCalled();
+      expect(coreRuntime.channel.inbound.dispatch).not.toHaveBeenCalled();
+    },
+  );
+
   it("revalidates paired DM access after metadata lookup before staging", async () => {
     resolveNextcloudTalkAuthenticatedMediaSourceMock.mockReset();
     let paired = true;
