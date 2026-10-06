@@ -4,7 +4,7 @@
   "pr_head_reference": "fd74a2e849af5f8f65b14361b1368e7eb76c7173",
   "proof_scope": "Exact-release synchronous envelope adapter, not exact PR async-envelope equivalence",
   "archive_sha256": "3b9b7daf4795008a570282c3c2ed2d953292b9cd78ee306152bfc181dc2b6147",
-  "patch_sha256": "b9f3d22ab993b95416a0ad8851e1a0e7cd903db7ca1a290d99d307a6fca1ceb1",
+  "patch_sha256": "b9a53ba43b03c1ca133ac2b0e0b7b96f415d976064639788bdfb99632c030dc3",
   "core_patch_sha256": "940b9a76ef154415c9e64ca7a3a20f3568303e5794425d8c147dfa134c6a2cba",
   "files": [
     {
@@ -114,9 +114,9 @@
     {
       "path": "extensions/nextcloud-talk/src/inbound.ts",
       "release_sha256": "ece6f882010289a9148c055628b7ab476a98f2f85a43fa7440071084a6e05d88",
-      "candidate_sha256": "726fe741b61fbd755272d07682305c1fb949ba48656dd78ae4e08fe3dc8254fd",
-      "candidate_bytes": 24739,
-      "additions": 280,
+      "candidate_sha256": "11a4592ba6895892395e028d23e0903551da4ef7c2fff438a383d3176c587a07",
+      "candidate_bytes": 24832,
+      "additions": 281,
       "deletions": 8
     },
     {
@@ -204,7 +204,7 @@
   },
   "totals": {
     "files": 23,
-    "additions": 4764,
+    "additions": 4765,
     "deletions": 27
   },
   "local_checks_run": [],

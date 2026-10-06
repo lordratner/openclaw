@@ -4,9 +4,9 @@
 
 - Installed-release source: `fc23bc864e4553c2d215e479eeec47b67a0bf943` (`2026.9.8`).
 - PR reference: `fd74a2e849af5f8f65b14361b1368e7eb76c7173`. This is a release adaptation, not that exact PR tree.
-- Source patch: `release-canary-source.patch`, SHA256 `b9f3d22ab993b95416a0ad8851e1a0e7cd903db7ca1a290d99d307a6fca1ceb1`.
+- Source patch: `release-canary-source.patch`, SHA256 `b9a53ba43b03c1ca133ac2b0e0b7b96f415d976064639788bdfb99632c030dc3`.
 - Core-only patch: `release-core-delete-seam.patch`, SHA256 `940b9a76ef154415c9e64ca7a3a20f3568303e5794425d8c147dfa134c6a2cba`.
-- `release-canary-source-manifest.json` records all 23 changed-file hashes: 4,764 additions / 27 deletions, predominantly regression coverage. Nothing here is built or tested.
+- `release-canary-source-manifest.json` records all 23 changed-file hashes: 4,765 additions / 27 deletions, predominantly regression coverage. Nothing here is built or tested.
 - `release-source-inventory.json` compares the draft with all 50,595 regular release archive files and separately verifies the archive's symlink. No unlisted source changes.
 
 The production delta contains Talk attachment/native-voice parsing, authenticated same-origin metadata/WebDAV retrieval, authorization and cancellation fences, staging/cleanup, and the generic runtime deletion seam. The only core production changes are the import/runtime property/type property for the existing stock `deleteMediaBuffer` implementation. No Gateway/MCP changes, dependency upgrades, async backport, private fd74 core bundled into the plugin, state/schema migration, or moving-main integration. The release's canonical bundler retains its own existing SDK compatibility bindings; no new custom core bundling is proposed.
@@ -82,3 +82,11 @@ The reviewed nine-file package was published at `c869e405a308c6034518becd0e98b8e
 This retry inserts exactly six `new file mode 100644` headers and updates only the patch hash in its source manifest. The 23 candidate source hashes are unchanged; full Git apply/check and duplicate-applied candidate hash comparison pass. The runner recipe is unchanged. The workflow also adds `include-hidden-files: true` to upload-artifact: the first artifact omitted nine hidden compiled/stamp files from each diagnostic core tree, including `.setup` imports, despite their presence in the build inventory. The controlled proof directory contains build output and redacted/public CI logs, not host credentials. Proposed remote writes are only the workflow upload option, this note, the corrected patch, and the updated source manifest on the same disposable branch. A second dispatch is not covered by the earlier single-run approval. No source PR or installed-state changes.
 
 The first core comparison reports 4,997 changed paths (2,293 added, 2,293 removed, 411 modified) including hash-filename cascades and build stamps. These remain diagnostic output, not a minimal live set. The retry does not fix or authorize that live boundary. Installed-stock closure equivalence and minimal artifact-scope assessment are still required before any activation.
+
+## Proposed comment-only correction after run 37538320079
+
+The second approved run at `5f70d7ac925ac75f4cf5601e800181c55ad126f2` built and staged the plugin, generated canonical Talk-only metadata, and passed all 281 tests across 30 files. Hidden compiled-file artifact preservation is now complete: both 7,032-file core inventories and the 16-file plugin overlay verify by SHA256 and size.
+
+The changed-file assertion SAFETY ratchet failed at `extensions/nextcloud-talk/src/inbound.ts` (10 uncommented assertions versus the release baseline of 9). The new synchronous session-store access casts narrower CoreConfig to OpenClawConfig. Proposed correction adds exactly one explanatory SAFETY comment immediately above that assertion: runtime ingress supplies full OpenClawConfig, while the local CoreConfig typing is narrower. No runtime statements, assertions, test expectations, dependencies, or core source change. Only this one source-file hash and its full patch/manifest hashes change. Full duplicate Git application and all 23 resulting file hashes reconcile.
+
+Proposed remote writes are exactly this scope note, the full source patch, and its source manifest; workflow and all other payload files remain unchanged. Publishing and one further CI dispatch require explicit approval. The remaining changed-file/type/lint gates and profiler are still unrun, and the compiled live core boundary remains unproven. No source PR or live mutations are included.

@@ -3982,7 +3982,7 @@ diff --git a/extensions/nextcloud-talk/src/inbound.ts b/extensions/nextcloud-tal
    const accessReason =
      access.ingress.reasonCode === "route_blocked"
        ? "route blocked"
-@@ -308,12 +323,25 @@
+@@ -308,12 +323,26 @@
        id: isGroup ? roomToken : senderId,
      },
    });
@@ -4000,6 +4000,7 @@ diff --git a/extensions/nextcloud-talk/src/inbound.ts b/extensions/nextcloud-tal
 +  // staging, then pass it explicitly so envelope formatting cannot reread history.
 +  const previousTimestamp =
 +    core.channel.session.readSessionUpdatedAt({
++      // SAFETY: runtime ingress receives full OpenClawConfig; local CoreConfig is narrower.
 +      storePath: core.channel.session.resolveStorePath((config as OpenClawConfig).session?.store, {
 +        agentId: route.agentId,
 +      }),
@@ -4010,7 +4011,7 @@ diff --git a/extensions/nextcloud-talk/src/inbound.ts b/extensions/nextcloud-tal
  
    if (access.ingress.admission !== "dispatch") {
      runtime.log?.(
-@@ -324,12 +352,246 @@
+@@ -324,12 +353,246 @@
      return;
    }
  
@@ -4258,7 +4259,7 @@ diff --git a/extensions/nextcloud-talk/src/inbound.ts b/extensions/nextcloud-tal
    });
  
    const groupSystemPrompt = normalizeOptionalString(roomConfig?.systemPrompt);
-@@ -355,17 +617,27 @@
+@@ -355,17 +618,27 @@
        routeSessionKey: route.sessionKey,
      },
      reply: { to: `nextcloud-talk:${roomToken}`, originatingTo: `nextcloud-talk:${roomToken}` },
