@@ -213,6 +213,7 @@ diff --git a/extensions/nextcloud-talk/src/guarded-response.ts b/extensions/next
  export async function readNextcloudTalkErrorBody(
    response: Response,
 diff --git a/extensions/nextcloud-talk/src/inbound-media.behavior.test.ts b/extensions/nextcloud-talk/src/inbound-media.behavior.test.ts
+new file mode 100644
 --- /dev/null
 +++ b/extensions/nextcloud-talk/src/inbound-media.behavior.test.ts
 @@ -0,0 +1,892 @@
@@ -1109,6 +1110,7 @@ diff --git a/extensions/nextcloud-talk/src/inbound-media.behavior.test.ts b/exte
 +  });
 +});
 diff --git a/extensions/nextcloud-talk/src/inbound-media.security.test.ts b/extensions/nextcloud-talk/src/inbound-media.security.test.ts
+new file mode 100644
 --- /dev/null
 +++ b/extensions/nextcloud-talk/src/inbound-media.security.test.ts
 @@ -0,0 +1,500 @@
@@ -1613,6 +1615,7 @@ diff --git a/extensions/nextcloud-talk/src/inbound-media.security.test.ts b/exte
 +  });
 +});
 diff --git a/extensions/nextcloud-talk/src/inbound-media.test.ts b/extensions/nextcloud-talk/src/inbound-media.test.ts
+new file mode 100644
 --- /dev/null
 +++ b/extensions/nextcloud-talk/src/inbound-media.test.ts
 @@ -0,0 +1,632 @@
@@ -2249,6 +2252,7 @@ diff --git a/extensions/nextcloud-talk/src/inbound-media.test.ts b/extensions/ne
 +  });
 +});
 diff --git a/extensions/nextcloud-talk/src/inbound-media.ts b/extensions/nextcloud-talk/src/inbound-media.ts
+new file mode 100644
 --- /dev/null
 +++ b/extensions/nextcloud-talk/src/inbound-media.ts
 @@ -0,0 +1,647 @@
@@ -2900,6 +2904,7 @@ diff --git a/extensions/nextcloud-talk/src/inbound-media.ts b/extensions/nextclo
 +  params.log?.(`nextcloud-talk: inbound media non-outcome ${fields.join(" ")}`);
 +}
 diff --git a/extensions/nextcloud-talk/src/inbound-media.voice.test.ts b/extensions/nextcloud-talk/src/inbound-media.voice.test.ts
+new file mode 100644
 --- /dev/null
 +++ b/extensions/nextcloud-talk/src/inbound-media.voice.test.ts
 @@ -0,0 +1,387 @@
@@ -4419,6 +4424,7 @@ diff --git a/extensions/nextcloud-talk/src/types.ts b/extensions/nextcloud-talk/
  
  /** Headers sent by Nextcloud Talk webhook. */
 diff --git a/extensions/nextcloud-talk/src/voice-media.ts b/extensions/nextcloud-talk/src/voice-media.ts
+new file mode 100644
 --- /dev/null
 +++ b/extensions/nextcloud-talk/src/voice-media.ts
 @@ -0,0 +1,238 @@

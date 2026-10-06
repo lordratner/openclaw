@@ -4,7 +4,7 @@
   "pr_head_reference": "fd74a2e849af5f8f65b14361b1368e7eb76c7173",
   "proof_scope": "Exact-release synchronous envelope adapter, not exact PR async-envelope equivalence",
   "archive_sha256": "3b9b7daf4795008a570282c3c2ed2d953292b9cd78ee306152bfc181dc2b6147",
-  "patch_sha256": "dc92fff5b9e85251332031da9bd8232dc42a3f9d3f08603c202892f52ef1bc42",
+  "patch_sha256": "b9f3d22ab993b95416a0ad8851e1a0e7cd903db7ca1a290d99d307a6fca1ceb1",
   "core_patch_sha256": "940b9a76ef154415c9e64ca7a3a20f3568303e5794425d8c147dfa134c6a2cba",
   "files": [
     {

@@ -1,10 +1,10 @@
-# Reviewable GitHub-only proposal — not published or dispatched
+# Reviewed GitHub-only package — first run failed; retry correction not published
 
 ## Prepared source
 
 - Installed-release source: `fc23bc864e4553c2d215e479eeec47b67a0bf943` (`2026.9.8`).
 - PR reference: `fd74a2e849af5f8f65b14361b1368e7eb76c7173`. This is a release adaptation, not that exact PR tree.
-- Source patch: `release-canary-source.patch`, SHA256 `dc92fff5b9e85251332031da9bd8232dc42a3f9d3f08603c202892f52ef1bc42`.
+- Source patch: `release-canary-source.patch`, SHA256 `b9f3d22ab993b95416a0ad8851e1a0e7cd903db7ca1a290d99d307a6fca1ceb1`.
 - Core-only patch: `release-core-delete-seam.patch`, SHA256 `940b9a76ef154415c9e64ca7a3a20f3568303e5794425d8c147dfa134c6a2cba`.
 - `release-canary-source-manifest.json` records all 23 changed-file hashes: 4,764 additions / 27 deletions, predominantly regression coverage. Nothing here is built or tested.
 - `release-source-inventory.json` compares the draft with all 50,595 regular release archive files and separately verifies the archive's symlink. No unlisted source changes.
@@ -74,3 +74,11 @@ Minimum intended live core operation is only the compiled runtime deletion conta
 The downloadable core directories are **not** authorization or a recommendation to replace all core. Parent must trace the changed runtime closure against the actual installed official release and reject unrelated content, broad replacement, singleton changes or unmatched stock dependencies. If the seam cannot be safely narrowed, stop before live activation and report the concrete build result. A rebuilt exact-release chunk is not automatically identical to the official installed build; matching source SHA alone is insufficient.
 
 Only after remote qualification and an installed-stock closure comparison can parent name/hash the actual minimal production swaps, exercise exact dual rollback, and present any remaining explicit artifact approval. This preparation is reviewable, but not deployable and not live-canary proof.
+
+## Proposed packaging-only retry after the approved first run
+
+The reviewed nine-file package was published at `c869e405a308c6034518becd0e98b8ee5b679451` and dispatched once as run `37536769577`. Frozen dependency preparation and both canonical core builds completed. The job then failed at full plugin-patch application: six added-file sections lacked Git new-file headers, producing `error: dev/null: No such file or directory`. No plugin build, generator, Talk tests, changed checks, or profiler ran.
+
+This retry inserts exactly six `new file mode 100644` headers and updates only the patch hash in its source manifest. The 23 candidate source hashes are unchanged; full Git apply/check and duplicate-applied candidate hash comparison pass. The runner recipe is unchanged. The workflow also adds `include-hidden-files: true` to upload-artifact: the first artifact omitted nine hidden compiled/stamp files from each diagnostic core tree, including `.setup` imports, despite their presence in the build inventory. The controlled proof directory contains build output and redacted/public CI logs, not host credentials. Proposed remote writes are only the workflow upload option, this note, the corrected patch, and the updated source manifest on the same disposable branch. A second dispatch is not covered by the earlier single-run approval. No source PR or installed-state changes.
+
+The first core comparison reports 4,997 changed paths (2,293 added, 2,293 removed, 411 modified) including hash-filename cascades and build stamps. These remain diagnostic output, not a minimal live set. The retry does not fix or authorize that live boundary. Installed-stock closure equivalence and minimal artifact-scope assessment are still required before any activation.

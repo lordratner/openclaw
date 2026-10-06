@@ -49,4 +49,5 @@ jobs:
           name: nextcloud-talk-release-9_8-${{ github.run_id }}
           path: ${{ runner.temp }}/release-canary-proof/
           retention-days: 7
+          include-hidden-files: true
           if-no-files-found: error
