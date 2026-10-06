@@ -4,9 +4,17 @@
   "pr_head_reference": "fd74a2e849af5f8f65b14361b1368e7eb76c7173",
   "proof_scope": "Exact-release synchronous envelope adapter, not exact PR async-envelope equivalence",
   "archive_sha256": "3b9b7daf4795008a570282c3c2ed2d953292b9cd78ee306152bfc181dc2b6147",
-  "patch_sha256": "b9a53ba43b03c1ca133ac2b0e0b7b96f415d976064639788bdfb99632c030dc3",
+  "patch_sha256": "88881253ceede0694821aad44557c7b5896fed889eb844645f96ff5a0bf4123a",
   "core_patch_sha256": "940b9a76ef154415c9e64ca7a3a20f3568303e5794425d8c147dfa134c6a2cba",
   "files": [
+    {
+      "path": "extensions/matrix/src/test-runtime.ts",
+      "release_sha256": "56076bef446d38d4366167389afe5b1a2f92152bf0dbed8c1161d172eb567207",
+      "candidate_sha256": "b9fa029b40b204cc6f59511cba0ce6e3f9ba21cf266198de2b74cde8923973a0",
+      "candidate_bytes": 6952,
+      "additions": 3,
+      "deletions": 0
+    },
     {
       "path": "extensions/nextcloud-talk/src/accounts.test.ts",
       "release_sha256": "7e9091eed27455b3bd154b607cda303a56fa78ed7b5fb2e26f12aa56b6058083",
@@ -200,11 +208,13 @@
     "src/config/bundled-channel-config-metadata.generated.ts": "5d93794de990c1054ac1c91a6ddfd8ed6657309c95511757f5271c30c3f4a042",
     "src/channels/inbound-event/envelope.ts": "7f013ef70ddc349906f4b6476d6d6b2cdd8a9a7e7c261f0144d53c89087269ec",
     "src/plugin-sdk/channel-inbound.ts": "f084a010e97470bcd38274ce5a47fe755137b664160d62378bc5a7d1ddbf4712",
-    "src/config/sessions/session-entry-read-runtime.ts": "bba331b6be116ab04775b31c729afb94e47c8a73209266d2e2f5b47eab4d81e0"
+    "src/config/sessions/session-entry-read-runtime.ts": "bba331b6be116ab04775b31c729afb94e47c8a73209266d2e2f5b47eab4d81e0",
+    "extensions/matrix/src/test-runtime.test.ts": "b153d47ba9c18cef302a7d57c13e87ef5cd3fdac21620d971a95781cbd92ba45",
+    "extensions/matrix/src/matrix/monitor/handler.media-failure.test.ts": "554c04cbd866546f393ce3a9b7dfafd799e3d520b18291c15e8fbfd296a00c95"
   },
   "totals": {
-    "files": 23,
-    "additions": 4765,
+    "files": 24,
+    "additions": 4768,
     "deletions": 27
   },
   "local_checks_run": [],

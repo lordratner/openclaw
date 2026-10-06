@@ -78,6 +78,10 @@ node --import ./scripts/tsx.mjs "$payload/stage-plugin.mts"
 # ingress/authorization/room lookup/dispatch siblings. No OAuth/audit/UI reruns.
 node scripts/run-vitest.mjs run --config test/vitest/vitest.extension-messaging.config.ts extensions/nextcloud-talk 2>&1 | tee "$proof/talk-tests.log"
 
+# Approval-gated Matrix test fixture compatibility: existing smoke/control tests
+# run only on the disposable GitHub runner; no Matrix production changes.
+node scripts/run-vitest.mjs run --config test/vitest/vitest.extension-messaging.config.ts extensions/matrix/src/test-runtime.test.ts extensions/matrix/src/matrix/monitor/handler.media-failure.test.ts 2>&1 | tee "$proof/matrix-fixture-tests.log"
+
 # Explicit paths include added files, not just tracked diff files. Canonical
 # changed-check owns type/lint/format/boundary selection; no hand-selected bypass.
 python3 - "$payload/release-canary-source-manifest.json" <<'PY' 2>&1 | tee "$proof/changed-check.log"

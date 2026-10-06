@@ -5230,3 +5230,16 @@ diff --git a/src/plugins/runtime/types-channel.ts b/src/plugins/runtime/types-ch
    };
    activity: {
      record: typeof import("../../infra/channel-activity.js").recordChannelActivity;
+diff --git a/extensions/matrix/src/test-runtime.ts b/extensions/matrix/src/test-runtime.ts
+--- a/extensions/matrix/src/test-runtime.ts
++++ b/extensions/matrix/src/test-runtime.ts
+@@ -97,6 +97,9 @@
+       path: "/tmp/test-media.jpg",
+       contentType: "image/jpeg",
+     }) as NonNullable<PluginRuntime["channel"]>["media"]["saveMediaBuffer"],
++    deleteMediaBuffer: vi
++      .fn<NonNullable<PluginRuntime["channel"]>["media"]["deleteMediaBuffer"]>()
++      .mockResolvedValue(),
+     ...overrides,
+   };
+ }
