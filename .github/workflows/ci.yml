@@ -1,6 +1,6 @@
-name: Talk PR public-read regression and repair proof
+name: Talk PR durable Gateway reader regression and repair proof
 on:
-  workflow_dispatch:
+  workflow_dispatch: null
 permissions:
   contents: read
 jobs:
@@ -10,7 +10,9 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        role: [original-reader, repaired-reader]
+        role:
+          - original-reader
+          - repaired-reader
     env:
       FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
       PNPM_CONFIG_VERIFY_DEPS_BEFORE_RUN: "false"
@@ -26,73 +28,81 @@ jobs:
           fetch-depth: 1
           persist-credentials: false
       - name: Verify source identity
-        run: |
-          test "$(git rev-parse HEAD)" = "5242fb64df13ecdb53aedaf56b5919996f0ad476"
+        run: >
+          test "$(git rev-parse HEAD)" =
+          "5242fb64df13ecdb53aedaf56b5919996f0ad476"
+
           test -z "$(git status --short)"
       - name: Prepare frozen Node environment
         uses: ./.github/actions/setup-node-env
         with:
-          node-version: "24.19.0"
+          node-version: 24.19.0
           install-bun: "false"
           frozen-lockfile: "true"
           cache-mode: off
       - name: Apply regression and conditional owner repair
         env:
           ROLE: ${{ matrix.role }}
-          REGRESSION_PATCH_BASE64: ZGlmZiAtLWdpdCBhL3NyYy9nYXRld2F5L2NvbnRyb2wtdWktcHVibGljLXNlc3Npb24tcmVhZC50ZXN0LnRzIGIvc3JjL2dhdGV3YXkvY29udHJvbC11aS1wdWJsaWMtc2Vzc2lvbi1yZWFkLnRlc3QudHMKLS0tIGEvc3JjL2dhdGV3YXkvY29udHJvbC11aS1wdWJsaWMtc2Vzc2lvbi1yZWFkLnRlc3QudHMKKysrIGIvc3JjL2dhdGV3YXkvY29udHJvbC11aS1wdWJsaWMtc2Vzc2lvbi1yZWFkLnRlc3QudHMKQEAgLTE0Nyw2ICsxNDcsMjkgQEAKICAgICAgIGF3YWl0IHBhdGNoU2Vzc2lvbkVudHJ5Q29yZShsb2NhdG9yLCAoKSA9PiAoeyBwdWJsaWNTaGFyZTogdW5kZWZpbmVkIH0pKTsKICAgICAgIGV4cGVjdChpc1B1YmxpY1Nlc3Npb25TaGFyZUFjdGl2ZShjZmcsIGxvY2F0b3IpKS50b0JlKGZhbHNlKTsKICAgICAgIGV4cGVjdChhd2FpdCByZWFkUHVibGljU2Vzc2lvblNoYXJlKGNmZywgbG9jYXRvcikpLnRvQmVOdWxsKCk7CisgICAgfSk7CisgIH0pOworCisgIGl0KCJyZXZhbGlkYXRlcyBjdXJyZW50IHNoYXJpbmcgYWZ0ZXIgYSB3b3JrZXIgbWV0YWRhdGEgcHVibGljYXRpb24gZHVyaW5nIGhpc3RvcnkiLCBhc3luYyAoKSA9PiB7CisgICAgYXdhaXQgd2l0aFB1YmxpY1Rlc3RTdGF0ZShhc3luYyAoKSA9PiB7CisgICAgICBhd2FpdCBzZWVkKFsiU3RpbGwgcHVibGlzaGVkIl0pOworICAgICAgY29uc3QgcmVhZCA9IHRyYW5zY3JpcHRSZWFkZXJzLnJlYWRTZXNzaW9uTWVzc2FnZXNQYWdlV2l0aFN0YXRzQXN5bmM7CisgICAgICB2aS5zcHlPbih0cmFuc2NyaXB0UmVhZGVycywgInJlYWRTZXNzaW9uTWVzc2FnZXNQYWdlV2l0aFN0YXRzQXN5bmMiKS5tb2NrSW1wbGVtZW50YXRpb25PbmNlKAorICAgICAgICBhc3luYyAoLi4uYXJncykgPT4geworICAgICAgICAgIGNvbnN0IHJlc3VsdCA9IGF3YWl0IHJlYWQoLi4uYXJncyk7CisgICAgICAgICAgYXdhaXQgcGF0Y2hTZXNzaW9uRW50cnlDb3JlKAorICAgICAgICAgICAgbG9jYXRvciwKKyAgICAgICAgICAgICgpID0+ICh7IHVwZGF0ZWRBdDogMiwgbGFiZWw6ICJTdGlsbCBwdWJsaWMiIH0pLAorICAgICAgICAgICAgeyB3b3JrZXJHdWFyZDoge30gfSwKKyAgICAgICAgICApOworICAgICAgICAgIHJldHVybiByZXN1bHQ7CisgICAgICAgIH0sCisgICAgICApOworICAgICAgZXhwZWN0KGF3YWl0IHJlYWRQdWJsaWNTZXNzaW9uU2hhcmUoY2ZnLCBsb2NhdG9yKSkudG9NYXRjaE9iamVjdCh7CisgICAgICAgIHRpdGxlOiAiU3RpbGwgcHVibGljIiwKKyAgICAgICAgbWVzc2FnZXM6IFt7IGNvbnRlbnQ6ICJTdGlsbCBwdWJsaXNoZWQiIH1dLAorICAgICAgfSk7CisgICAgICBleHBlY3QoaXNQdWJsaWNTZXNzaW9uU2hhcmVBY3RpdmUoY2ZnLCBsb2NhdG9yKSkudG9CZSh0cnVlKTsKICAgICB9KTsKICAgfSk7CiAK
-          PRODUCTION_PATCH_BASE64: ZGlmZiAtLWdpdCBhL3NyYy9nYXRld2F5L2NvbnRyb2wtdWktcHVibGljLXNlc3Npb24tcmVhZC50cyBiL3NyYy9nYXRld2F5L2NvbnRyb2wtdWktcHVibGljLXNlc3Npb24tcmVhZC50cwotLS0gYS9zcmMvZ2F0ZXdheS9jb250cm9sLXVpLXB1YmxpYy1zZXNzaW9uLXJlYWQudHMKKysrIGIvc3JjL2dhdGV3YXkvY29udHJvbC11aS1wdWJsaWMtc2Vzc2lvbi1yZWFkLnRzCkBAIC0xMDgsMjUgKzEwOCwzMiBAQAogICAgICAgYWxsb3dSZXNldEFyY2hpdmVGYWxsYmFjazogZmFsc2UsCiAgICAgfSwKICAgKTsKLSAgY29uc3QgY3VycmVudCA9IHJlYWRBdXRob3JpemVkVGFyZ2V0KGNmZywgbG9jYXRvciwgcHJvamVjdGlvbik7Ci0gIGlmICgKLSAgICAhY3VycmVudCB8fAotICAgIGN1cnJlbnQuc291cmNlLnBhdGggIT09IGluaXRpYWwuc291cmNlLnBhdGggfHwKLSAgICBjdXJyZW50LnNvdXJjZS5kYXRhYmFzZUlkZW50aXR5ICE9PSBpbml0aWFsLnNvdXJjZS5kYXRhYmFzZUlkZW50aXR5IHx8Ci0gICAgY3VycmVudC5zb3VyY2UuZGF0YWJhc2VCaXJ0aHRpbWUgIT09IGluaXRpYWwuc291cmNlLmRhdGFiYXNlQmlydGh0aW1lCi0gICkgewotICAgIHJldHVybiBudWxsOwotICB9Ci0gIGNvbnN0IHRpdGxlID0gKAotICAgIGN1cnJlbnQudGFyZ2V0LmVudHJ5LmxhYmVsIHx8Ci0gICAgY3VycmVudC50YXJnZXQuZW50cnkuZGlzcGxheU5hbWUgfHwKLSAgICAiU2hhcmVkIHNlc3Npb24iCi0gICkudHJpbSgpOwotICByZXR1cm4gewotICAgIHRpdGxlOiB0aXRsZSB8fCAiU2hhcmVkIHNlc3Npb24iLAotICAgIG1lc3NhZ2VzOiBoaXN0b3J5Lm1lc3NhZ2VzLAotICAgIHRvdGFsTWVzc2FnZXM6IGhpc3RvcnkudG90YWxNZXNzYWdlcywKLSAgICB0cnVuY2F0ZWQ6IGhpc3Rvcnkub21pdHRlZE92ZXJzaXplZCA9PT0gdHJ1ZSwKLSAgICAuLi4oaGlzdG9yeS5vbGRlck9mZnNldCAhPT0gdW5kZWZpbmVkID8geyBvbGRlck9mZnNldDogaGlzdG9yeS5vbGRlck9mZnNldCB9IDoge30pLAotICB9OworICByZXR1cm4gd2l0aFJlYWR5U2Vzc2lvblJvd3MoCisgICAgcHJvamVjdGlvbiwKKyAgICAoKSA9PiBbeyBrZXk6IGxvY2F0b3Iuc2Vzc2lvbktleSwgYWdlbnRJZDogbG9jYXRvci5hZ2VudElkIH1dLAorICAgICgpID0+IHsKKyAgICAgIC8vIEhpc3RvcnkgeWllbGRzOyBwcmVwYXJlIGN1cnJlbnQgc2hhcmluZyBmYWN0cyBiZWZvcmUgY29uc3VtaW5nIHRoZSBsaXZlIGdyYW50LgorICAgICAgY29uc3QgY3VycmVudCA9IHJlYWRBdXRob3JpemVkVGFyZ2V0KGNmZywgbG9jYXRvciwgcHJvamVjdGlvbik7CisgICAgICBpZiAoCisgICAgICAgICFjdXJyZW50IHx8CisgICAgICAgIGN1cnJlbnQuc291cmNlLnBhdGggIT09IGluaXRpYWwuc291cmNlLnBhdGggfHwKKyAgICAgICAgY3VycmVudC5zb3VyY2UuZGF0YWJhc2VJZGVudGl0eSAhPT0gaW5pdGlhbC5zb3VyY2UuZGF0YWJhc2VJZGVudGl0eSB8fAorICAgICAgICBjdXJyZW50LnNvdXJjZS5kYXRhYmFzZUJpcnRodGltZSAhPT0gaW5pdGlhbC5zb3VyY2UuZGF0YWJhc2VCaXJ0aHRpbWUKKyAgICAgICkgeworICAgICAgICByZXR1cm4gbnVsbDsKKyAgICAgIH0KKyAgICAgIGNvbnN0IHRpdGxlID0gKAorICAgICAgICBjdXJyZW50LnRhcmdldC5lbnRyeS5sYWJlbCB8fAorICAgICAgICBjdXJyZW50LnRhcmdldC5lbnRyeS5kaXNwbGF5TmFtZSB8fAorICAgICAgICAiU2hhcmVkIHNlc3Npb24iCisgICAgICApLnRyaW0oKTsKKyAgICAgIHJldHVybiB7CisgICAgICAgIHRpdGxlOiB0aXRsZSB8fCAiU2hhcmVkIHNlc3Npb24iLAorICAgICAgICBtZXNzYWdlczogaGlzdG9yeS5tZXNzYWdlcywKKyAgICAgICAgdG90YWxNZXNzYWdlczogaGlzdG9yeS50b3RhbE1lc3NhZ2VzLAorICAgICAgICB0cnVuY2F0ZWQ6IGhpc3Rvcnkub21pdHRlZE92ZXJzaXplZCA9PT0gdHJ1ZSwKKyAgICAgICAgLi4uKGhpc3Rvcnkub2xkZXJPZmZzZXQgIT09IHVuZGVmaW5lZCA/IHsgb2xkZXJPZmZzZXQ6IGhpc3Rvcnkub2xkZXJPZmZzZXQgfSA6IHt9KSwKKyAgICAgIH07CisgICAgfSwKKyAgKTsKIH0K
-        run: |
+          REGRESSION_PATCH_BASE64: ZGlmZiAtLWdpdCBhL3NyYy9nYXRld2F5L3Nlc3Npb24tcm93LXByb2plY3Rpb24ucHJlcGFyZWQtcmVhZC50ZXN0LnRzIGIvc3JjL2dhdGV3YXkvc2Vzc2lvbi1yb3ctcHJvamVjdGlvbi5wcmVwYXJlZC1yZWFkLnRlc3QudHMKaW5kZXggZDQwZTcyMWZiYzEuLjQ2NmJiNjNkOWM2IDEwMDY0NAotLS0gYS9zcmMvZ2F0ZXdheS9zZXNzaW9uLXJvdy1wcm9qZWN0aW9uLnByZXBhcmVkLXJlYWQudGVzdC50cworKysgYi9zcmMvZ2F0ZXdheS9zZXNzaW9uLXJvdy1wcm9qZWN0aW9uLnByZXBhcmVkLXJlYWQudGVzdC50cwpAQCAtNSwxMiArNSwxNyBAQCBpbXBvcnQgeyBhd2FpdEdhdGVCZWZvcmVTZXR0bGVtZW50LCB3aXRoaW5UZXN0IH0gZnJvbSAiLi4vLi4vdGVzdC9oZWxwZXJzL3Byb21pcwogaW1wb3J0IHsgb2JzZXJ2ZUhvc3REYXRhU3FsIH0gZnJvbSAiLi4vLi4vdGVzdC9oZWxwZXJzL3NxbGl0ZS1zdGF0ZW1lbnQtZXhlY3V0aW9uLWNvdW50ZXIuanMiOwogaW1wb3J0IHsKICAgbG9hZFNlc3Npb25FbnRyeVJlYWRPbmx5LAorICBwYXRjaFNlc3Npb25FbnRyeUNvcmUsCiAgIHJlcGxhY2VTZXNzaW9uRW50cnlTeW5jLAorICByZXBsYWNlVHJhbnNjcmlwdEV2ZW50cywKKyAgdXBzZXJ0U2Vzc2lvbkVudHJ5Q29yZSwKIH0gZnJvbSAiLi4vY29uZmlnL3Nlc3Npb25zL3Nlc3Npb24tYWNjZXNzb3IuanMiOworaW1wb3J0ICogYXMgd29ya2VyUGF0Y2hlcyBmcm9tICIuLi9jb25maWcvc2Vzc2lvbnMvc2Vzc2lvbi1lbnRyeS1wYXRjaC5qcyI7CiBpbXBvcnQgeyBzZXNzaW9uQ2hhbmdlcyB9IGZyb20gIi4uL3Nlc3Npb25zL3Nlc3Npb24tcm93LWNoYW5nZXMuanMiOwogaW1wb3J0IHsgY3JlYXRlRGVmZXJyZWRDb3JlIH0gZnJvbSAiLi4vc2hhcmVkL2RlZmVycmVkLmpzIjsKIGltcG9ydCB7IGdldFNlc3Npb25SZXBvc2l0b3J5V29ya3NwYWNlU3RvcmUgfSBmcm9tICIuLi9zdGF0ZS9zZXNzaW9uLXJlcG9zaXRvcnktd29ya3NwYWNlcy5qcyI7CiBpbXBvcnQgeyB3aXRoT3BlbkNsYXdUZXN0U3RhdGUgfSBmcm9tICIuLi90ZXN0LXV0aWxzL29wZW5jbGF3LXRlc3Qtc3RhdGUuanMiOworaW1wb3J0IHsgcmVhZFB1YmxpY1Nlc3Npb25TaGFyZSB9IGZyb20gIi4vY29udHJvbC11aS1wdWJsaWMtc2Vzc2lvbi1yZWFkLmpzIjsKIGltcG9ydCB7IHNlc3Npb25CeUtleVJlYWRIYW5kbGVycyB9IGZyb20gIi4vc2VydmVyLW1ldGhvZHMvc2Vzc2lvbnMtcmVhZC1ieS1rZXkuanMiOwogaW1wb3J0IHsgcmVxdWVzdENvbnRleHQgfSBmcm9tICIuL3NlcnZlci1tZXRob2RzL3Nlc3Npb25zLXJlYWQtY2FjaGUudGVzdC1zdXBwb3J0LmpzIjsKIGltcG9ydCB7IHJldGFpblNlc3Npb25MaXN0Rm9yZWdyb3VuZFdvcmsgfSBmcm9tICIuL3Nlc3Npb24tcHJvamVjdGlvbi13b3JrLmpzIjsKQEAgLTE4LDYgKzIzLDcgQEAgaW1wb3J0IHR5cGUgeyBTZXNzaW9uUm93UmVhZFZpZXcgfSBmcm9tICIuL3Nlc3Npb24tcm93LXByZXBhcmVkLXJlYWQuanMiOwogaW1wb3J0IHsgYmluZFNlc3Npb25Sb3dQcm9qZWN0aW9uIH0gZnJvbSAiLi9zZXNzaW9uLXJvdy1wcm9qZWN0aW9uLWFjY2Vzcy5qcyI7CiBpbXBvcnQgKiBhcyBkYXRhYmFzZUZhY3RzUmVhZCBmcm9tICIuL3Nlc3Npb24tcm93LXByb2plY3Rpb24tcmVhZC5qcyI7CiBpbXBvcnQgeyBjcmVhdGVTZXNzaW9uUm93UHJvamVjdGlvbiB9IGZyb20gIi4vc2Vzc2lvbi1yb3ctcHJvamVjdGlvbi5qcyI7CitpbXBvcnQgKiBhcyB0cmFuc2NyaXB0UmVhZGVycyBmcm9tICIuL3Nlc3Npb24tdHJhbnNjcmlwdC1yZWFkZXJzLmpzIjsKIGltcG9ydCB7IHByb2plY3RXb3JrZXJTZXNzaW9uUGxhY2VtZW50IH0gZnJvbSAiLi93b3JrZXItZW52aXJvbm1lbnRzL3BsYWNlbWVudC1wcm9qZWN0b3IuanMiOwogaW1wb3J0IHR5cGUgeyBXb3JrZXJTZXNzaW9uUGxhY2VtZW50UHJvamVjdGlvbiB9IGZyb20gIi4vd29ya2VyLWVudmlyb25tZW50cy9wbGFjZW1lbnQtcmVhZC1wcm9qZWN0aW9uLnR5cGVzLmpzIjsKIGltcG9ydCB7CkBAIC03NDUsMyArNzUxLDEwOSBAQCBpdCgicHJlcGFyZXMgb25seSB0aGUgcHJpdmF0ZSByZXNwb25zZSdzIGNoaWxkIHNlbGVjdGlvbnMgYmVmb3JlIGNvbnN1bXB0aW9uIiwgYQogICAgIH0KICAgfSk7CiB9KTsKKworYXN5bmMgZnVuY3Rpb24gd2l0aFB1Ymxpc2hlZEhpc3RvcnkoCisgIHJ1bjogKGZpeHR1cmU6IHsKKyAgICBwcm9qZWN0aW9uOiBBd2FpdGVkPFJldHVyblR5cGU8dHlwZW9mIGNyZWF0ZVNlc3Npb25Sb3dQcm9qZWN0aW9uPj47CisgICAgbG9jYXRvcjogeyBhZ2VudElkOiBzdHJpbmc7IHNlc3Npb25LZXk6IHN0cmluZzsgc2Vzc2lvbklkOiBzdHJpbmc7IHNoYXJlSWQ6IHN0cmluZyB9OworICB9KSA9PiBQcm9taXNlPHZvaWQ+LAorKSB7CisgIC8vIFRoaXMgZmlsZSB1c2VzIHRoZSBleGlzdGluZyBHYXRld2F5IGRhdGFiYXNlLXdvcmtlciBmb3JrIHByb2ZpbGUuCisgIHZpLnVzZVJlYWxUaW1lcnMoKTsKKyAgYXdhaXQgd2l0aE9wZW5DbGF3VGVzdFN0YXRlKHsgc2NlbmFyaW86ICJtaW5pbWFsIiB9LCBhc3luYyAoKSA9PiB7CisgICAgY29uc3QgbG9jYXRvciA9IHsKKyAgICAgIGFnZW50SWQ6ICJtYWluIiwKKyAgICAgIHNlc3Npb25LZXk6ICJhZ2VudDptYWluOnB1YmxpYy13b3JrZXItaGlzdG9yeSIsCisgICAgICBzZXNzaW9uSWQ6ICJwdWJsaWMtd29ya2VyLWhpc3RvcnktZ2VuZXJhdGlvbiIsCisgICAgICBzaGFyZUlkOiAiYSIucmVwZWF0KDQ4KSwKKyAgICB9OworICAgIGF3YWl0IHVwc2VydFNlc3Npb25FbnRyeUNvcmUobG9jYXRvciwgeworICAgICAgc2Vzc2lvbklkOiBsb2NhdG9yLnNlc3Npb25JZCwKKyAgICAgIHVwZGF0ZWRBdDogMSwKKyAgICAgIGxhYmVsOiAiUHVibGljIGV4YW1wbGUiLAorICAgICAgcHVibGljU2hhcmU6IHsgaWQ6IGxvY2F0b3Iuc2hhcmVJZCwgc2Vzc2lvbklkOiBsb2NhdG9yLnNlc3Npb25JZCwgY3JlYXRlZEF0OiAxIH0sCisgICAgfSk7CisgICAgYXdhaXQgcmVwbGFjZVRyYW5zY3JpcHRFdmVudHMobG9jYXRvciwgWworICAgICAgeyB0eXBlOiAic2Vzc2lvbiIsIHZlcnNpb246IDMsIGlkOiBsb2NhdG9yLnNlc3Npb25JZCB9LAorICAgICAgeworICAgICAgICB0eXBlOiAibWVzc2FnZSIsCisgICAgICAgIGlkOiAicHVibGlzaGVkLW1lc3NhZ2UiLAorICAgICAgICBwYXJlbnRJZDogbnVsbCwKKyAgICAgICAgbWVzc2FnZTogeyByb2xlOiAidXNlciIsIGNvbnRlbnQ6ICJTdGlsbCBwdWJsaXNoZWQiIH0sCisgICAgICB9LAorICAgIF0pOworICAgIGNvbnN0IHByb2plY3Rpb24gPSBhd2FpdCBjcmVhdGVTZXNzaW9uUm93UHJvamVjdGlvbih7IGNmZywgbW9kZWxDYXRhbG9nOiBbXSB9KTsKKyAgICB0cnkgeworICAgICAgYXdhaXQgcHJvamVjdGlvbi5lbnN1cmVNYXRlcmlhbGl6ZWQoKTsKKyAgICAgIGF3YWl0IHJ1bih7IHByb2plY3Rpb24sIGxvY2F0b3IgfSk7CisgICAgfSBmaW5hbGx5IHsKKyAgICAgIHByb2plY3Rpb24uZGlzcG9zZSgpOworICAgIH0KKyAgfSk7Cit9CisKK2l0KCJyZXZhbGlkYXRlcyBjdXJyZW50IHNoYXJpbmcgYWZ0ZXIgYSB3b3JrZXIgbWV0YWRhdGEgcHVibGljYXRpb24gZHVyaW5nIGhpc3RvcnkiLCBhc3luYyAoKSA9PiB7CisgIGF3YWl0IHdpdGhQdWJsaXNoZWRIaXN0b3J5KGFzeW5jICh7IHByb2plY3Rpb24sIGxvY2F0b3IgfSkgPT4geworICAgIGNvbnN0IHJlYWQgPSB0cmFuc2NyaXB0UmVhZGVycy5yZWFkU2Vzc2lvbk1lc3NhZ2VzUGFnZVdpdGhTdGF0c0FzeW5jOworICAgIGNvbnN0IHdvcmtlclBhdGNoID0gdmkuc3B5T24od29ya2VyUGF0Y2hlcywgInBhdGNoU2Vzc2lvbkVudHJ5SW5Xb3JrZXIiKTsKKyAgICB2aS5zcHlPbih0cmFuc2NyaXB0UmVhZGVycywgInJlYWRTZXNzaW9uTWVzc2FnZXNQYWdlV2l0aFN0YXRzQXN5bmMiKS5tb2NrSW1wbGVtZW50YXRpb25PbmNlKAorICAgICAgYXN5bmMgKC4uLmFyZ3MpID0+IHsKKyAgICAgICAgY29uc3QgcmVzdWx0ID0gYXdhaXQgcmVhZCguLi5hcmdzKTsKKyAgICAgICAgY29uc3QgY29tbWl0dGVkID0gYXdhaXQgcGF0Y2hTZXNzaW9uRW50cnlDb3JlKAorICAgICAgICAgIGxvY2F0b3IsCisgICAgICAgICAgKCkgPT4gKHsgdXBkYXRlZEF0OiAyLCBsYWJlbDogIlN0aWxsIHB1YmxpYyIgfSksCisgICAgICAgICAgeyB3b3JrZXJHdWFyZDoge30gfSwKKyAgICAgICAgKTsKKyAgICAgICAgZXhwZWN0KHdvcmtlclBhdGNoKS50b0hhdmVCZWVuQ2FsbGVkVGltZXMoMSk7CisgICAgICAgIGV4cGVjdChjb21taXR0ZWQpLnRvTWF0Y2hPYmplY3QoeworICAgICAgICAgIGxhYmVsOiAiU3RpbGwgcHVibGljIiwKKyAgICAgICAgICBwdWJsaWNTaGFyZTogeyBpZDogbG9jYXRvci5zaGFyZUlkIH0sCisgICAgICAgIH0pOworICAgICAgICByZXR1cm4gcmVzdWx0OworICAgICAgfSwKKyAgICApOworICAgIGV4cGVjdChhd2FpdCByZWFkUHVibGljU2Vzc2lvblNoYXJlKGNmZywgbG9jYXRvciwgeyBwcm9qZWN0aW9uIH0pKS50b01hdGNoT2JqZWN0KHsKKyAgICAgIHRpdGxlOiAiU3RpbGwgcHVibGljIiwKKyAgICAgIG1lc3NhZ2VzOiBbeyBjb250ZW50OiAiU3RpbGwgcHVibGlzaGVkIiB9XSwKKyAgICB9KTsKKyAgfSk7Cit9KTsKKworaXQuZWFjaChbInJldm9rZSIsICJyZXNldCJdIGFzIGNvbnN0KSgKKyAgInJlamVjdHMgJXMgZHVyaW5nIHBvc3QtaGlzdG9yeSBzaGFyaW5nIHJlYWRpbmVzcyBiZWZvcmUgcmVsZWFzaW5nIGNvbnRlbnQiLAorICBhc3luYyAoYWN0aW9uKSA9PiB7CisgICAgYXdhaXQgd2l0aFB1Ymxpc2hlZEhpc3RvcnkoYXN5bmMgKHsgcHJvamVjdGlvbiwgbG9jYXRvciB9KSA9PiB7CisgICAgICBsZXQgYXJtZWQgPSBmYWxzZTsKKyAgICAgIGxldCBpbnRlcmxlYXZlZCA9IGZhbHNlOworICAgICAgY29uc3QgcHJlcGFyZSA9IHByb2plY3Rpb24ud2l0aFByZXBhcmVkRXhhY3RSb3dzLmJpbmQocHJvamVjdGlvbik7CisgICAgICB2aS5zcHlPbihwcm9qZWN0aW9uLCAid2l0aFByZXBhcmVkRXhhY3RSb3dzIikubW9ja0ltcGxlbWVudGF0aW9uKGFzeW5jICguLi5hcmdzKSA9PiB7CisgICAgICAgIGlmIChhcm1lZCkgeworICAgICAgICAgIGFybWVkID0gZmFsc2U7CisgICAgICAgICAgaW50ZXJsZWF2ZWQgPSB0cnVlOworICAgICAgICAgIGNvbnN0IGNvbW1pdHRlZCA9IGF3YWl0IHBhdGNoU2Vzc2lvbkVudHJ5Q29yZSgKKyAgICAgICAgICAgIGxvY2F0b3IsCisgICAgICAgICAgICAoKSA9PiAoYWN0aW9uID09PSAicmVzZXQiID8geyBzZXNzaW9uSWQ6ICJyZXBsYWNlbWVudCIgfSA6IHsgcHVibGljU2hhcmU6IHVuZGVmaW5lZCB9KSwKKyAgICAgICAgICAgIHsgd29ya2VyR3VhcmQ6IHt9IH0sCisgICAgICAgICAgKTsKKyAgICAgICAgICBleHBlY3QoY29tbWl0dGVkKS5ub3QudG9CZU51bGwoKTsKKyAgICAgICAgICBleHBlY3QoY29tbWl0dGVkPy5wdWJsaWNTaGFyZSkudG9CZVVuZGVmaW5lZCgpOworICAgICAgICAgIGlmIChhY3Rpb24gPT09ICJyZXNldCIpIHsKKyAgICAgICAgICAgIGV4cGVjdChjb21taXR0ZWQ/LnNlc3Npb25JZCkudG9CZSgicmVwbGFjZW1lbnQiKTsKKyAgICAgICAgICB9CisgICAgICAgIH0KKyAgICAgICAgcmV0dXJuIHByZXBhcmUoLi4uYXJncyk7CisgICAgICB9KTsKKyAgICAgIGNvbnN0IHJlYWQgPSB0cmFuc2NyaXB0UmVhZGVycy5yZWFkU2Vzc2lvbk1lc3NhZ2VzUGFnZVdpdGhTdGF0c0FzeW5jOworICAgICAgdmkuc3B5T24odHJhbnNjcmlwdFJlYWRlcnMsICJyZWFkU2Vzc2lvbk1lc3NhZ2VzUGFnZVdpdGhTdGF0c0FzeW5jIikubW9ja0ltcGxlbWVudGF0aW9uT25jZSgKKyAgICAgICAgYXN5bmMgKC4uLmFyZ3MpID0+IHsKKyAgICAgICAgICBjb25zdCByZXN1bHQgPSBhd2FpdCByZWFkKC4uLmFyZ3MpOworICAgICAgICAgIGFybWVkID0gdHJ1ZTsKKyAgICAgICAgICByZXR1cm4gcmVzdWx0OworICAgICAgICB9LAorICAgICAgKTsKKyAgICAgIGNvbnN0IHJlc3VsdCA9IGF3YWl0IHJlYWRQdWJsaWNTZXNzaW9uU2hhcmUoY2ZnLCBsb2NhdG9yLCB7IHByb2plY3Rpb24gfSk7CisgICAgICBleHBlY3QoaW50ZXJsZWF2ZWQpLnRvQmUodHJ1ZSk7CisgICAgICBleHBlY3QocmVzdWx0KS50b0JlTnVsbCgpOworICAgIH0pOworICB9LAorKTsK
+          PRODUCTION_PATCH_BASE64: ZGlmZiAtLWdpdCBhL3NyYy9nYXRld2F5L2NvbnRyb2wtdWktcHVibGljLXNlc3Npb24tcmVhZC50cyBiL3NyYy9nYXRld2F5L2NvbnRyb2wtdWktcHVibGljLXNlc3Npb24tcmVhZC50cwppbmRleCA1NzNhNWY5MGZkNi4uMzk5NmJkOTZmNzggMTAwNjQ0Ci0tLSBhL3NyYy9nYXRld2F5L2NvbnRyb2wtdWktcHVibGljLXNlc3Npb24tcmVhZC50cworKysgYi9zcmMvZ2F0ZXdheS9jb250cm9sLXVpLXB1YmxpYy1zZXNzaW9uLXJlYWQudHMKQEAgLTEwOCwyNSArMTA4LDMyIEBAIGV4cG9ydCBhc3luYyBmdW5jdGlvbiByZWFkUHVibGljU2Vzc2lvblNoYXJlKAogICAgICAgYWxsb3dSZXNldEFyY2hpdmVGYWxsYmFjazogZmFsc2UsCiAgICAgfSwKICAgKTsKLSAgY29uc3QgY3VycmVudCA9IHJlYWRBdXRob3JpemVkVGFyZ2V0KGNmZywgbG9jYXRvciwgcHJvamVjdGlvbik7Ci0gIGlmICgKLSAgICAhY3VycmVudCB8fAotICAgIGN1cnJlbnQuc291cmNlLnBhdGggIT09IGluaXRpYWwuc291cmNlLnBhdGggfHwKLSAgICBjdXJyZW50LnNvdXJjZS5kYXRhYmFzZUlkZW50aXR5ICE9PSBpbml0aWFsLnNvdXJjZS5kYXRhYmFzZUlkZW50aXR5IHx8Ci0gICAgY3VycmVudC5zb3VyY2UuZGF0YWJhc2VCaXJ0aHRpbWUgIT09IGluaXRpYWwuc291cmNlLmRhdGFiYXNlQmlydGh0aW1lCi0gICkgewotICAgIHJldHVybiBudWxsOwotICB9Ci0gIGNvbnN0IHRpdGxlID0gKAotICAgIGN1cnJlbnQudGFyZ2V0LmVudHJ5LmxhYmVsIHx8Ci0gICAgY3VycmVudC50YXJnZXQuZW50cnkuZGlzcGxheU5hbWUgfHwKLSAgICAiU2hhcmVkIHNlc3Npb24iCi0gICkudHJpbSgpOwotICByZXR1cm4gewotICAgIHRpdGxlOiB0aXRsZSB8fCAiU2hhcmVkIHNlc3Npb24iLAotICAgIG1lc3NhZ2VzOiBoaXN0b3J5Lm1lc3NhZ2VzLAotICAgIHRvdGFsTWVzc2FnZXM6IGhpc3RvcnkudG90YWxNZXNzYWdlcywKLSAgICB0cnVuY2F0ZWQ6IGhpc3Rvcnkub21pdHRlZE92ZXJzaXplZCA9PT0gdHJ1ZSwKLSAgICAuLi4oaGlzdG9yeS5vbGRlck9mZnNldCAhPT0gdW5kZWZpbmVkID8geyBvbGRlck9mZnNldDogaGlzdG9yeS5vbGRlck9mZnNldCB9IDoge30pLAotICB9OworICByZXR1cm4gd2l0aFJlYWR5U2Vzc2lvblJvd3MoCisgICAgcHJvamVjdGlvbiwKKyAgICAoKSA9PiBbeyBrZXk6IGxvY2F0b3Iuc2Vzc2lvbktleSwgYWdlbnRJZDogbG9jYXRvci5hZ2VudElkIH1dLAorICAgICgpID0+IHsKKyAgICAgIC8vIEhpc3RvcnkgeWllbGRzOyBwcmVwYXJlIGN1cnJlbnQgc2hhcmluZyBmYWN0cyBiZWZvcmUgY29uc3VtaW5nIHRoZSBsaXZlIGdyYW50LgorICAgICAgY29uc3QgY3VycmVudCA9IHJlYWRBdXRob3JpemVkVGFyZ2V0KGNmZywgbG9jYXRvciwgcHJvamVjdGlvbik7CisgICAgICBpZiAoCisgICAgICAgICFjdXJyZW50IHx8CisgICAgICAgIGN1cnJlbnQuc291cmNlLnBhdGggIT09IGluaXRpYWwuc291cmNlLnBhdGggfHwKKyAgICAgICAgY3VycmVudC5zb3VyY2UuZGF0YWJhc2VJZGVudGl0eSAhPT0gaW5pdGlhbC5zb3VyY2UuZGF0YWJhc2VJZGVudGl0eSB8fAorICAgICAgICBjdXJyZW50LnNvdXJjZS5kYXRhYmFzZUJpcnRodGltZSAhPT0gaW5pdGlhbC5zb3VyY2UuZGF0YWJhc2VCaXJ0aHRpbWUKKyAgICAgICkgeworICAgICAgICByZXR1cm4gbnVsbDsKKyAgICAgIH0KKyAgICAgIGNvbnN0IHRpdGxlID0gKAorICAgICAgICBjdXJyZW50LnRhcmdldC5lbnRyeS5sYWJlbCB8fAorICAgICAgICBjdXJyZW50LnRhcmdldC5lbnRyeS5kaXNwbGF5TmFtZSB8fAorICAgICAgICAiU2hhcmVkIHNlc3Npb24iCisgICAgICApLnRyaW0oKTsKKyAgICAgIHJldHVybiB7CisgICAgICAgIHRpdGxlOiB0aXRsZSB8fCAiU2hhcmVkIHNlc3Npb24iLAorICAgICAgICBtZXNzYWdlczogaGlzdG9yeS5tZXNzYWdlcywKKyAgICAgICAgdG90YWxNZXNzYWdlczogaGlzdG9yeS50b3RhbE1lc3NhZ2VzLAorICAgICAgICB0cnVuY2F0ZWQ6IGhpc3Rvcnkub21pdHRlZE92ZXJzaXplZCA9PT0gdHJ1ZSwKKyAgICAgICAgLi4uKGhpc3Rvcnkub2xkZXJPZmZzZXQgIT09IHVuZGVmaW5lZCA/IHsgb2xkZXJPZmZzZXQ6IGhpc3Rvcnkub2xkZXJPZmZzZXQgfSA6IHt9KSwKKyAgICAgIH07CisgICAgfSwKKyAgKTsKIH0K
+        run: >
           python3 - <<'PY'
+
           import base64, os, subprocess
+
           from pathlib import Path
-          names = ['REGRESSION'] + (['PRODUCTION'] if os.environ['ROLE'] == 'repaired-reader' else [])
+
+          names = ['REGRESSION'] + (['PRODUCTION'] if os.environ['ROLE'] ==
+          'repaired-reader' else [])
+
           for name in names:
               p = Path(os.environ['RUNNER_TEMP'], name.lower() + '.patch')
               p.write_bytes(base64.b64decode(os.environ[name + '_PATCH_BASE64']))
               subprocess.run(['git', 'apply', '--check', str(p)], check=True)
               subprocess.run(['git', 'apply', str(p)], check=True)
-          # Proof-only call-through attestation: do not replace worker behavior/results.
-          test = Path('src/gateway/control-ui-public-session-read.test.ts')
-          text = test.read_text()
-          text = 'import * as workerPatches from "../config/sessions/session-entry-patch.js";\n' + text
-          start = text.index('  it("revalidates current sharing after a worker metadata publication during history"')
-          stop = text.index('\n  it.each(', start)
-          case = text[start:stop]
-          case = case.replace('      const read = transcriptReaders.', '      const workerPatch = vi.spyOn(workerPatches, "patchSessionEntryInWorker");\n      const read = transcriptReaders.', 1)
-          case = case.replace('          await patchSessionEntryCore(', '          const committed = await patchSessionEntryCore(', 1)
-          case = case.replace('          return result;', '          expect(workerPatch).toHaveBeenCalledTimes(1);\n          expect(committed).toMatchObject({ label: "Still public", publicShare: { id: locator.shareId } });\n          return result;', 1)
-          test.write_text(text[:start] + case + text[stop:])
           subprocess.run(['git', 'diff', '--check'], check=True)
+
           PY
       - name: Build QA runtime from candidate source
         run: pnpm build qaRuntime
-      - name: Run owner file including worker publication regression and late denial cases
-        run: |
+      - name: Run whole fork-owned Gateway prepared-read file with shipping regressions
+        run: >
           set -o pipefail
-          /usr/bin/time -p pnpm test src/gateway/control-ui-public-session-read.test.ts --maxWorkers=1 --pool=forks --silent=false --reporter=verbose --reporter=json --outputFile="$RUNNER_TEMP/read-regression.json" 2>&1 | tee "$RUNNER_TEMP/read-regression.log"
+
+          /usr/bin/time -p pnpm test
+          src/gateway/session-row-projection.prepared-read.test.ts
+          --maxWorkers=1 --silent=false --reporter=verbose --reporter=json
+          --outputFile="$RUNNER_TEMP/read-regression.json" 2>&1 | tee
+          "$RUNNER_TEMP/read-regression.log"
       - name: Retain exact source and applied diff
         if: always()
         env:
           ROLE: ${{ matrix.role }}
-        run: |
+        run: >
           python3 - <<'PY'
+
           import hashlib, json, os, subprocess
+
           from pathlib import Path
+
           diff = subprocess.check_output(['git', 'diff', '--binary'], text=True)
+
           Path(os.environ['RUNNER_TEMP'], 'applied.patch').write_text(diff)
+
           Path(os.environ['RUNNER_TEMP'], 'source.json').write_text(json.dumps({
               'role': os.environ['ROLE'],
               'expectedSha': '5242fb64df13ecdb53aedaf56b5919996f0ad476',
               'actualSha': subprocess.check_output(['git', 'rev-parse', 'HEAD'], text=True).strip(),
               'status': subprocess.check_output(['git', 'status', '--short'], text=True),
               'node': subprocess.check_output(['node', '--version'], text=True).strip(),
-              'regressionPatchSha256': '3aeeb64b715590525b8a5491049917d2108d42bbc008bb9e7876aac0385bb504',
-              'productionPatchSha256': 'e73811dc0b8edeace9fffc0929bbb359568515839be2049ae1f5a4c6767d8a52',
+              'regressionPatchSha256': 'cdffb1a84c907b253a8e44d51a6ae8fa7fa68b55f9e006e4bc1f388b7b11102c',
+              'productionPatchSha256': '8c8c44dfd0e80f0810e0456a564ac21a682dd8ea655a13f94bae3a661a7ad56d',
               'appliedDiffSha256': hashlib.sha256(diff.encode()).hexdigest(),
               'runId': os.environ['GITHUB_RUN_ID'],
-              'pool': 'forks',
-              'proofOnlyWorkerCallThroughAttestation': True,
+              'pool': 'repository-owned Gateway database-worker forks; no CLI pool override',
+              'shippingWorkerCallThroughAttestation': True,
           }, indent=2) + '\n')
+
           PY
       - name: Retain proof
         if: always()
