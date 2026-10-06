@@ -1,138 +1,52 @@
-"name": "Talk PR targeted MCP OAuth follow-up"
-"on":
-  "workflow_dispatch": null
-"permissions":
-  "contents": "read"
-  "actions": "read"
-"jobs":
-  "compatibility":
-    "runs-on": "ubuntu-24.04"
-    "timeout-minutes": 35
-    "env":
-      "CI": "true"
-      "FORCE_JAVASCRIPT_ACTIONS_TO_NODE24": "true"
-      "PNPM_CONFIG_VERIFY_DEPS_BEFORE_RUN": "false"
-      "OPENCLAW_E2E_USE_PREBUILT_DIST": "1"
-      "OPENCLAW_VITEST_MAX_WORKERS": "2"
-      "NODE_OPTIONS": "--max-old-space-size=8192"
-      "GRAPH_HASHES": "{\"package.json\": \"146b32ac2ff8aee0a99ce0e0814bfaffba9102401de004848e896e45250b0d5d\", \"extensions/browser/package.json\": \"03127e133886d46bf8b7011ee7ac5c6f014702cfe27b011b1b20130bdb180357\", \"extensions/qa-lab/package.json\": \"4a2bb0a79b212d9ceffcb5c70f0de55e2468767ac3fc484bb6e21a453858abf6\", \"ui/package.json\": \"37f5d54f4404291141ee43ab26fbe4d288a841a48c4d3be86e018ff44f4e4f9c\", \"pnpm-lock.yaml\": \"9fbbb7d8299681261415c079b9142a4a149c3b85762a52fb3e69f6110b4c7654\"}"
-      "KIND": "oauth-followup"
-      "FIXTURE_PATCH_BASE64": "LS0tIGEvc3JjL2FnZW50cy9tY3Atb2F1dGgtcmVmcmVzaC1pc3N1ZXIudGVzdC50cworKysgYi9zcmMvYWdlbnRzL21jcC1vYXV0aC1yZWZyZXNoLWlzc3Vlci50ZXN0LnRzCkBAIC01NSw2ICs1NSw3IEBACiAgIGNoYWxsZW5nZU1ldGFkYXRhVXJsOiBzdHJpbmc7CiAgIGlzc3Vlcjogc3RyaW5nOwogICBtaW50ZWRBY2Nlc3NUb2tlbjogc3RyaW5nOworICBzdXBwb3J0c1JlZ2lzdHJhdGlvbj86IGJvb2xlYW47CiB9KSB7CiAgIGNvbnN0IHRva2VuUmVxdWVzdHM6IEFycmF5PHsgdXJsOiBzdHJpbmc7IGJvZHk6IHN0cmluZyB9PiA9IFtdOwogICBjb25zdCBmZXRjaEZuOiBGZXRjaExpa2UgPSBhc3luYyAoaW5wdXQsIGluaXQpID0+IHsKQEAgLTgyLDkgKzgzLDIxIEBACiAgICAgICAgIGlzc3VlcjogY29uZmlnLmlzc3VlciwKICAgICAgICAgYXV0aG9yaXphdGlvbl9lbmRwb2ludDogYCR7Y29uZmlnLmlzc3Vlcn0vYXV0aG9yaXplYCwKICAgICAgICAgdG9rZW5fZW5kcG9pbnQ6IGAke2NvbmZpZy5pc3N1ZXJ9L3Rva2VuYCwKKyAgICAgICAgLi4uKGNvbmZpZy5zdXBwb3J0c1JlZ2lzdHJhdGlvbgorICAgICAgICAgID8geyByZWdpc3RyYXRpb25fZW5kcG9pbnQ6IGAke2NvbmZpZy5pc3N1ZXJ9L3JlZ2lzdGVyYCB9CisgICAgICAgICAgOiB7fSksCiAgICAgICAgIHJlc3BvbnNlX3R5cGVzX3N1cHBvcnRlZDogWyJjb2RlIl0sCiAgICAgICAgIGdyYW50X3R5cGVzX3N1cHBvcnRlZDogWyJhdXRob3JpemF0aW9uX2NvZGUiLCAicmVmcmVzaF90b2tlbiJdLAogICAgICAgfSk7CisgICAgfQorICAgIGlmIChjb25maWcuc3VwcG9ydHNSZWdpc3RyYXRpb24gJiYgdXJsLmhyZWYgPT09IGAke2NvbmZpZy5pc3N1ZXJ9L3JlZ2lzdGVyYCkgeworICAgICAgcmV0dXJuIFJlc3BvbnNlLmpzb24oCisgICAgICAgIHsKKyAgICAgICAgICAuLi5KU09OLnBhcnNlKGJvZHlUZXh0KGluaXQ/LmJvZHkpKSwKKyAgICAgICAgICBjbGllbnRfaWQ6ICJyZXBsYWNlbWVudC1jbGllbnQtaWQiLAorICAgICAgICB9LAorICAgICAgICB7IHN0YXR1czogMjAxIH0sCisgICAgICApOwogICAgIH0KICAgICBpZiAodXJsLmhyZWYgPT09IGAke2NvbmZpZy5pc3N1ZXJ9L3Rva2VuYCkgewogICAgICAgdG9rZW5SZXF1ZXN0cy5wdXNoKHsgdXJsOiB1cmwuaHJlZiwgYm9keTogYm9keVRleHQoaW5pdD8uYm9keSkgfSk7CkBAIC0yODYsNiArMjk5LDcgQEAKICAgICAgICAgICBjaGFsbGVuZ2VNZXRhZGF0YVVybDogUkVQTEFDRU1FTlRfTUVUQURBVEFfVVJMLAogICAgICAgICAgIGlzc3VlcjogUkVQTEFDRU1FTlRfSVNTVUVSLAogICAgICAgICAgIG1pbnRlZEFjY2Vzc1Rva2VuOiAiYXR0YWNrZXItYWNjZXNzIiwKKyAgICAgICAgICBzdXBwb3J0c1JlZ2lzdHJhdGlvbjogdHJ1ZSwKICAgICAgICAgfSk7CiAgICAgICAgIGF3YWl0IGV4cGVjdCgKICAgICAgICAgICBidWlsZE9BdXRoRmV0Y2gobmV3SXNzdWVyLmZldGNoRm4pKFNFUlZFUl9VUkwsIHsgbWV0aG9kOiAiUE9TVCIsIGJvZHk6ICJ7fSIgfSksCg=="
-      "FIXTURE_PATCH_SHA256": "be6ce2bdf8c8dbd20cd872298aba5f3dd3336921fbda7c2d5a315aa8fb0749bc"
-      "FIXTURE_SHA256": "bcc066d7d84a7ab57becf091a99579d36660f4141cd4a721b8678b548ed31522"
-    "steps":
-      -
-        "name": "Checkout fixed candidate, not moving main"
-        "uses": "actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1"
-        "with":
-          "repository": "lordratner/openclaw"
-          "ref": "9ed34bae60dee85442f80258732f8300f411a393"
-          "fetch-depth": 1
-          "persist-credentials": false
-      -
-        "name": "Download exact successful graph artifact"
-        "uses": "actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c"
-        "with":
-          "name": "mcp-patched-graph-37513173608"
-          "path": "${{ runner.temp }}/mcp-graph"
-          "run-id": 37513173608
-          "github-token": "${{ github.token }}"
-      -
-        "name": "Verify and apply hash-bound five-file graph"
-        "run": |-
-          python3 - <<'PYCODE'
-          import os, subprocess, json, hashlib, shutil
-          from pathlib import Path
-          assert subprocess.check_output(['git','rev-parse','HEAD'],text=True).strip()=='9ed34bae60dee85442f80258732f8300f411a393'
-          assert not subprocess.check_output(['git','status','--short'],text=True)
-          artifact=Path(os.environ['RUNNER_TEMP'],'mcp-graph')
-          receipt=json.loads((artifact/'source.json').read_text())
-          expected=json.loads(os.environ['GRAPH_HASHES'])
-          assert receipt['fileSha256']==expected
-          assert receipt['actualSha']==receipt['expectedSha']=='9ed34bae60dee85442f80258732f8300f411a393'
-          for name,digest in expected.items():
-              src=artifact/name
-              assert hashlib.sha256(src.read_bytes()).hexdigest()==digest,name
-              shutil.copy2(src,Path(name))
-          assert set(subprocess.check_output(['git','diff','--name-only'],text=True).splitlines())==set(expected)
-          subprocess.run(['git','diff','--check'],check=True)
-          proof=Path(os.environ['RUNNER_TEMP'],'mcp-proof');proof.mkdir(exist_ok=True)
-          (proof/'graph-source.json').write_text(json.dumps(receipt,indent=2))
-          (proof/'graph-applied.patch').write_text(subprocess.check_output(['git','diff','--binary'],text=True))
-          PYCODE
-      -
-        "name": "Apply only the approved issuer registration fixture"
-        "run": |-
-          python3 - <<'PYCODE'
-          import os, base64, hashlib, subprocess
-          from pathlib import Path
-          patch=base64.b64decode(os.environ['FIXTURE_PATCH_BASE64'])
-          assert hashlib.sha256(patch).hexdigest()==os.environ['FIXTURE_PATCH_SHA256']
-          subprocess.run(['git','apply','--check','-'],input=patch,check=True)
-          subprocess.run(['git','apply','-'],input=patch,check=True)
-          assert hashlib.sha256(Path('src/agents/mcp-oauth-refresh-issuer.test.ts').read_bytes()).hexdigest()==os.environ['FIXTURE_SHA256']
-          subprocess.run(['git','diff','--check'],check=True)
-          PYCODE
-      -
-        "name": "Prepare frozen Node and repository dependency install"
-        "uses": "./.github/actions/setup-node-env"
-        "with":
-          "node-version": "24.19.0"
-          "install-bun": "false"
-          "frozen-lockfile": "true"
-          "cache-mode": "off"
-      -
-        "name": "Build required QA runtime once"
-        "run": |-
-          set -euo pipefail
-          pnpm build qaRuntime 2>&1 | tee "$RUNNER_TEMP/qa-build.log"
-      -
-        "name": "Run only missing OAuth proof and fixture checks"
-        "run": |-
-          python3 - <<'PYCODE'
-          import json, os, subprocess, time
-          from pathlib import Path
-          root=Path(os.environ['RUNNER_TEMP'],'mcp-proof');root.mkdir(exist_ok=True)
-          commands=[
-           ('issuer',['pnpm','test','src/agents/mcp-oauth-refresh-issuer.test.ts','--silent=false','--reporter=verbose']),
-           ('preparation',['pnpm','test','src/agents/mcp-oauth-provider.preparation.test.ts','--silent=false','--reporter=verbose']),
-           ('fixture-format',['pnpm','exec','oxfmt','--check','src/agents/mcp-oauth-refresh-issuer.test.ts']),
-           ('fixture-lint',['node','scripts/run-oxlint.mjs','--tsconfig','config/tsconfig/oxlint.core.json','src/agents/mcp-oauth-refresh-issuer.test.ts'])
-          ]
-          results=[]
-          for label,command in commands:
-           log=root/(label+'.log');start=time.monotonic()
-           with log.open('w') as f:result=subprocess.run(command,stdout=f,stderr=subprocess.STDOUT)
-           row={'label':label,'command':command,'exitCode':result.returncode,'wallSeconds':round(time.monotonic()-start,3)}
-           results.append(row);(root/'results.json').write_text(json.dumps(results,indent=2)+'\n')
-           print(json.dumps(row),flush=True);print(log.read_text()[-8000:],flush=True)
-          if any(x['exitCode'] for x in results):raise SystemExit(1)
-          PYCODE
-      -
-        "name": "Retain exact tested dependency and fixture receipt"
-        "if": "always()"
-        "run": |-
-          python3 - <<'PYCODE'
-          import os,json,subprocess,hashlib,shutil
-          from pathlib import Path
-          root=Path(os.environ['RUNNER_TEMP'],'mcp-proof');root.mkdir(exist_ok=True)
-          expected=json.loads(os.environ['GRAPH_HASHES'])
-          for name,digest in expected.items():assert hashlib.sha256(Path(name).read_bytes()).hexdigest()==digest,name
-          changes=subprocess.check_output(['git','diff','--name-only'],text=True).splitlines()
-          assert set(changes)==set(expected)|{'src/agents/mcp-oauth-refresh-issuer.test.ts'},changes
-          assert hashlib.sha256(Path('src/agents/mcp-oauth-refresh-issuer.test.ts').read_bytes()).hexdigest()==os.environ['FIXTURE_SHA256']
-          diff=subprocess.check_output(['git','diff','--binary'],text=True);(root/'tested-applied.patch').write_text(diff)
-          (root/'tested-source.json').write_text(json.dumps({'expectedSha':'9ed34bae60dee85442f80258732f8300f411a393','actualSha':subprocess.check_output(['git','rev-parse','HEAD'],text=True).strip(),'node':subprocess.check_output(['node','--version'],text=True).strip(),'pnpm':subprocess.check_output(['pnpm','--version'],text=True).strip(),'graphRunId':37513173608,'graphFileSha256':expected,'fixtureSha256':os.environ['FIXTURE_SHA256'],'appliedDiffSha256':hashlib.sha256(diff.encode()).hexdigest(),'runId':os.environ['GITHUB_RUN_ID'],'kind':os.environ['KIND'],'shippingSource':'five-file dependency graph plus approved fixture; not published'},indent=2)+'\n')
-          for name in ['qa-build.log','mcp-frozen-install.log']:
-              src=Path(os.environ['RUNNER_TEMP'],name)
-              if src.exists():shutil.copy2(src,root/name)
-          subprocess.run(['git','diff','--check'],check=True)
-          PYCODE
-      -
-        "name": "Upload compatibility evidence"
-        "if": "always()"
-        "uses": "actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a"
-        "with":
-          "name": "mcp-oauth-followup-${{ github.run_id }}"
-          "path": "${{ runner.temp }}/mcp-proof/"
-          "retention-days": 7
+name: Exact 9.8 Talk attachment canary qualification
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+  actions: read
+jobs:
+  qualify-release-canary:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 55
+    env:
+      CI: "true"
+      FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
+      PNPM_CONFIG_VERIFY_DEPS_BEFORE_RUN: "false"
+      OPENCLAW_BUNDLED_PLUGIN_BUILD_IDS: nextcloud-talk
+      OPENCLAW_VITEST_MAX_WORKERS: "2"
+      NODE_OPTIONS: --max-old-space-size=8192
+      OPENCLAW_E2E_USE_PREBUILT_DIST: "1"
+    steps:
+      - name: Capture reviewed disposable-branch payload
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+          fetch-depth: 1
+      - name: Preserve payload outside source checkout
+        run: |
+          cp -a canary-payload "$RUNNER_TEMP/canary-payload"
+          git rev-parse HEAD > "$RUNNER_TEMP/canary-payload/workflow-commit.txt"
+      - name: Checkout exact installed release source
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          repository: openclaw/openclaw
+          ref: fc23bc864e4553c2d215e479eeec47b67a0bf943
+          fetch-depth: 1
+          persist-credentials: false
+      - name: Prepare exact release frozen dependency graph on GitHub only
+        uses: ./.github/actions/setup-node-env
+        with:
+          node-version: "24.19.0"
+          install-bun: "false"
+          frozen-lockfile: "true"
+          cache-mode: "off"
+      - name: Build, compare, generate and qualify release adaptation
+        run: bash "$RUNNER_TEMP/canary-payload/run-release-ci.sh"
+      - name: Retain attributable qualification and artifact boundary
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: nextcloud-talk-release-9_8-${{ github.run_id }}
+          path: ${{ runner.temp }}/release-canary-proof/
+          retention-days: 7
+          if-no-files-found: error

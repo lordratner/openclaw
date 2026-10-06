@@ -1,0 +1,31 @@
+diff --git a/src/plugins/runtime/runtime-channel.ts b/src/plugins/runtime/runtime-channel.ts
+--- a/src/plugins/runtime/runtime-channel.ts
++++ b/src/plugins/runtime/runtime-channel.ts
+@@ -70,7 +70,7 @@
+ } from "../../config/sessions/session-accessor.js";
+ import { getChannelActivity, recordChannelActivity } from "../../infra/channel-activity.js";
+ import { readRemoteMediaBuffer, saveRemoteMedia, saveResponseMedia } from "../../media/fetch.js";
+-import { saveMediaBuffer } from "../../media/store.js";
++import { deleteMediaBuffer, saveMediaBuffer } from "../../media/store.js";
+ import { buildPairingReply } from "../../pairing/pairing-messages.js";
+ import {
+   readChannelAllowFromStore,
+@@ -192,6 +192,7 @@
+       saveRemoteMedia,
+       saveResponseMedia,
+       saveMediaBuffer,
++      deleteMediaBuffer,
+     },
+     activity: {
+       record: recordChannelActivity,
+diff --git a/src/plugins/runtime/types-channel.ts b/src/plugins/runtime/types-channel.ts
+--- a/src/plugins/runtime/types-channel.ts
++++ b/src/plugins/runtime/types-channel.ts
+@@ -106,6 +106,7 @@
+     saveRemoteMedia: typeof import("../../media/fetch.js").saveRemoteMedia;
+     saveResponseMedia: typeof import("../../media/fetch.js").saveResponseMedia;
+     saveMediaBuffer: typeof import("../../media/store.js").saveMediaBuffer;
++    deleteMediaBuffer: typeof import("../../media/store.js").deleteMediaBuffer;
+   };
+   activity: {
+     record: typeof import("../../infra/channel-activity.js").recordChannelActivity;

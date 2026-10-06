@@ -1,0 +1,214 @@
+{
+  "state": "SOURCE_PREPARED_UNBUILT_UNTESTED_NOT_DEPLOYABLE",
+  "release_commit": "fc23bc864e4553c2d215e479eeec47b67a0bf943",
+  "pr_head_reference": "fd74a2e849af5f8f65b14361b1368e7eb76c7173",
+  "proof_scope": "Exact-release synchronous envelope adapter, not exact PR async-envelope equivalence",
+  "archive_sha256": "3b9b7daf4795008a570282c3c2ed2d953292b9cd78ee306152bfc181dc2b6147",
+  "patch_sha256": "dc92fff5b9e85251332031da9bd8232dc42a3f9d3f08603c202892f52ef1bc42",
+  "core_patch_sha256": "940b9a76ef154415c9e64ca7a3a20f3568303e5794425d8c147dfa134c6a2cba",
+  "files": [
+    {
+      "path": "extensions/nextcloud-talk/src/accounts.test.ts",
+      "release_sha256": "7e9091eed27455b3bd154b607cda303a56fa78ed7b5fb2e26f12aa56b6058083",
+      "candidate_sha256": "2238602a1612e5453cd56bc6f48f1df36effc3eac58166ad493002ad7ab4ff0c",
+      "candidate_bytes": 4832,
+      "additions": 30,
+      "deletions": 0
+    },
+    {
+      "path": "extensions/nextcloud-talk/src/channel.core.test.ts",
+      "release_sha256": "6c272c4a9f0c32d309e3398d8f36138a3d08a5d27753dda8dee35f87ab3bbe86",
+      "candidate_sha256": "e4709980d830ba34385609517f9a37e9bf1918f8ceb0eebeb6dd0aa994aa1f78",
+      "candidate_bytes": 4069,
+      "additions": 61,
+      "deletions": 3
+    },
+    {
+      "path": "extensions/nextcloud-talk/src/channel.ts",
+      "release_sha256": "4e8800e92f452379417941b834c5772f0acb0a370ee0b2a3ce70b17127e3c644",
+      "candidate_sha256": "9e91bd5031a5cf0049ebbcfed4bc150f6a830fed83a85ecb118e5ac44946b4a1",
+      "candidate_bytes": 8482,
+      "additions": 3,
+      "deletions": 3
+    },
+    {
+      "path": "extensions/nextcloud-talk/src/config-schema.ts",
+      "release_sha256": "c1984cd59ae3e51b1130fe0eb172d515128e7e222bbe3fb9c3e3c7df51836e9f",
+      "candidate_sha256": "1c0caf0bfdc567562ad2ead981529a7b802727d74a2bb105af99cec9ee140dc0",
+      "candidate_bytes": 3301,
+      "additions": 18,
+      "deletions": 0
+    },
+    {
+      "path": "extensions/nextcloud-talk/src/guarded-response.ts",
+      "release_sha256": "77b37a2bf4d637b745401e92d60b6c96086cc34570ab4b12c96b41305b684f6c",
+      "candidate_sha256": "939d9e57065b17a14768cdc93a80d16950da126c94541b3307978d1f68f2d668",
+      "candidate_bytes": 1165,
+      "additions": 13,
+      "deletions": 0
+    },
+    {
+      "path": "extensions/nextcloud-talk/src/inbound-media.behavior.test.ts",
+      "release_sha256": null,
+      "candidate_sha256": "24ce77f6ec290e5e47a27af3efc142e057039279a8edb9fead24cb6af55532d2",
+      "candidate_bytes": 31549,
+      "additions": 892,
+      "deletions": 0
+    },
+    {
+      "path": "extensions/nextcloud-talk/src/inbound-media.security.test.ts",
+      "release_sha256": null,
+      "candidate_sha256": "3e5539b33499eb1c400b41cdcaa1baeb03dc1b7a648ef51eeed263ab7286bd9a",
+      "candidate_bytes": 17378,
+      "additions": 500,
+      "deletions": 0
+    },
+    {
+      "path": "extensions/nextcloud-talk/src/inbound-media.test.ts",
+      "release_sha256": null,
+      "candidate_sha256": "a727d0a8193735c1db1ec172da654fee60557bffb65a0b48dc5450756e771626",
+      "candidate_bytes": 21129,
+      "additions": 632,
+      "deletions": 0
+    },
+    {
+      "path": "extensions/nextcloud-talk/src/inbound-media.ts",
+      "release_sha256": null,
+      "candidate_sha256": "1f5044e9b483390790620bfb19c3f063343838b2b83f9b4c521f6bf5c8f9f83f",
+      "candidate_bytes": 21304,
+      "additions": 647,
+      "deletions": 0
+    },
+    {
+      "path": "extensions/nextcloud-talk/src/inbound-media.voice.test.ts",
+      "release_sha256": null,
+      "candidate_sha256": "008aac59966733796c2f8b7d7b44614e41ce9abbe9c69102f2019dfd18b17722",
+      "candidate_bytes": 13208,
+      "additions": 387,
+      "deletions": 0
+    },
+    {
+      "path": "extensions/nextcloud-talk/src/inbound.authz.test.ts",
+      "release_sha256": "153900ed1c0b6fc2183e2ec854c34cfc90141094af1ec3108f27d71d1e3270d2",
+      "candidate_sha256": "da7a1721d0f72240091092f2c6d4d71f511310faa9347963de904015d792560b",
+      "candidate_bytes": 21550,
+      "additions": 524,
+      "deletions": 5
+    },
+    {
+      "path": "extensions/nextcloud-talk/src/inbound.behavior.test.ts",
+      "release_sha256": "ebe8af9e1aad1623ee843b964e8b6fdb435f211f663da99d3cd35ea334b602d7",
+      "candidate_sha256": "6a61193b95a51575664f6abf496fe66057c218362707537f7c76203cbd5a9773",
+      "candidate_bytes": 16612,
+      "additions": 1,
+      "deletions": 0
+    },
+    {
+      "path": "extensions/nextcloud-talk/src/inbound.room-info-retry.test.ts",
+      "release_sha256": "2233937c6d4be7117cca9f5e1c23f1e6fdbbcceeac4b0954fd138a91c6f9f4eb",
+      "candidate_sha256": "66274074b3d445c4d5bc1492d76d76a33a8b9b72af1c6aa1b56dffdafb21be8d",
+      "candidate_bytes": 8814,
+      "additions": 1,
+      "deletions": 0
+    },
+    {
+      "path": "extensions/nextcloud-talk/src/inbound.ts",
+      "release_sha256": "ece6f882010289a9148c055628b7ab476a98f2f85a43fa7440071084a6e05d88",
+      "candidate_sha256": "726fe741b61fbd755272d07682305c1fb949ba48656dd78ae4e08fe3dc8254fd",
+      "candidate_bytes": 24739,
+      "additions": 280,
+      "deletions": 8
+    },
+    {
+      "path": "extensions/nextcloud-talk/src/monitor.test-fixtures.ts",
+      "release_sha256": "2c8d1d65a8cb2f13df52c48f82617109a21ae20962bfc586d91c36debf458f2c",
+      "candidate_sha256": "f2cbf5a4a770caa401702297a526b52c5fefc1e7c2f9000a3050523b4d489baa",
+      "candidate_bytes": 4074,
+      "additions": 99,
+      "deletions": 0
+    },
+    {
+      "path": "extensions/nextcloud-talk/src/types.ts",
+      "release_sha256": "ae92af2cfec98524b34991f7c62775ad9004922cddcc64c242386e9a3f29bb60",
+      "candidate_sha256": "8de93095c860684abdd887b335de8082bee87e54c0053793d911d31e8391cb64",
+      "candidate_bytes": 2956,
+      "additions": 12,
+      "deletions": 0
+    },
+    {
+      "path": "extensions/nextcloud-talk/src/voice-media.ts",
+      "release_sha256": null,
+      "candidate_sha256": "7d6c0a5f84d0b7a100acf8fa38cae79a0d379150797466579aede7348b565af0",
+      "candidate_bytes": 7373,
+      "additions": 238,
+      "deletions": 0
+    },
+    {
+      "path": "extensions/nextcloud-talk/src/webhook-spool-state.ts",
+      "release_sha256": "f4db784692a9f935134999eb5fede596d3f60306debbe244e7d24d9ee9138081",
+      "candidate_sha256": "c487c0c629f8c5b5323c3400a2223031954fe574044285cfcf45a1e84461f99d",
+      "candidate_bytes": 6848,
+      "additions": 81,
+      "deletions": 1
+    },
+    {
+      "path": "extensions/nextcloud-talk/src/webhook-spool.test.ts",
+      "release_sha256": "2b753119dc370a010ad5046fd6dcf1f733b940f957a19f87abe9ed255ba64d3e",
+      "candidate_sha256": "9a0c34fa10752388dcc660586713c4f61882a6f36124f8b32a2e212534fbb0d0",
+      "candidate_bytes": 25795,
+      "additions": 325,
+      "deletions": 2
+    },
+    {
+      "path": "extensions/nextcloud-talk/src/webhook-spool.ts",
+      "release_sha256": "54b9bf3a76739107e75c0e5e31831edf9aef59ad06f8bd67cede633f1bcdca0d",
+      "candidate_sha256": "98bffa47c9fb8449390a4e3dd6eb1c075646cdfb1b79f6d56f699285cabe9f0c",
+      "candidate_bytes": 10465,
+      "additions": 16,
+      "deletions": 4
+    },
+    {
+      "path": "src/plugin-sdk/test-helpers/plugin-runtime-mock.ts",
+      "release_sha256": "4c3de64e85cef055269cd882f2eb97c2985b2a7e491e5d43060f7ebd3cbddef6",
+      "candidate_sha256": "dc823d47719d8d48460a2bc89852a87a06d2bcd9dd7f04f1914a29824a6426cc",
+      "candidate_bytes": 38653,
+      "additions": 1,
+      "deletions": 0
+    },
+    {
+      "path": "src/plugins/runtime/runtime-channel.ts",
+      "release_sha256": "52dd4cb0999d58bac7e0b1927695e96552b104c02ba1a35fb74bf6b4adc62fb4",
+      "candidate_sha256": "bcfe077a22390d6cc671d62e3912225772e12826cfe435e8f6d2a2a9ec9f9745",
+      "candidate_bytes": 9443,
+      "additions": 2,
+      "deletions": 1
+    },
+    {
+      "path": "src/plugins/runtime/types-channel.ts",
+      "release_sha256": "e08a0feabe2afdd2acc8b00117c0dccbf4adad55a9f3218298d982434b290b67",
+      "candidate_sha256": "c861b79235570506c13c9bf9af7ffe1212dd1c4f5c68a9e6b5e0e0c719388376",
+      "candidate_bytes": 10418,
+      "additions": 1,
+      "deletions": 0
+    }
+  ],
+  "unchanged_contract_files": {
+    "package.json": "508fad0420913c21e6a3e370f39fb07c35511adf464d958136e69b4f5a34c429",
+    "pnpm-lock.yaml": "c717cc8ed7331b2b4787ed4cbe80d46d3d733de69e3dc9dd7f1d49e6b4942802",
+    "extensions/nextcloud-talk/package.json": "f6becafde2b367db1fa2d958e1a532ef36da8aec2acc1862b468c07482ab36c7",
+    "extensions/nextcloud-talk/openclaw.plugin.json": "b3c1092cfbad585b1fa658d83c00dcac748e93fdfd13c84d8e6a1ac87b07b66d",
+    "src/config/bundled-channel-config-metadata.generated.ts": "5d93794de990c1054ac1c91a6ddfd8ed6657309c95511757f5271c30c3f4a042",
+    "src/channels/inbound-event/envelope.ts": "7f013ef70ddc349906f4b6476d6d6b2cdd8a9a7e7c261f0144d53c89087269ec",
+    "src/plugin-sdk/channel-inbound.ts": "f084a010e97470bcd38274ce5a47fe755137b664160d62378bc5a7d1ddbf4712",
+    "src/config/sessions/session-entry-read-runtime.ts": "bba331b6be116ab04775b31c729afb94e47c8a73209266d2e2f5b47eab4d81e0"
+  },
+  "totals": {
+    "files": 23,
+    "additions": 4764,
+    "deletions": 27
+  },
+  "local_checks_run": [],
+  "local_installs_builds_tests": false,
+  "remote_publication_or_dispatch": false,
+  "live_mutations": false
+}
