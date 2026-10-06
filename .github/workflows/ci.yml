@@ -51,6 +51,17 @@ jobs:
               p.write_bytes(base64.b64decode(os.environ[name + '_PATCH_BASE64']))
               subprocess.run(['git', 'apply', '--check', str(p)], check=True)
               subprocess.run(['git', 'apply', str(p)], check=True)
+          # Proof-only call-through attestation: do not replace worker behavior/results.
+          test = Path('src/gateway/control-ui-public-session-read.test.ts')
+          text = test.read_text()
+          text = 'import * as workerPatches from "../config/sessions/session-entry-patch.js";\n' + text
+          start = text.index('  it("revalidates current sharing after a worker metadata publication during history"')
+          stop = text.index('\n  it.each(', start)
+          case = text[start:stop]
+          case = case.replace('      const read = transcriptReaders.', '      const workerPatch = vi.spyOn(workerPatches, "patchSessionEntryInWorker");\n      const read = transcriptReaders.', 1)
+          case = case.replace('          await patchSessionEntryCore(', '          const committed = await patchSessionEntryCore(', 1)
+          case = case.replace('          return result;', '          expect(workerPatch).toHaveBeenCalledTimes(1);\n          expect(committed).toMatchObject({ label: "Still public", publicShare: { id: locator.shareId } });\n          return result;', 1)
+          test.write_text(text[:start] + case + text[stop:])
           subprocess.run(['git', 'diff', '--check'], check=True)
           PY
       - name: Build QA runtime from candidate source
@@ -58,7 +69,7 @@ jobs:
       - name: Run owner file including worker publication regression and late denial cases
         run: |
           set -o pipefail
-          /usr/bin/time -p pnpm test src/gateway/control-ui-public-session-read.test.ts --maxWorkers=1 --silent=false --reporter=verbose --reporter=json --outputFile="$RUNNER_TEMP/read-regression.json" 2>&1 | tee "$RUNNER_TEMP/read-regression.log"
+          /usr/bin/time -p pnpm test src/gateway/control-ui-public-session-read.test.ts --maxWorkers=1 --pool=forks --silent=false --reporter=verbose --reporter=json --outputFile="$RUNNER_TEMP/read-regression.json" 2>&1 | tee "$RUNNER_TEMP/read-regression.log"
       - name: Retain exact source and applied diff
         if: always()
         env:
@@ -79,6 +90,8 @@ jobs:
               'productionPatchSha256': 'e73811dc0b8edeace9fffc0929bbb359568515839be2049ae1f5a4c6767d8a52',
               'appliedDiffSha256': hashlib.sha256(diff.encode()).hexdigest(),
               'runId': os.environ['GITHUB_RUN_ID'],
+              'pool': 'forks',
+              'proofOnlyWorkerCallThroughAttestation': True,
           }, indent=2) + '\n')
           PY
       - name: Retain proof
