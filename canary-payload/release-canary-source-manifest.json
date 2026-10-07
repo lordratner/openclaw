@@ -4,7 +4,7 @@
   "pr_head_reference": "fd74a2e849af5f8f65b14361b1368e7eb76c7173",
   "proof_scope": "Exact-release synchronous envelope adapter, not exact PR async-envelope equivalence",
   "archive_sha256": "3b9b7daf4795008a570282c3c2ed2d953292b9cd78ee306152bfc181dc2b6147",
-  "patch_sha256": "88881253ceede0694821aad44557c7b5896fed889eb844645f96ff5a0bf4123a",
+  "patch_sha256": "1a4d03e66834548d6a4cad77346e7227bee25dd60a1d12ead7f7af8097d69527",
   "core_patch_sha256": "940b9a76ef154415c9e64ca7a3a20f3568303e5794425d8c147dfa134c6a2cba",
   "files": [
     {
@@ -42,8 +42,8 @@
     {
       "path": "extensions/nextcloud-talk/src/config-schema.ts",
       "release_sha256": "c1984cd59ae3e51b1130fe0eb172d515128e7e222bbe3fb9c3e3c7df51836e9f",
-      "candidate_sha256": "1c0caf0bfdc567562ad2ead981529a7b802727d74a2bb105af99cec9ee140dc0",
-      "candidate_bytes": 3301,
+      "candidate_sha256": "dbfe8f02aff3b37865e46059a45ee82212b4beefee62970e533c516795964788",
+      "candidate_bytes": 3334,
       "additions": 18,
       "deletions": 0
     },

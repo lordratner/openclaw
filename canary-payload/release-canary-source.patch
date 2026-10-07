@@ -154,14 +154,14 @@ diff --git a/extensions/nextcloud-talk/src/channel.ts b/extensions/nextcloud-tal
 diff --git a/extensions/nextcloud-talk/src/config-schema.ts b/extensions/nextcloud-talk/src/config-schema.ts
 --- a/extensions/nextcloud-talk/src/config-schema.ts
 +++ b/extensions/nextcloud-talk/src/config-schema.ts
-@@ -4,6 +4,7 @@
-   MarkdownConfigSchema,
-   ReplyRuntimeConfigSchemaShape,
-   ReplyToModeSchema,
-+  buildChannelConfigSchema,
-   buildGroupEntrySchema,
-   buildMultiAccountChannelSchema,
-   requireOpenAllowFrom,
+@@ -11,6 +11,7 @@
+ import { requireChannelOpenAllowFrom } from "openclaw/plugin-sdk/extension-shared";
+ import { buildSecretInputSchema } from "openclaw/plugin-sdk/secret-input";
+ import { z } from "zod";
++import { buildChannelConfigSchema } from "./channel-api.js";
+ 
+ export const NextcloudTalkRoomSchema = buildGroupEntrySchema({
+   allowFrom: z.array(z.string()).optional(),
 @@ -52,6 +53,7 @@
      webhookPath: z.string().optional(),
      webhookPublicUrl: z.string().optional(),
