@@ -1,0 +1,73 @@
+name: Split X publication baseline control
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  control:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    strategy:
+      fail-fast: false
+      matrix:
+        role: [tested-main-reader, preserved-reader-repair]
+    env:
+      CI: 'true'
+      NODE_OPTIONS: --max-old-space-size=8192
+      OPENCLAW_E2E_USE_PREBUILT_DIST: '1'
+      FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: 'true'
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          repository: openclaw/openclaw
+          ref: 22430f79c335c47b353b6f8ca761e5c85e28415a
+          fetch-depth: 1
+          persist-credentials: false
+      - name: Frozen environment
+        uses: ./.github/actions/setup-node-env
+        with:
+          node-version: 24.19.0
+          install-bun: 'false'
+          frozen-lockfile: 'true'
+          cache-mode: off
+      - name: Source receipt and single-file repaired control
+        env:
+          ROLE: ${{ matrix.role }}
+        run: |
+          mkdir -p "$RUNNER_TEMP/proof"
+          git rev-parse HEAD > "$RUNNER_TEMP/proof/head.txt"
+          test "$(git rev-parse HEAD)" = 22430f79c335c47b353b6f8ca761e5c85e28415a
+          if [ "$ROLE" = preserved-reader-repair ]; then
+            git fetch --depth=1 https://github.com/lordratner/openclaw.git 08b49cea773a27c322bb1389ebe7d83b95033219
+            git restore --source=FETCH_HEAD --worktree src/gateway/control-ui-public-session-read.ts
+          fi
+          git diff --binary > "$RUNNER_TEMP/proof/applied.patch"
+          sha256sum src/gateway/control-ui-public-session-read.ts src/gateway/x-publication-owner-composition.e2e.test.ts > "$RUNNER_TEMP/proof/source-sha256.txt"
+      - name: Canonical QA runtime
+        run: |
+          set -o pipefail
+          pnpm build qaRuntime 2>&1 | tee "$RUNNER_TEMP/proof/build.log"
+      - name: Observe unchanged X composition outcomes (not a waiver)
+        run: |
+          set -o pipefail
+          set +e
+          /usr/bin/time -p pnpm test src/gateway/x-publication-owner-composition.e2e.test.ts --maxWorkers=1 --reporter=verbose --reporter=json --outputFile="$RUNNER_TEMP/proof/x.json" 2>&1 | tee "$RUNNER_TEMP/proof/x.log"
+          result=${PIPESTATUS[0]}
+          set -e
+          echo "$result" > "$RUNNER_TEMP/proof/exit.txt"
+          python3 - <<'PYCODE'
+          import json, os
+          from pathlib import Path
+          p=Path(os.environ['RUNNER_TEMP'])/'proof'
+          j=json.loads((p/'x.json').read_text())
+          assert j['numTotalTests']==1 and j['numPassedTests']+j['numFailedTests']==1 and j['numPendingTests']==0
+          expected=0 if j['numPassedTests']==1 else 1
+          assert int((p/'exit.txt').read_text())==expected
+          print('Observation only:', j['numPassedTests'], 'passed,', j['numFailedTests'], 'failed')
+          PYCODE
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        if: always()
+        with:
+          name: x-control-${{ matrix.role }}-${{ github.run_id }}
+          path: ${{ runner.temp }}/proof
+          retention-days: 7
