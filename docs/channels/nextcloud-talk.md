@@ -15,7 +15,7 @@ openclaw plugins install @openclaw/nextcloud-talk
 
 Use the bare package spec to follow the current official release tag. Pin an exact version only when you need a reproducible install.
 
-The attachment-capable plugin requires an OpenClaw host that provides staged-media deletion (`2026.9.7` or newer). Upgrade the host before installing or updating this plugin; a plugin-only update on an older host is rejected.
+Inbound attachments require a host that provides the staged-media cleanup contract used by this plugin. No minimum unmodified released host has been qualified for attachment support by this change. The package compatibility requirements do not establish that capability, and a plugin-only update is not sufficient. Install attachment support only with a host release explicitly qualified for the accepted cleanup contract.
 
 From a local checkout (dev workflows):
 
