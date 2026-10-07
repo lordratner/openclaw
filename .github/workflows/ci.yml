@@ -125,8 +125,7 @@ jobs:
           /usr/bin/time -p pnpm test src/gateway/session-row-projection.prepared-read.test.ts --maxWorkers=1 --reporter=verbose --reporter=json --outputFile="$RUNNER_TEMP/proof/gateway.json" 2>&1 | tee "$RUNNER_TEMP/proof/gateway.log"
           result=${PIPESTATUS[0]}
           set -e
-          printf '%s
-' "$result" > "$RUNNER_TEMP/proof/exit.txt"
+          echo "$result" > "$RUNNER_TEMP/proof/exit.txt"
           python3 - <<'PYCODE'
           import json, os
           from pathlib import Path
