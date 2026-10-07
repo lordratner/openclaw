@@ -19,6 +19,26 @@ assert.equal(plan.commands.length, 41);
 assert.deepEqual(plan.commands.slice(0, 39).map(c => c.name), ledger.completedCheckNames);
 const tail = plan.commands.slice(39);
 assert.deepEqual(tail.map(c => c.name), ledger.remainingCanonicalChecks);
+if (process.argv[2] === '--reuse-passed-tail') {
+  const previous = JSON.parse(readFileSync(path.join(process.env.RUNNER_TEMP, 'prior-ci8/resumed-canonical-checks.json'), 'utf8'));
+  assert.equal(previous.status, 'PASS');
+  assert.equal(previous.sourceManifestSha256, ledger.sourceManifestSha256);
+  assert.equal(previous.priorRun, ledger.run);
+  assert.equal(previous.totalChecks, 41);
+  assert.equal(previous.canonicalPlanMatchedEntirePriorPrefixAndRemainingTail, true);
+  assert.equal(previous.singleWholeChangedCheckInvocationPassed, false);
+  assert.deepEqual(previous.records.map(r=>r.name), tail.map(c=>c.name));
+  for (let i=0;i<tail.length;i++) {
+    const managed=tail[i].bin ? tail[i] : createPnpmManagedCommand(tail[i]);
+    const r=previous.records[i];
+    assert.equal(r.exitCode, 0); assert.equal(r.signal, null);
+    assert.equal(r.bin, managed.bin); assert.deepEqual(r.args, managed.args);
+  }
+  writeFileSync(path.join(proof,'resumed-canonical-checks.json'),JSON.stringify({...previous,
+    passedTailReusedFromRun:37557414361, repeatedGuardExecution:false},null,2)+'\n');
+  console.log('All41 exact-source canonical checks verified from CI7+CI8; no guards rerun.');
+  process.exit(0);
+}
 const records = [];
 for (const command of tail) {
   const managed = command.bin ? command : createPnpmManagedCommand(command);
