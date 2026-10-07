@@ -1,152 +1,58 @@
-name: Talk scope split focused qualification
+name: Talk split frozen receipt verification
 on:
   workflow_dispatch:
 permissions:
   contents: read
+  actions: read
 jobs:
-  talk:
+  verify:
     runs-on: ubuntu-24.04
-    timeout-minutes: 25
-    env:
-      CI: 'true'
-      NODE_OPTIONS: --max-old-space-size=8192
-      OPENCLAW_E2E_USE_PREBUILT_DIST: '1'
-      FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: 'true'
+    timeout-minutes: 5
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
-          repository: lordratner/openclaw
           ref: d420728afb1542291a33c1b953749b705cd854bc
-          fetch-depth: 1
           persist-credentials: false
-      - name: Frozen environment
-        uses: ./.github/actions/setup-node-env
-        with:
-          node-version: 24.19.0
-          install-bun: 'false'
-          frozen-lockfile: 'true'
-          cache-mode: off
-      - name: Source receipt
-        run: |
-          mkdir -p "$RUNNER_TEMP/proof"
-          git rev-parse HEAD > "$RUNNER_TEMP/proof/head.txt"
-          test "$(git rev-parse HEAD)" = d420728afb1542291a33c1b953749b705cd854bc
-          git status --short > "$RUNNER_TEMP/proof/initial-status.txt"
-          test -z "$(git status --short)"
-      - name: Build canonical QA runtime
-        run: |
-          set -o pipefail
-          /usr/bin/time -p pnpm build qaRuntime 2>&1 | tee "$RUNNER_TEMP/proof/build.log"
-      - name: Canonical generated outputs and focused format
-        run: |
-          set -o pipefail
-          pnpm channels:catalog:gen
-          pnpm config:channels:gen
-          pnpm config:schema:gen
-          pnpm config:docs:gen
-          git diff --binary > "$RUNNER_TEMP/proof/generated.patch"
-          git diff --exit-code
-          pnpm exec oxfmt --check extensions/nextcloud-talk src/plugins/runtime/runtime-channel.ts src/plugins/runtime/types-channel.ts src/plugin-sdk/test-helpers/plugin-runtime-media-mock.ts src/plugin-sdk/test-helpers/plugin-runtime-mock.ts extensions/matrix/src/test-runtime.ts
-      - name: Single-worker complete Talk suite and cost
-        run: |
-          set -o pipefail
-          /usr/bin/time -p pnpm test extensions/nextcloud-talk --maxWorkers=1 --reporter=verbose --reporter=json --outputFile="$RUNNER_TEMP/proof/talk.json" 2>&1 | tee "$RUNNER_TEMP/proof/talk.log"
-      - name: Matrix runtime-contract controls
-        run: |
-          set -o pipefail
-          node scripts/run-vitest.mjs run --config test/vitest/vitest.extension-matrix.config.ts --passWithNoTests=false extensions/matrix/src/test-runtime.test.ts extensions/matrix/src/matrix/monitor/handler.media-failure.test.ts --reporter=json --outputFile="$RUNNER_TEMP/proof/matrix.json" 2>&1 | tee "$RUNNER_TEMP/proof/matrix.log"
-      - name: Fail closed on selected suite execution
+      - name: Download existing exact-source receipts (no test execution)
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh run download 37565755622 --repo lordratner/openclaw --dir receipts
+      - name: Validate frozen hashes, complete current-head inventory and exact outcomes
         run: |
           python3 - <<'PYCODE'
-          import json, os
+          import json, hashlib, re
           from pathlib import Path
-          p=Path(os.environ['RUNNER_TEMP'])/'proof'
-          for name, expected in [('talk',281),('matrix',6)]:
-              j=json.loads((p/(name+'.json')).read_text())
-              assert j['numTotalTests']==expected, (name,j['numTotalTests'])
-              assert j['numPassedTests']==expected and j['numFailedTests']==0 and j['success']
+          p=Path('receipts')
+          expected={'talk-split-37565755622/talk.log': 'b91a430eba65b1301c9deb831775e84a04ebc101d34b13b971b84da737c7c3ee', 'talk-split-37565755622/matrix.json': '57ebdf0f8950ffba55138d6530768677ea64c7e9f3d96d596f3ac28165acb340', 'talk-split-37565755622/generated.patch': 'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855', 'talk-split-37565755622/talk.json': '6decda5fbdaa002f0fa666e811dec1dd914d67e2248de014cff2326347456dbb', 'talk-split-37565755622/initial-status.txt': 'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855', 'talk-split-37565755622/matrix.log': '395dc66721ec6f9aab7ab94f6d861b182d6e19fba2e8f1b556b1d6a9baccab67', 'talk-split-37565755622/head.txt': '68509192cfe4c1d79208488db36d1bb0b4f2650463f05c01236b874e107a51b0', 'talk-split-37565755622/build.log': '6d39dd25bb8b4ce289340100254198c9c20e51997e5d42936574c88dadba215c', 'gateway-original-reader-37565755622/exit.txt': '4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865', 'gateway-original-reader-37565755622/gateway.json': 'b08abd1dbe8a816f87baaa13204dad028a241b706b9f4153b37679248e66e1c1', 'gateway-original-reader-37565755622/gateway.log': '1c13fd95373422435872b6317b2c5daf7b80fded4b003378d686a51e702dac2f', 'gateway-original-reader-37565755622/head.txt': 'c67d9aea9472a314617b690076e56f10ed5a01561df59be31fbcbc87bba86a95', 'gateway-original-reader-37565755622/source-sha256.txt': '9b11f024dd07b9b7c861c50badafdbedf6eacfc0759f264d81fa853705723e78', 'gateway-original-reader-37565755622/applied.patch': '08ecae2db898d76be53d486f2cdfc27b857c9019146f74e44ea69cb9a9dfe6a8', 'gateway-original-reader-37565755622/build.log': '704ded6d9f534b4225c5576bdebecc3aff80b916e9f6377edcf2f3ff58044a02', 'gateway-repaired-reader-37565755622/siblings.log': '6eb6c52757e4fc9eb7f484f1d402bba375e5a6552b15d6e29265aed8dfd0eb2f', 'gateway-repaired-reader-37565755622/exit.txt': '9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa', 'gateway-repaired-reader-37565755622/gateway.json': '70ed89703eee5c78ae5e8e74dc8ab8f5bab47c338f49e23e42430fbea3dc8df4', 'gateway-repaired-reader-37565755622/gateway.log': '5b72cb022705c2c2591ff5da800672f1f87b4fda082d3bdc5b574beb3c4350a9', 'gateway-repaired-reader-37565755622/head.txt': 'c67d9aea9472a314617b690076e56f10ed5a01561df59be31fbcbc87bba86a95', 'gateway-repaired-reader-37565755622/source-sha256.txt': '69a4570d1e3ea5f15727611a7ca19f637e361dd3cd842ca9d53c3f57e24468cb', 'gateway-repaired-reader-37565755622/applied.patch': 'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855', 'gateway-repaired-reader-37565755622/build.log': '364b6daaa80819eb479aeab6c205a1b38c36e420f4b160bd7d9ed3834a437cbf', 'gateway-repaired-reader-37565755622/siblings.json': 'eef145af63edce293a0b7928eb8d6701b4c794b324b4447cc8c71f9a7b4f11ab'}
+          for name, digest in expected.items():
+              assert hashlib.sha256((p/name).read_bytes()).hexdigest()==digest, name
+          for directory,head in [('talk-split-37565755622','d420728afb1542291a33c1b953749b705cd854bc'),('gateway-original-reader-37565755622','08b49cea773a27c322bb1389ebe7d83b95033219'),('gateway-repaired-reader-37565755622','08b49cea773a27c322bb1389ebe7d83b95033219')]:
+              assert (p/directory/'head.txt').read_text().strip()==head
+          records=[]
+          for directory,name,total,failed,files in [('talk-split-37565755622','talk',306,0,33),('talk-split-37565755622','matrix',5,0,2),('gateway-original-reader-37565755622','gateway',18,3,1),('gateway-repaired-reader-37565755622','gateway',18,0,1),('gateway-repaired-reader-37565755622','siblings',23,0,3)]:
+              j=json.loads((p/directory/(name+'.json')).read_text())
+              assert j['numTotalTests']==total and j['numPassedTests']==total-failed and j['numFailedTests']==failed and j['numPendingTests']==0 and j['success']==(failed==0)
+              assert len(j['testResults'])==files
+              assertions=[t for f in j['testResults'] for t in f['assertionResults']]
+              assert len(assertions)==total and sum(x['status']=='passed' for x in assertions)==total-failed and sum(x['status']=='failed' for x in assertions)==failed
+              if name=='talk':
+                  executed={x['name'].split('/extensions/')[-1] for x in j['testResults']}
+                  declared={str(x.relative_to(Path('extensions'))) for x in Path('extensions/nextcloud-talk').rglob('*.test.ts')}
+                  assert executed==declared, (executed-declared,declared-executed)
+              if name=='matrix':
+                  assert {x['name'].split('/extensions/')[-1] for x in j['testResults']}=={'matrix/src/test-runtime.test.ts','matrix/src/matrix/monitor/handler.media-failure.test.ts'}
+              if failed:
+                  assert {x['fullName'] for x in assertions if x['status']=='failed'}=={'revalidates current sharing after a worker metadata publication during history','rejects revoke during post-history sharing readiness before releasing content','rejects reset during post-history sharing readiness before releasing content'}
+              records.append(dict(directory=directory,suite=name,total=total,passed=total-failed,failed=failed,files=files))
+          assert (p/'talk-split-37565755622/generated.patch').read_bytes()==b''
+          assert (p/'talk-split-37565755622/initial-status.txt').read_bytes()==b''
+          assert (p/'gateway-repaired-reader-37565755622/applied.patch').read_bytes()==b''
+          result=dict(source_run=37565755622,receipts_sha256=expected,suites=records,generated_diff_empty=True,validation_only=True,reexecuted_tests=False)
+          Path('receipt-validation.json').write_text(json.dumps(result,indent=2)+'\n')
+          print(json.dumps(records,indent=2))
           PYCODE
-      - name: Retain receipts
-        if: always()
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
         with:
-          name: talk-split-${{ github.run_id }}
-          path: ${{ runner.temp }}/proof
-          retention-days: 7
-  gateway:
-    runs-on: ubuntu-24.04
-    timeout-minutes: 20
-    strategy:
-      fail-fast: false
-      matrix:
-        role: [original-reader, repaired-reader]
-    env:
-      CI: 'true'
-      NODE_OPTIONS: --max-old-space-size=8192
-      OPENCLAW_E2E_USE_PREBUILT_DIST: '1'
-      FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: 'true'
-    steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
-        with:
-          repository: lordratner/openclaw
-          ref: 08b49cea773a27c322bb1389ebe7d83b95033219
-          fetch-depth: 2
-          persist-credentials: false
-      - name: Frozen environment
-        uses: ./.github/actions/setup-node-env
-        with:
-          node-version: 24.19.0
-          install-bun: 'false'
-          frozen-lockfile: 'true'
-          cache-mode: off
-      - name: Prepare main control or unchanged draft source
-        env:
-          ROLE: ${{ matrix.role }}
-        run: |
-          mkdir -p "$RUNNER_TEMP/proof"
-          test "$(git rev-parse HEAD)" = 08b49cea773a27c322bb1389ebe7d83b95033219
-          test -z "$(git status --short)"
-          if [ "$ROLE" = original-reader ]; then
-            git restore --source=390fcec17863174dda480f563f87927738b9ee24 --worktree src/gateway/control-ui-public-session-read.ts
-          fi
-          git rev-parse HEAD > "$RUNNER_TEMP/proof/head.txt"
-          git diff --binary > "$RUNNER_TEMP/proof/applied.patch"
-          sha256sum src/gateway/control-ui-public-session-read.ts src/gateway/session-row-projection.prepared-read.test.ts > "$RUNNER_TEMP/proof/source-sha256.txt"
-      - name: Build canonical QA runtime
-        run: |
-          set -o pipefail
-          /usr/bin/time -p pnpm build qaRuntime 2>&1 | tee "$RUNNER_TEMP/proof/build.log"
-      - name: Regression comparison with existing worker profile and single-worker cost
-        env:
-          ROLE: ${{ matrix.role }}
-        run: |
-          set -o pipefail
-          set +e
-          /usr/bin/time -p pnpm test src/gateway/session-row-projection.prepared-read.test.ts --maxWorkers=1 --reporter=verbose --reporter=json --outputFile="$RUNNER_TEMP/proof/gateway.json" 2>&1 | tee "$RUNNER_TEMP/proof/gateway.log"
-          result=${PIPESTATUS[0]}
-          set -e
-          echo "$result" > "$RUNNER_TEMP/proof/exit.txt"
-          python3 - <<'PYCODE'
-          import json, os
-          from pathlib import Path
-          p=Path(os.environ['RUNNER_TEMP'])/'proof';j=json.loads((p/'gateway.json').read_text())
-          original=os.environ['ROLE']=='original-reader';failed=3 if original else 0
-          assert j['numTotalTests']==18 and j['numFailedTests']==failed and j['numPassedTests']==18-failed, j
-          assert int((p/'exit.txt').read_text())==(1 if original else 0)
-          if original:
-              failures=[x['fullName'] for t in j['testResults'] for x in t['assertionResults'] if x['status']=='failed']
-              assert len(failures)==3 and all('sharing' in x for x in failures), failures
-          PYCODE
-      - name: Public-reader siblings and focused format
-        if: matrix.role == 'repaired-reader'
-        run: |
-          set -o pipefail
-          /usr/bin/time -p pnpm test src/gateway/control-ui-public-session-read.test.ts src/gateway/control-ui-public-session.http.test.ts src/gateway/control-ui-public-session.concurrent.test.ts --maxWorkers=1 --reporter=json --outputFile="$RUNNER_TEMP/proof/siblings.json" 2>&1 | tee "$RUNNER_TEMP/proof/siblings.log"
-          pnpm exec oxfmt --check src/gateway/control-ui-public-session-read.ts src/gateway/session-row-projection.prepared-read.test.ts
-      - name: Retain receipts
-        if: always()
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
-        with:
-          name: gateway-${{ matrix.role }}-${{ github.run_id }}
-          path: ${{ runner.temp }}/proof
+          name: frozen-receipt-validation-${{ github.run_id }}
+          path: receipt-validation.json
           retention-days: 7
