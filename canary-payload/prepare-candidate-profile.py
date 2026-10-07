@@ -23,11 +23,19 @@ stock=Path('dist/extensions/nextcloud-talk');saved=b/'diagnostic-stock-nextcloud
 for name in ('package.json','README.md'):
  shutil.copy2(saved/name,stock/name)
 shutil.copytree(saved/'assets',stock/'assets')
+# Package-local builds resolve this workspace host link naturally. The diagnostic
+# root profile directory needs the identical public host package identity.
+host=Path.cwd();hostpkg=read(host/'package.json');assert hostpkg['name']=='openclaw'
+assert hostpkg['exports']['./plugin-sdk/channel-entry-contract']['default']=='./dist/plugin-sdk/channel-entry-contract.js'
+assert (host/'dist/plugin-sdk/channel-entry-contract.js').is_file()
+(stock/'node_modules').mkdir();(stock/'node_modules/openclaw').symlink_to(host,target_is_directory=True)
+assert (stock/'node_modules/openclaw').resolve()==host
+
 plugin=read(p/'plugin-artifact-manifest.json');count=0
 for name,entry in plugin['files'].items():
  if name.startswith('dist/'):
   src=p/'plugin-overlay'/name;assert sha(src)==entry['sha256'];dest=stock/name[5:];dest.parent.mkdir(parents=True,exist_ok=True);shutil.copy2(src,dest);assert sha(dest)==entry['sha256'];count+=1
 assert count==14
 shutil.copy2(p/'plugin-overlay/openclaw.plugin.json',stock/'openclaw.plugin.json')
-(p/'profile-root-overlay-binding.json').write_text(json.dumps({'status':'PASS','candidateFilesVerified':count,'rootEntrySha256':sha(stock/'index.js'),'metadataSha256':sha(stock/'openclaw.plugin.json'),'stockPackageProjectionPreserved':True,'diagnosticOnly':True,'liveChanged':False},indent=2)+'\n')
+(p/'profile-root-overlay-binding.json').write_text(json.dumps({'status':'PASS','candidateFilesVerified':count,'rootEntrySha256':sha(stock/'index.js'),'metadataSha256':sha(stock/'openclaw.plugin.json'),'stockPackageProjectionPreserved':True,'hostPackageLinkVerified':True,'diagnosticOnly':True,'liveChanged':False},indent=2)+'\n')
 print('Clean ephemeral exact candidate snapshot and canonical root profile entry prepared; source/output bytes preserved.')
