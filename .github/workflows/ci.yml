@@ -7,7 +7,7 @@ permissions:
 jobs:
   qualify-release-canary:
     runs-on: ubuntu-24.04
-    timeout-minutes: 55
+    timeout-minutes: 25
     env:
       CI: "true"
       FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
@@ -40,8 +40,10 @@ jobs:
           install-bun: "false"
           frozen-lockfile: "true"
           cache-mode: "off"
-      - name: Build, compare, generate and qualify release adaptation
-        run: bash "$RUNNER_TEMP/canary-payload/run-release-ci.sh"
+      - name: Finish only exact-source uncompleted qualification
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: bash "$RUNNER_TEMP/canary-payload/run-release-resume-ci.sh"
       - name: Retain attributable qualification and artifact boundary
         if: always()
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
