@@ -33,7 +33,6 @@ export type CoreConfig = {
   [key: string]: unknown;
 };
 
-/** Result from sending a message to Nextcloud Talk. */
 export type NextcloudTalkSendResult = {
   messageId: string;
   roomToken: string;
@@ -51,7 +50,6 @@ export type NextcloudTalkInboundAttachment = {
   hideDownload: boolean;
 };
 
-/** Parsed incoming message context. */
 export type NextcloudTalkInboundMessage = {
   messageId: string;
   roomToken: string;
@@ -66,7 +64,6 @@ export type NextcloudTalkInboundMessage = {
   attachmentIssue?: "media_missing_metadata";
 };
 
-/** Headers sent by Nextcloud Talk webhook. */
 export type NextcloudTalkWebhookHeaders = {
   /** HMAC-SHA256 signature of the request. */
   signature: string;
