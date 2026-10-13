@@ -26,7 +26,7 @@ const historyText = `${ANCHOR} $historical [@historical](plugin://history)\n${"h
 const historicalImage = {
   type: "image" as const,
   mimeType: "image/png",
-  data: "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+jvXkAAAAASUVORK5CYII=",
+  data: "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+ip1sAAAAASUVORK5CYII=",
 };
 
 function seedParams(mode: "thread_bootstrap" | "per_turn") {
@@ -164,7 +164,7 @@ describe("Codex configured assembled-history delivery", () => {
     let starts = 0;
     let loseAcknowledgment = true;
     const acceptedSeeds: string[] = [];
-    const harness = createStartedThreadHarness(async (method, request) => {
+    const respond = async (method: string, request: unknown) => {
       if (method === "thread/start") {
         return threadStartResult(`thread-seed-${++starts}`);
       }
@@ -176,14 +176,18 @@ describe("Codex configured assembled-history delivery", () => {
         isJsonObject(request) &&
         JSON.stringify(request).includes(ANCHOR)
       ) {
-        acceptedSeeds.push(String(request.threadId));
+        if (typeof request.threadId !== "string") {
+          throw new Error("Expected a native thread id in the history seed request");
+        }
+        acceptedSeeds.push(request.threadId);
         if (loseAcknowledgment) {
           throw new Error("Synthetic lost seed acknowledgment");
         }
         return {};
       }
       return undefined;
-    });
+    };
+    const harness = createStartedThreadHarness(respond);
     await expect(runCodexAppServerAttempt(params)).rejects.toThrow(
       "Synthetic lost seed acknowledgment",
     );
@@ -195,11 +199,13 @@ describe("Codex configured assembled-history delivery", () => {
     });
     expect(harness.requests.some(({ method }) => method === "turn/start")).toBe(false);
     loseAcknowledgment = false;
+    // Failed startup retires its client; recovery must acquire a fresh transport.
+    const retryHarness = createStartedThreadHarness(respond);
     const retry = runCodexAppServerAttempt({ ...params, runId: "run-seed-retry" });
     // Recording dispatch precedes installing the terminal notification projector.
     await retry.waitForTurnAccepted();
     expect(acceptedSeeds).toEqual(["thread-seed-1", "thread-seed-2"]);
-    await harness.completeTurn("completed", "thread-seed-2");
+    await retryHarness.completeTurn("completed", "thread-seed-2");
     await retry;
     expect((await readCodexAppServerBinding(params.sessionFile))?.threadId).toBe("thread-seed-2");
   });
@@ -226,7 +232,10 @@ describe("Codex configured assembled-history delivery", () => {
         return threadStartResult(`thread-epoch-${++starts}`);
       }
       if (method === "thread/resume" && isJsonObject(request)) {
-        return threadStartResult(String(request.threadId));
+        if (typeof request.threadId !== "string") {
+          throw new Error("Expected a native thread id in the resume request");
+        }
+        return threadStartResult(request.threadId);
       }
       return undefined;
     });
@@ -265,8 +274,8 @@ describe("Codex configured assembled-history delivery", () => {
     expect(getRequestInputText(harness)).not.toContain("SMALL_HISTORY");
     expect(historySeedRequests(harness)).toEqual([]);
     const seed = harness.requests.find(
-      ({ method, params }) =>
-        method === "thread/inject_items" && JSON.stringify(params).includes("SMALL_HISTORY"),
+      ({ method, params: request }) =>
+        method === "thread/inject_items" && JSON.stringify(request).includes("SMALL_HISTORY"),
     );
     expect(seed).toBeDefined();
     expect(

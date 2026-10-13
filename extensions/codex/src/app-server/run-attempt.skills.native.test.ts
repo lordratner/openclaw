@@ -126,6 +126,7 @@ async function writeCodexFixtureConfig(options: {
           shell_type: "local",
           visibility: "list",
           supported_in_api: true,
+          input_modalities: ["text", "image"],
           priority: 1,
           support_verbosity: false,
           truncation_policy: { mode: "bytes", limit: 10000 },
@@ -221,7 +222,7 @@ describe("native Codex skill delivery", () => {
     const image = {
       type: "image" as const,
       mimeType: "image/png",
-      data: "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+jvXkAAAAASUVORK5CYII=",
+      data: "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+ip1sAAAAASUVORK5CYII=",
     };
     try {
       const params = createParams("large-history.jsonl");
@@ -280,6 +281,28 @@ describe("native Codex skill delivery", () => {
                     ? [row.payload]
                     : [],
                 );
+                const seedImageCount =
+                  isJsonObject(request) && Array.isArray(request.items)
+                    ? request.items.flatMap((item) =>
+                        isJsonObject(item) && Array.isArray(item.content)
+                          ? item.content.filter(
+                              (part) => isJsonObject(part) && part.type === "input_image",
+                            )
+                          : [],
+                      ).length
+                    : 0;
+                const persistedImageCount = history.flatMap((item) =>
+                  Array.isArray(item.content)
+                    ? item.content.filter(
+                        (part) => isJsonObject(part) && part.type === "input_image",
+                      )
+                    : [],
+                ).length;
+                // Tiny diagnostics localize media loss without printing the large history.
+                expect({ seedImageCount, persistedImageCount }).toEqual({
+                  seedImageCount: 1,
+                  persistedImageCount: 1,
+                });
                 const savedText = history
                   .flatMap((item) =>
                     Array.isArray(item.content)
