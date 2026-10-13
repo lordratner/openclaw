@@ -45,6 +45,11 @@ on:
         required: false
         default: ''
         type: string
+      gate_paths_json:
+        description: Optional scoped changed files for fresh format/lint; empty uses full candidate delta
+        required: false
+        default: '[]'
+        type: string
 permissions:
   contents: read
   actions: read
@@ -64,6 +69,7 @@ env:
   STOCK_TEST_NAME_PATTERN: ${{ inputs.stock_test_name_pattern }}
   REUSE_PRODUCTION_SHA: ${{ inputs.reuse_production_from_sha }}
   REUSE_PRODUCTION_RUN: ${{ inputs.reuse_production_run_id }}
+  GATE_PATHS_JSON: ${{ inputs.gate_paths_json }}
 jobs:
   admit:
     runs-on: ubuntu-24.04
@@ -259,6 +265,19 @@ jobs:
           git rev-parse HEAD > "$RUNNER_TEMP/proof/head.txt"
           git diff "$BASE_SHA" HEAD --binary > "$RUNNER_TEMP/proof/candidate.patch"
           git diff "$BASE_SHA" HEAD --name-only > "$RUNNER_TEMP/proof/changed-files.txt"
+      - name: Select fresh scoped gates without hiding candidate diff
+        run: |
+          python3 - <<'PYSCOPE'
+          import json, os
+          from pathlib import Path
+          proof = Path(os.environ['RUNNER_TEMP']) / 'proof'
+          changed = (proof / 'changed-files.txt').read_text().splitlines()
+          selected = json.loads(os.environ['GATE_PATHS_JSON'])
+          assert isinstance(selected, list) and all(isinstance(p, str) for p in selected)
+          assert len(selected) == len(set(selected))
+          assert set(selected).issubset(changed)
+          (proof / 'gate-files.txt').write_text('\n'.join(selected or changed) + '\n')
+          PYSCOPE
       - name: Verify and retain unchanged production proof
         if: inputs.reuse_production_from_sha != ''
         env:
@@ -307,7 +326,7 @@ jobs:
       - name: Package-owned focused format gate
         run: |
           set -euo pipefail
-          mapfile -t paths < "$RUNNER_TEMP/proof/changed-files.txt"
+          mapfile -t paths < "$RUNNER_TEMP/proof/gate-files.txt"
           test "${#paths[@]}" -gt 0
           /usr/bin/time -p pnpm format:check "${paths[@]}" 2>&1 | tee "$RUNNER_TEMP/proof/format.log"
       - name: Package-owned core production type gate
@@ -327,7 +346,7 @@ jobs:
           import os, subprocess
           from pathlib import Path
           proof = Path(os.environ['RUNNER_TEMP']) / 'proof'
-          paths = (proof / 'changed-files.txt').read_text().splitlines()
+          paths = (proof / 'gate-files.txt').read_text().splitlines()
           failures = []
           for owner, config in [('src/', 'config/tsconfig/oxlint.core.json'),
                                 ('extensions/', 'extensions/tsconfig.json'),
