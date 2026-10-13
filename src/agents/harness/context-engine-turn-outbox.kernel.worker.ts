@@ -166,6 +166,7 @@ export function acceptContextEngineTurnIntent(params: OutboxKernelParams<"accept
       isHeartbeat: params.isHeartbeat,
       state: "accepted",
       runtimeContext: params.runtimeContext,
+      runtimeSettings: params.runtimeSettings,
     },
   });
 }
@@ -262,6 +263,7 @@ function advanceAcceptedContextEngineTurn(
       isHeartbeat: payload.isHeartbeat,
       messages: closedTurn.messages,
       runtimeContext: payload.runtimeContext,
+      runtimeSettings: payload.runtimeSettings,
     },
   });
   return closedTurn.kind;

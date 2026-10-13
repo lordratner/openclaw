@@ -21,6 +21,8 @@ import type {
 } from "../../config/sessions/transcript-entry-anchor.js";
 import { withSessionTranscriptWriteAssertion } from "../../config/sessions/transcript-write-context.js";
 import type { ContextEngine } from "../../context-engine/types.js";
+import { OPENCLAW_EMBEDDED_CONTEXT_ENGINE_HOST } from "../../context-engine/host-compat.js";
+import { buildContextEngineRuntimeSettings } from "../../context-engine/runtime-settings.js";
 import { openNodeSqliteDatabase } from "../../infra/node-sqlite.js";
 import { admitSqliteSchema } from "../../infra/sqlite-schema-facts.js";
 import { createUserTurnTranscriptRecorder } from "../../sessions/user-turn-transcript.js";
@@ -374,10 +376,21 @@ describe("context-engine turn outbox", () => {
     },
   );
 
-  it.each(["accepted", "admission-only"] as const)(
+  it.each(["accepted", "legacy accepted", "admission-only"] as const)(
     "recovers %s prior work before recording the next dispatch",
     async (state) => {
-      const accepted = state === "accepted";
+      const accepted = state !== "admission-only";
+      const runtimeSettings =
+        state === "accepted"
+          ? buildContextEngineRuntimeSettings({
+              contextEngineHost: OPENCLAW_EMBEDDED_CONTEXT_ENGINE_HOST,
+              provider: "anthropic",
+              resolvedModel: "claude-sonnet-4-6",
+              promptTokenBudget: 180_000,
+              maxOutputTokens: 20_000,
+              selectedContextEngineId: "test",
+            })
+          : undefined;
       const {
         target,
         current: admitted,
@@ -404,6 +417,7 @@ describe("context-engine turn outbox", () => {
           database,
           engineId: "test",
           isHeartbeat: true,
+          runtimeSettings,
           runtimeContext: {
             provider: "anthropic",
             modelId: "claude-sonnet-4-6",
@@ -464,6 +478,14 @@ describe("context-engine turn outbox", () => {
           database.db.prepare("SELECT advancement_key FROM context_engine_turn_outbox").all(),
         ).toHaveLength(0);
         expect(commitTurn.mock.calls[0]?.[0]).not.toHaveProperty("prePromptMessageCount");
+        if (runtimeSettings) {
+          expect(commitTurn.mock.calls[0]?.[0].runtimeSettings).toMatchObject({
+            model: { provider: "anthropic", resolved: "claude-sonnet-4-6" },
+            limits: { promptTokenBudget: 180_000, maxOutputTokens: 20_000 },
+          });
+        } else {
+          expect(commitTurn.mock.calls[0]?.[0]).not.toHaveProperty("runtimeSettings");
+        }
         recorder.markRuntimePersisted(currentMessage, currentAdmission);
         // The dispatch wait settles admission in the agent database worker.
         expect(recorder.hasRuntimePersistencePending()).toBe(true);

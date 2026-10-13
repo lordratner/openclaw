@@ -7,15 +7,20 @@ import { registerInternalHook } from "openclaw/plugin-sdk/hook-runtime";
 import { withinTest } from "openclaw/plugin-sdk/test-fixtures";
 import { describe, expect, it, vi } from "vitest";
 import { createCodexNativeTestState } from "./native-app-server.test-support.js";
+import { assertCodexThreadStartResponse, resolveCodexThreadRolloutPath } from "./protocol-validators.js";
 import { isJsonObject, type JsonObject } from "./protocol.js";
+import { createContextEngine } from "./run-attempt.context-engine.test-support.js";
 import { seedRunSessionOwnerForTest } from "./run-attempt-session-owners.test-support.js";
 import {
   createNativeRunParams,
   runCodexAppServerAttempt,
   setupRunAttemptTestHooks,
   tempDir,
+  assistantMessage,
+  userMessage,
 } from "./run-attempt-test-harness.js";
 import { createIsolatedCodexAppServerClient } from "./shared-client.js";
+import { CODEX_APP_SERVER_VERSION } from "./version.js";
 
 setupRunAttemptTestHooks();
 vi.unmock("node:child_process");
@@ -201,6 +206,105 @@ async function createNativeFixture(modelId: string, contextWindow = 200_000) {
 }
 
 describe("native Codex skill delivery", () => {
+  it("persists a complete large history seed without inference and delivers it before ordinary current input", async () => {
+    const { fixture, attemptOptions, createParams } = await createNativeFixture("large-history-carrier-model", 700_000);
+    let client: Awaited<ReturnType<typeof createIsolatedCodexAppServerClient>> | undefined;
+    let rolloutPath: string | undefined;
+    let seedAcknowledged = false;
+    const rawHistory = `NATIVE_HISTORY_START $historical [@historical](plugin://historical)\n${"x".repeat(1_100_000)}\nNATIVE_HISTORY_END`;
+    const image = {
+      type: "image" as const,
+      mimeType: "image/png",
+      data: "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+jvXkAAAAASUVORK5CYII=",
+    };
+    try {
+      const params = createParams("large-history.jsonl");
+      params.disableTools = false;
+      params.config = { tools: { web: { search: { enabled: false } } } };
+      params.authoredContextTokenCap = 600_000;
+      params.contextTokenBudget = 500_000;
+      params.prompt = "NATIVE_CURRENT_REQUEST $current";
+      const historicalImageMessage = userMessage("NATIVE_IMAGE_CAPTION", 3);
+      params.hostCapabilities = Object.freeze({
+        ...params.hostCapabilities,
+        prepareContextMedia: async ({ message }: Parameters<NonNullable<typeof params.hostCapabilities.prepareContextMedia>>[0]) => ({
+          images: message === historicalImageMessage ? [image] : [],
+        }),
+      });
+      params.contextEngine = createContextEngine({
+        assemble: async () => ({
+          messages: [
+            { ...userMessage(rawHistory, 1), __openclaw: { senderId: "native-speaker" } },
+            assistantMessage("NATIVE_ASSISTANT_BETWEEN", 2),
+            historicalImageMessage,
+            assistantMessage("NATIVE_ASSISTANT_AFTER_IMAGE", 4),
+          ],
+          estimatedTokens: 350_000,
+          contextProjection: { mode: "thread_bootstrap", epoch: "native-seed-epoch" },
+        }),
+      });
+      const result = await runCodexAppServerAttempt(params, {
+        ...attemptOptions,
+        clientFactory: async (options) => {
+          client = await createIsolatedCodexAppServerClient(options);
+          expect(client.getRuntimeIdentity()?.serverVersion).toBe(CODEX_APP_SERVER_VERSION);
+          const originalRequest = client.request.bind(client);
+          vi.spyOn(client, "request").mockImplementation((method, request, requestOptions) => {
+            return originalRequest(method, request, requestOptions).then(async (response) => {
+              if (method === "thread/start") {
+                rolloutPath = resolveCodexThreadRolloutPath(assertCodexThreadStartResponse(response).thread);
+              }
+              if (method === "thread/inject_items" && JSON.stringify(request).includes("NATIVE_HISTORY_START")) {
+                expect(fixture.requests).toHaveLength(0);
+                expect(rolloutPath).toBeDefined();
+                const persisted = await fs.readFile(rolloutPath!, "utf8");
+                const rows = persisted.split("\n").filter(Boolean).map((line) => JSON.parse(line) as unknown);
+                const history = rows.flatMap((row) => isJsonObject(row) && isJsonObject(row.payload) && isJsonObject(row.payload.item) ? [row.payload.item] : []);
+                const savedText = history.flatMap((item) => Array.isArray(item.content) ? item.content.flatMap((part) => isJsonObject(part) && typeof part.text === "string" ? [part.text] : []) : []).join("");
+                expect(savedText).toContain(rawHistory.replace("$historical", "＄historical").replace("[@historical]", "[＠historical]"));
+                expect(savedText).not.toContain(params.prompt);
+                seedAcknowledged = true;
+              }
+              if (method === "turn/start") {
+                expect(seedAcknowledged).toBe(true);
+                expect(JSON.stringify(request)).toContain(params.prompt);
+                expect(JSON.stringify(request)).not.toContain("NATIVE_HISTORY_START");
+              }
+              return response;
+            });
+          });
+          return client;
+        },
+      });
+      expect(result.terminal).toEqual({ kind: "ok" });
+      expect(seedAcknowledged).toBe(true);
+      expect(fixture.requests).toHaveLength(1);
+      const input = fixture.requests[0]?.input;
+      expect(Array.isArray(input)).toBe(true);
+      const users = Array.isArray(input) ? input.filter((item) => isJsonObject(item) && item.role === "user") : [];
+      const historical = users.find((item) => JSON.stringify(item).includes("NATIVE_HISTORY_START"));
+      const current = users.find((item) => JSON.stringify(item).includes(params.prompt));
+      expect(historical).toBeDefined();
+      expect(current).toBeDefined();
+      const content = isJsonObject(historical) && Array.isArray(historical.content) ? historical.content : [];
+      const text = content.flatMap((part) => isJsonObject(part) && typeof part.text === "string" ? [part.text] : []).join("");
+      expect(text.length).toBeGreaterThan(1 << 20);
+      expect(text).toContain(rawHistory.replace("$historical", "＄historical").replace("[@historical]", "[＠historical]"));
+      expect(text).toContain('[user sender={"id":"native-speaker"}]');
+      expect(text).not.toContain("truncated");
+      expect(users.indexOf(historical!)).toBeLessThan(users.indexOf(current!));
+      const imageIndex = content.findIndex((part) => isJsonObject(part) && part.type === "input_image");
+      expect(imageIndex).toBeGreaterThan(0);
+      expect(JSON.stringify(content.slice(0, imageIndex))).toContain("NATIVE_IMAGE_CAPTION");
+      expect(JSON.stringify(content.slice(imageIndex + 1))).toContain("NATIVE_ASSISTANT_AFTER_IMAGE");
+    } finally {
+      if (client) {
+        expect(await client.closeAndWait()).toMatchObject({ exited: true });
+      }
+      await fixture.close();
+    }
+  }, 45_000);
+
   it("delivers the ordinary root catalog when model metadata owns collaboration instructions", async () => {
     const { fixture, attemptOptions, createParams } =
       await createNativeFixture("skill-carrier-model");

@@ -33,6 +33,13 @@ export function buildContextEngineBinding(
       turnMaintenanceMode: contextEngine.info.turnMaintenanceMode,
       citationsMode: params.config?.memory?.citations,
       contextTokenBudget: params.contextTokenBudget,
+      ...(params.authoredContextTokenCap && params.contextTokenBudget
+        ? {
+            historyCarrier: "thread/inject_items",
+            modelProvider: params.provider,
+            model: params.modelId,
+          }
+        : {}),
       projectionMaxChars: resolveCodexContextEngineProjectionMaxChars({
         contextTokenBudget: params.contextTokenBudget,
       }),

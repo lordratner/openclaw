@@ -4,7 +4,7 @@ import type {
   TranscriptTurnAdmission,
   TranscriptTurnBoundary,
 } from "../../config/sessions/transcript-entry-anchor.js";
-import type { ContextEngine } from "../../context-engine/types.js";
+import type { ContextEngine, ContextEngineRuntimeSettings } from "../../context-engine/types.js";
 
 export type PendingContextEngineTurn = Readonly<{
   advancement_key: string;
@@ -31,6 +31,7 @@ export type AcceptedContextEngineTurnOutboxPayload = Readonly<{
   isHeartbeat: boolean;
   state: "accepted";
   runtimeContext?: ContextEngineTurnRuntimeContext;
+  runtimeSettings?: ContextEngineRuntimeSettings;
 }>;
 
 export type ReadyContextEngineTurnOutboxPayload = Readonly<{
@@ -39,6 +40,7 @@ export type ReadyContextEngineTurnOutboxPayload = Readonly<{
   messages: AgentMessage[];
   state: "ready";
   runtimeContext?: ContextEngineTurnRuntimeContext;
+  runtimeSettings?: ContextEngineRuntimeSettings;
 }>;
 
 export type ContextEngineTurnReadFailureKind = Exclude<
@@ -186,6 +188,7 @@ async function commitPendingContextEngineTurn(params: {
       },
       isHeartbeat: payload.isHeartbeat,
       ...(payload.runtimeContext ? { runtimeContext: payload.runtimeContext } : {}),
+      ...(payload.runtimeSettings ? { runtimeSettings: payload.runtimeSettings } : {}),
     };
     params.store.assertReadable?.();
     const result = await params.engine.commitTurn?.(commonParams);
@@ -251,6 +254,7 @@ export type ContextEngineTurnOutboxWorkerOperations = {
       boundary: TranscriptTurnBoundary;
       isHeartbeat: boolean;
       runtimeContext?: ContextEngineTurnRuntimeContext;
+      runtimeSettings?: ContextEngineRuntimeSettings;
     };
     output: undefined;
   };
@@ -261,6 +265,7 @@ export type ContextEngineTurnOutboxWorkerOperations = {
       maxBytes: number;
       maxEvents: number;
       runtimeContext?: ContextEngineTurnRuntimeContext;
+      runtimeSettings?: ContextEngineRuntimeSettings;
     };
     output: ClosedTranscriptTurnReadResult["kind"];
   };

@@ -399,7 +399,25 @@ describe("model chat and native model ownership", () => {
   );
 
   it("retains admitted account routes when projecting native model capabilities", async () => {
-    const fixture = await createFixture();
+    const fixture = await createFixture({
+      models: {
+        providers: {
+          openai: {
+            baseUrl: "https://api.openai.com/v1",
+            models: [{
+              id: "fixture-model",
+              name: "Configured account-only model",
+              reasoning: true,
+              input: ["text", "image"],
+              cost: { input: 0, output: 0, cacheRead: 0, cacheWrite: 0 },
+              maxTokens: 20_000,
+              contextWindow: 1_000_000,
+              contextTokens: 500_000,
+            }],
+          },
+        },
+      },
+    });
     const model = {
       provider: "openai",
       id: fixture.generation.modelId,
@@ -451,6 +469,9 @@ describe("model chat and native model ownership", () => {
             const snapshot = runtime.snapshot();
             expect(runtime.nativeModelOwned).toBe(true);
             expect(snapshot.agentHarness.id).toBe("codex");
+            expect(snapshot.contextTokenBudget).toBe(500_000);
+            expect(snapshot.authoredContextTokenCap).toBe(500_000);
+            expect(snapshot.contextWindowInfo?.source).toBe("modelsConfig");
             expect(snapshot.activePreparedAuthPlan).toMatchObject({
               forwardedAuthProfileId: "openai:account-only",
               selectedAuthMode: "oauth",

@@ -59,6 +59,22 @@ describe("CodexAppServerClient", () => {
     await expect(next).resolves.toEqual({ models: [] });
   });
 
+  it("rejects an oversized history seed before writing while keeping a sibling request usable", async () => {
+    const harness = createHarness({ maxFrameBytes: 1024 });
+    const request = harness.client.request("thread/inject_items", {
+      threadId: "fresh-thread",
+      items: [{ type: "message", role: "user", content: [{ type: "input_text", text: "h".repeat(2048) }] }],
+    });
+    const error = await request.catch((requestError: unknown) => requestError);
+    expect(error).toMatchObject({ message: expect.stringContaining("transport frame limit") });
+    expect(isCodexAppServerIndeterminateTransportError(error)).toBe(false);
+    expect(harness.writes).toEqual([]);
+    const sibling = harness.client.request("model/list", {});
+    const sent = JSON.parse(await harness.waitForWrite(0));
+    harness.send({ id: sent.id, result: { models: [] } });
+    await expect(sibling).resolves.toEqual({ models: [] });
+  });
+
   it("replays configuration warnings emitted before their notification observer exists", () => {
     const harness = createHarness();
     const notification = {

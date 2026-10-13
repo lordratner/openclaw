@@ -32,6 +32,7 @@ import {
 } from "../../plugins/runtime/gateway-request-scope.js";
 import { mintSecretSentinel } from "../../secrets/sentinel.js";
 import { createUserTurnTranscriptRecorder } from "../../sessions/user-turn-transcript.js";
+import { createDeferredCore } from "../../shared/deferred.js";
 import type { UserTurnTranscriptRecorder } from "../../sessions/user-turn-transcript.types.js";
 import { closeOpenClawAgentDatabasesAsync } from "../../state/openclaw-agent-db.js";
 import { closeStateDatabaseForTest } from "../../test-utils/database-cleanup.js";
@@ -74,6 +75,7 @@ import { getGatewayToolCallerIdentity } from "../tools/gateway-caller-context.js
 import { callGatewayTool } from "../tools/gateway.js";
 import type { SystemAgentToolOptions } from "../tools/system-agent-tool.js";
 import type { ContextEngineLogicalTurnLease } from "./context-engine-logical-turn.js";
+import { assembleHarnessContextEngine } from "./context-engine-lifecycle.js";
 import { prepareAgentHarnessNativeToolPolicyRestricted } from "./execution-environment.js";
 import { resolveAgentHarnessPolicy } from "./policy.js";
 import {
@@ -1028,6 +1030,7 @@ describe("runAgentHarnessAttempt", () => {
   it.each([
     { boundary: "missing admission", selection: "host", ownership: "none" },
     { boundary: "missing terminal", selection: "host", ownership: "none" },
+    { boundary: "complete", selection: "native different", ownership: "none" },
     { boundary: "complete", selection: "native different", ownership: "native" },
     { boundary: "complete", selection: "native different", ownership: "host" },
     { boundary: "complete", selection: "host", ownership: "native" },
@@ -1096,7 +1099,10 @@ describe("runAgentHarnessAttempt", () => {
             aborted: false,
             yieldAborted: false,
             runtimeContext:
-              nativeSessionRuntime && runtimeModelSelection
+              runtimeModelSelection &&
+              (nativeSessionRuntime ||
+                runtimeModelSelection.provider !== params.provider ||
+                runtimeModelSelection.model !== params.modelId)
                 ? {
                     provider: runtimeModelSelection.provider,
                     modelId: runtimeModelSelection.model,
@@ -1114,6 +1120,195 @@ describe("runAgentHarnessAttempt", () => {
       }
     },
   );
+
+  it.each([
+    { change: "none", tokenBudget: 400_000, expectedBudget: 379_985 },
+    { change: "smaller budget", tokenBudget: 120_000, expectedBudget: 120_000 },
+    { change: "mutable settings", tokenBudget: 400_000, expectedBudget: 379_985 },
+    { change: "model", tokenBudget: 400_000, expectedBudget: undefined },
+    { change: "provider", tokenBudget: 400_000, expectedBudget: undefined },
+    { change: "session", tokenBudget: 400_000, expectedBudget: undefined },
+    { change: "assembly failure", tokenBudget: 400_000, expectedBudget: undefined },
+  ] as const)(
+    "hands accepted native context only its bounded assembly settings: $change",
+    async ({ change, tokenBudget, expectedBudget }) => {
+      const admission = {
+        ...createTranscriptAnchor("user-1", 1, 0),
+        logicalTurnId: "bounded-turn",
+        role: "user" as const,
+      };
+      const params = createAttemptParams(providerRuntimeConfig("codex", "codex"));
+      params.sessionKey = admission.sessionKey;
+      params.contextTokenBudget = tokenBudget;
+      params.userTurnTranscriptRecorder = createTranscriptRecorder(admission);
+      const record = vi.fn();
+      params.onContextEngineTurnCandidate = record;
+      const engine = createContextEngineRequiringAssembly();
+      if (change === "assembly failure") {
+        engine.assemble = async () => {
+          throw new Error("assembly unavailable");
+        };
+      } else if (change === "mutable settings") {
+        engine.assemble = async ({ messages, runtimeSettings }) => {
+          if (runtimeSettings) {
+            runtimeSettings.limits.promptTokenBudget = 900_000;
+            runtimeSettings.model.resolved = "mutated-model";
+          }
+          return { messages, estimatedTokens: 0 };
+        };
+      }
+      registerHarness({
+        runAttempt: async (attempt) => {
+          await assembleHarnessContextEngine({
+            contextEngine: engine,
+            sessionId: attempt.sessionId,
+            sessionKey: attempt.sessionKey,
+            providerId: attempt.provider,
+            modelId: attempt.modelId,
+            messages: [],
+            tokenBudget: attempt.contextTokenBudget,
+            promptBudget: {
+              contextTokens: 400_000,
+              reserveTokens: 20_000,
+              systemPrompt: "",
+              prompt: "",
+            },
+          }).catch(() => undefined);
+          return {
+            ...createAttemptResult(change === "session" ? "other-session" : attempt.sessionId),
+            contextEngineTerminalAnchor: createTranscriptAnchor("assistant-1", 2, 1),
+            runtimeModelSelection: {
+              provider: change === "provider" ? "other-provider" : attempt.provider,
+              model: change === "model" ? "other-model" : attempt.modelId,
+            },
+          };
+        },
+      });
+
+      const registration = getRegisteredAgentHarness("codex");
+      if (!registration) {
+        throw new Error("expected registered native harness");
+      }
+      await runAgentHarnessAttempt(params, {
+        harness: registration.harness,
+        auth: "native",
+        assertCurrent: async () => {},
+      });
+
+      expect(record).toHaveBeenCalledOnce();
+      const facts = record.mock.calls[0]![0];
+      // Native identity alone still supplies no host capacity, but matching assembly does.
+      expect(facts.runtimeContext).not.toHaveProperty("tokenBudget");
+      if (expectedBudget === undefined) {
+        expect(facts.runtimeSettings).toBeUndefined();
+      } else {
+        expect(facts.runtimeSettings).toMatchObject({
+          schemaVersion: 1,
+          model: { provider: "codex", resolved: "gpt-5.4" },
+          limits: { promptTokenBudget: expectedBudget, maxOutputTokens: 20_000 },
+        });
+      }
+    },
+  );
+
+  it.each(["failed", "aborted"] as const)(
+    "does not reuse assembly from a %s attempt in its retry",
+    async (terminalKind) => {
+      const params = createAttemptParams(providerRuntimeConfig("codex", "codex"));
+      const admission = {
+        ...createTranscriptAnchor("user-1", 1, 0),
+        logicalTurnId: "retry-turn",
+        role: "user" as const,
+      };
+      params.sessionKey = admission.sessionKey;
+      params.userTurnTranscriptRecorder = createTranscriptRecorder(admission);
+      const record = vi.fn();
+      params.onContextEngineTurnCandidate = record;
+      let attemptCount = 0;
+      registerHarness({
+        runAttempt: async (attempt) => {
+          if (attemptCount++ === 0) {
+            await assembleHarnessContextEngine({
+              contextEngine: createContextEngineRequiringAssembly(),
+              sessionId: attempt.sessionId,
+              sessionKey: attempt.sessionKey,
+              providerId: attempt.provider,
+              modelId: attempt.modelId,
+              tokenBudget: 400_000,
+              messages: [],
+            });
+            return {
+              ...createAttemptResult(attempt.sessionId),
+              terminal:
+                terminalKind === "failed"
+                  ? { kind: "failed", source: "prompt", error: new Error("fixture failure") }
+                  : { kind: "aborted", source: "external" },
+              contextEngineTerminalAnchor: createTranscriptAnchor("assistant-1", 2, 1),
+            };
+          }
+          return {
+            ...createAttemptResult(attempt.sessionId),
+            contextEngineTerminalAnchor: createTranscriptAnchor("assistant-1", 2, 1),
+          };
+        },
+      });
+
+      await runAgentHarnessAttempt(params);
+      await runAgentHarnessAttempt(params);
+
+      expect(record).toHaveBeenCalledTimes(2);
+      expect(record.mock.calls[1]![0].runtimeSettings).toBeUndefined();
+    },
+  );
+
+  it("keeps concurrent attempt assemblies separate", async () => {
+    const firstAssembled = createDeferredCore<void>();
+    const secondAssembled = createDeferredCore<void>();
+    registerHarness({
+      runAttempt: async (attempt) => {
+        await assembleHarnessContextEngine({
+          contextEngine: createContextEngineRequiringAssembly(),
+          sessionId: attempt.sessionId,
+          sessionKey: attempt.sessionKey,
+          providerId: attempt.provider,
+          modelId: attempt.modelId,
+          tokenBudget: attempt.contextTokenBudget,
+          messages: [],
+        });
+        if (attempt.contextTokenBudget === 400_000) {
+          firstAssembled.resolve();
+          await secondAssembled.promise;
+        } else {
+          secondAssembled.resolve();
+        }
+        return {
+          ...createAttemptResult(attempt.sessionId),
+          contextEngineTerminalAnchor: createTranscriptAnchor("assistant-1", 2, 1),
+        };
+      },
+    });
+    const run = (tokenBudget: number) => {
+      const params = createAttemptParams(providerRuntimeConfig("codex", "codex"));
+      const admission = {
+        ...createTranscriptAnchor("user-1", 1, 0),
+        logicalTurnId: `concurrent-${tokenBudget}`,
+        role: "user" as const,
+      };
+      params.sessionKey = admission.sessionKey;
+      params.contextTokenBudget = tokenBudget;
+      params.userTurnTranscriptRecorder = createTranscriptRecorder(admission);
+      const record = vi.fn();
+      params.onContextEngineTurnCandidate = record;
+      return { record, completed: runAgentHarnessAttempt(params) };
+    };
+    const first = run(400_000);
+    await firstAssembled.promise;
+    const second = run(120_000);
+    await Promise.all([first.completed, second.completed]);
+
+    expect(first.record.mock.calls[0]![0].runtimeSettings?.limits.promptTokenBudget).toBe(400_000);
+    expect(second.record.mock.calls[0]![0].runtimeSettings?.limits.promptTokenBudget).toBe(120_000);
+  });
 
   it("drains pending context-engine turns before pinning a plugin harness", async () => {
     const order: string[] = [];

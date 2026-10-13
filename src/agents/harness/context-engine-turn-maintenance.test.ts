@@ -8,6 +8,8 @@ import {
 import { LegacyContextEngine } from "../../context-engine/legacy.js";
 import { registerContextEngineInRegistry } from "../../context-engine/registry.js";
 import type { ContextEngine } from "../../context-engine/types.js";
+import { OPENCLAW_EMBEDDED_CONTEXT_ENGINE_HOST } from "../../context-engine/host-compat.js";
+import { buildContextEngineRuntimeSettings } from "../../context-engine/runtime-settings.js";
 import { createEmptyPluginRegistry } from "../../plugins/registry-empty.js";
 import { PluginRegistryInspectionResources } from "../../plugins/registry-inspection-resources.js";
 import { retireInspectionInstances } from "../../plugins/registry-inspection.test-support.js";
@@ -106,6 +108,14 @@ async function createAcceptedTurn(
     aborted: false,
     yieldAborted: false,
     runtimeContext: { provider: "fixture", modelId: "fixture-model", tokenBudget: 1_000 },
+    runtimeSettings: buildContextEngineRuntimeSettings({
+      contextEngineHost: OPENCLAW_EMBEDDED_CONTEXT_ENGINE_HOST,
+      provider: "fixture",
+      resolvedModel: "fixture-model",
+      selectedContextEngineId: engineId,
+      promptTokenBudget: 900,
+      maxOutputTokens: 100,
+    }),
   };
 
   // The logical lease must retain this database after its supplying inspection
@@ -270,6 +280,14 @@ describe("durable accepted-turn maintenance handoff", () => {
               ]),
             ).toBe("maintenance");
             expect(fixture.pendingTurn()).toBeUndefined();
+            expect(fixture.commitTurn.mock.calls[0]?.[0].runtimeSettings).toMatchObject({
+              model: { provider: "fixture", resolved: "fixture-model" },
+              limits: { promptTokenBudget: 900, maxOutputTokens: 100 },
+            });
+            expect(fixture.maintain.mock.calls[0]?.[0].runtimeSettings).toMatchObject({
+              model: { provider: "fixture", resolved: "fixture-model" },
+              limits: { promptTokenBudget: 900, maxOutputTokens: 100 },
+            });
             const runtimeContext = fixture.maintain.mock.calls[0]?.[0].runtimeContext;
             expect(runtimeContext).toMatchObject({
               ...fixture.facts.runtimeContext,

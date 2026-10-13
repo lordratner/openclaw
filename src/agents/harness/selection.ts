@@ -42,6 +42,11 @@ import type { SystemAgentToolOptions } from "../tools/system-agent-tool.js";
 import { copyCoreTtsAttemptResultProvenance } from "../tools/tts-tool-result-provenance.js";
 import { createOpenClawAgentHarness, isBuiltInOpenClawAgentHarness } from "./builtin-openclaw.js";
 import { beginContextEngineLogicalTurn } from "./context-engine-turn-begin.js";
+import {
+  readContextEngineAssemblySettings,
+  runWithContextEngineAssemblyAttempt,
+  type ContextEngineAssemblySnapshot,
+} from "./context-engine-assembly-attempt.js";
 import { AgentHarnessPreflightError } from "./errors.js";
 import {
   assertAgentHarnessExecutionEnvironment,
@@ -358,8 +363,9 @@ export async function runAgentHarnessAttempt(
     agentId: params.agentId,
   });
   let result: EmbeddedRunAttemptResult;
+  let assembly: ContextEngineAssemblySnapshot | undefined;
   try {
-    result = await runAgentHarnessOperation(harness, params, () =>
+    const run = () => runAgentHarnessOperation(harness, params, () =>
       runWithAgentRingZeroTools(ringZeroTools, async () => {
         // Resolve plugin policy after entering the host scope. Ring-zero tools are
         // trusted setup authority and must survive ordinary deny-all policy.
@@ -443,6 +449,9 @@ export async function runAgentHarnessAttempt(
         );
       }),
     );
+    const completed = await runWithContextEngineAssemblyAttempt(run);
+    result = completed.result;
+    assembly = completed.assembly;
   } finally {
     pluginAttempt.closeHostCapabilities();
   }
@@ -452,6 +461,19 @@ export async function runAgentHarnessAttempt(
     admission &&
     result.contextEngineTerminalAnchor
   ) {
+    const acceptedModel = result.runtimeModelSelection ?? {
+      provider: internalParams.provider,
+      model: internalParams.modelId,
+    };
+    const runtimeSettings = readContextEngineAssemblySettings(
+      {
+        sessionId: result.sessionIdUsed,
+        sessionKey: internalParams.sessionKey,
+        provider: acceptedModel.provider,
+        modelId: acceptedModel.model,
+      },
+      assembly ?? null,
+    );
     internalParams.onContextEngineTurnCandidate({
       boundary: {
         admission,
@@ -469,9 +491,13 @@ export async function runAgentHarnessAttempt(
       yieldAborted:
         result.terminal.kind === "aborted" && result.terminal.source === "yield_cleanup",
       isHeartbeat: isHeartbeatLifecycleRunKind(internalParams.bootstrapContextRunKind),
+      runtimeSettings,
       // Native model identity does not attest the host's window or context cap.
       runtimeContext:
-        nativeSessionRuntime && result.runtimeModelSelection
+        result.runtimeModelSelection &&
+        (nativeSessionRuntime ||
+          result.runtimeModelSelection.provider !== internalParams.provider ||
+          result.runtimeModelSelection.model !== internalParams.modelId)
           ? {
               provider: result.runtimeModelSelection.provider,
               modelId: result.runtimeModelSelection.model,
