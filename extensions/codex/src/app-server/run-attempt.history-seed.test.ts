@@ -52,24 +52,29 @@ function seedParams(mode: "thread_bootstrap" | "per_turn") {
   ];
   params.hostCapabilities = Object.freeze({
     ...params.hostCapabilities,
-    prepareContextMedia: async ({ message }: Parameters<NonNullable<typeof params.hostCapabilities.prepareContextMedia>>[0]) => ({
+    prepareContextMedia: async ({
+      message,
+    }: Parameters<NonNullable<typeof params.hostCapabilities.prepareContextMedia>>[0]) => ({
       images: message === savedImageMessage ? [historicalImage] : [],
     }),
   });
-  const assemble = vi.fn(async (_input: Parameters<ReturnType<typeof createContextEngine>["assemble"]>[0]) => ({
-    messages,
-    estimatedTokens: 350_000,
-    ...(mode === "thread_bootstrap"
-      ? { contextProjection: { mode: "thread_bootstrap" as const, epoch: "seed-epoch-1" } }
-      : {}),
-  }));
+  const assemble = vi.fn(
+    async (_input: Parameters<ReturnType<typeof createContextEngine>["assemble"]>[0]) => ({
+      messages,
+      estimatedTokens: 350_000,
+      ...(mode === "thread_bootstrap"
+        ? { contextProjection: { mode: "thread_bootstrap" as const, epoch: "seed-epoch-1" } }
+        : {}),
+    }),
+  );
   params.contextEngine = createContextEngine({ assemble });
   return { params, assemble };
 }
 
 function historySeedRequests(harness: ReturnType<typeof createStartedThreadHarness>) {
   return harness.requests.filter(
-    ({ method, params }) => method === "thread/inject_items" && JSON.stringify(params).includes(ANCHOR),
+    ({ method, params }) =>
+      method === "thread/inject_items" && JSON.stringify(params).includes(ANCHOR),
   );
 }
 
@@ -105,18 +110,32 @@ describe("Codex configured assembled-history delivery", () => {
         expect(Array.isArray(items)).toBe(true);
         const message = Array.isArray(items) ? items[0] : undefined;
         expect(message).toMatchObject({ type: "message", role: "user" });
-        const content = isJsonObject(message) && Array.isArray(message.content) ? message.content : [];
-        expect(content.map((part) => isJsonObject(part) ? part.type : undefined)).toEqual([
-          "input_text", "input_image", "input_text",
+        const content =
+          isJsonObject(message) && Array.isArray(message.content) ? message.content : [];
+        expect(content.map((part) => (isJsonObject(part) ? part.type : undefined))).toEqual([
+          "input_text",
+          "input_image",
+          "input_text",
         ]);
-        const text = content.flatMap((part) => isJsonObject(part) && typeof part.text === "string" ? [part.text] : []).join("");
+        const text = content
+          .flatMap((part) =>
+            isJsonObject(part) && typeof part.text === "string" ? [part.text] : [],
+          )
+          .join("");
         expect(text.length).toBeGreaterThan(1 << 20);
-        expect(text).toContain(historyText.replace("$historical", "＄historical").replace("[@historical]", "[＠historical]"));
+        expect(text).toContain(
+          historyText
+            .replace("$historical", "＄historical")
+            .replace("[@historical]", "[＠historical]"),
+        );
         expect(text).toContain('[user sender={"id":"speaker-a","name":"Speaker A"}]');
         expect(text).toContain('[user sender={"id":"speaker-b","name":"Speaker B"}]');
         expect(text).not.toContain("truncated");
         expect(text).not.toContain(params.prompt);
-        expect(content[1]).toEqual({ type: "input_image", image_url: `data:image/png;base64,${historicalImage.data}` });
+        expect(content[1]).toEqual({
+          type: "input_image",
+          image_url: `data:image/png;base64,${historicalImage.data}`,
+        });
         expect(JSON.stringify(content[0])).toContain("IMAGE_MESSAGE_CAPTION");
         expect(JSON.stringify(content[2])).toContain("ASSISTANT_AFTER_IMAGE");
         const current = getRequestInputText(harness);
@@ -128,7 +147,9 @@ describe("Codex configured assembled-history delivery", () => {
         expect(assembled?.tokenBudget).toBeLessThan(480_000);
         const binding = await readCodexAppServerBinding(params.sessionFile);
         expect(binding?.threadId).toBe("thread-1");
-        expect(binding?.contextEngine?.projection?.epoch).toBe(mode === "thread_bootstrap" ? "seed-epoch-1" : undefined);
+        expect(binding?.contextEngine?.projection?.epoch).toBe(
+          mode === "thread_bootstrap" ? "seed-epoch-1" : undefined,
+        );
       } finally {
         acknowledgeSeed.resolve();
         await harness.waitForMethod("turn/start");
@@ -150,7 +171,11 @@ describe("Codex configured assembled-history delivery", () => {
       if (method === "thread/delete") {
         return {};
       }
-      if (method === "thread/inject_items" && isJsonObject(request) && JSON.stringify(request).includes(ANCHOR)) {
+      if (
+        method === "thread/inject_items" &&
+        isJsonObject(request) &&
+        JSON.stringify(request).includes(ANCHOR)
+      ) {
         acceptedSeeds.push(String(request.threadId));
         if (loseAcknowledgment) {
           throw new Error("Synthetic lost seed acknowledgment");
@@ -159,10 +184,15 @@ describe("Codex configured assembled-history delivery", () => {
       }
       return undefined;
     });
-    await expect(runCodexAppServerAttempt(params)).rejects.toThrow("Synthetic lost seed acknowledgment");
+    await expect(runCodexAppServerAttempt(params)).rejects.toThrow(
+      "Synthetic lost seed acknowledgment",
+    );
     expect(acceptedSeeds).toEqual(["thread-seed-1"]);
     expect(await readCodexAppServerBinding(params.sessionFile)).toBeUndefined();
-    expect(harness.requests).toContainEqual({ method: "thread/delete", params: { threadId: "thread-seed-1" } });
+    expect(harness.requests).toContainEqual({
+      method: "thread/delete",
+      params: { threadId: "thread-seed-1" },
+    });
     expect(harness.requests.some(({ method }) => method === "turn/start")).toBe(false);
     loseAcknowledgment = false;
     const retry = runCodexAppServerAttempt({ ...params, runId: "run-seed-retry" });
@@ -216,11 +246,16 @@ describe("Codex configured assembled-history delivery", () => {
     expect(starts).toBe(1);
     expect(historySeedRequests(harness)).toHaveLength(1);
     const previous = await assemble.mock.results[0]!.value;
-    assemble.mockResolvedValue({ ...previous, contextProjection: { mode: "thread_bootstrap", epoch: "seed-epoch-2" } });
+    assemble.mockResolvedValue({
+      ...previous,
+      contextProjection: { mode: "thread_bootstrap", epoch: "seed-epoch-2" },
+    });
     await runTurn("epoch-change", "thread-epoch-2");
     expect(starts).toBe(2);
     expect(historySeedRequests(harness)).toHaveLength(2);
-    expect((await readCodexAppServerBinding(params.sessionFile))?.contextEngine?.projection?.epoch).toBe("seed-epoch-2");
+    expect(
+      (await readCodexAppServerBinding(params.sessionFile))?.contextEngine?.projection?.epoch,
+    ).toBe("seed-epoch-2");
   });
 
   it("also seeds small configured per-turn projections on a fresh checked native thread", async () => {
@@ -233,9 +268,14 @@ describe("Codex configured assembled-history delivery", () => {
     await harness.waitForMethod("turn/start");
     expect(getRequestInputText(harness)).not.toContain("SMALL_HISTORY");
     expect(historySeedRequests(harness)).toEqual([]);
-    const seed = harness.requests.find(({ method, params }) => method === "thread/inject_items" && JSON.stringify(params).includes("SMALL_HISTORY"));
+    const seed = harness.requests.find(
+      ({ method, params }) =>
+        method === "thread/inject_items" && JSON.stringify(params).includes("SMALL_HISTORY"),
+    );
     expect(seed).toBeDefined();
-    expect(harness.requests.findIndex(({ method }) => method === "thread/inject_items")).toBeLessThan(harness.requests.findIndex(({ method }) => method === "turn/start"));
+    expect(
+      harness.requests.findIndex(({ method }) => method === "thread/inject_items"),
+    ).toBeLessThan(harness.requests.findIndex(({ method }) => method === "turn/start"));
     await harness.completeTurn();
     await run;
   });

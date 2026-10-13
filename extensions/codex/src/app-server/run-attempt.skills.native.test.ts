@@ -7,9 +7,11 @@ import { registerInternalHook } from "openclaw/plugin-sdk/hook-runtime";
 import { withinTest } from "openclaw/plugin-sdk/test-fixtures";
 import { describe, expect, it, vi } from "vitest";
 import { createCodexNativeTestState } from "./native-app-server.test-support.js";
-import { assertCodexThreadStartResponse, resolveCodexThreadRolloutPath } from "./protocol-validators.js";
+import {
+  assertCodexThreadStartResponse,
+  resolveCodexThreadRolloutPath,
+} from "./protocol-validators.js";
 import { isJsonObject, type JsonObject } from "./protocol.js";
-import { createContextEngine } from "./run-attempt.context-engine.test-support.js";
 import { seedRunSessionOwnerForTest } from "./run-attempt-session-owners.test-support.js";
 import {
   createNativeRunParams,
@@ -19,6 +21,7 @@ import {
   assistantMessage,
   userMessage,
 } from "./run-attempt-test-harness.js";
+import { createContextEngine } from "./run-attempt.context-engine.test-support.js";
 import { createIsolatedCodexAppServerClient } from "./shared-client.js";
 import { CODEX_APP_SERVER_VERSION } from "./version.js";
 
@@ -207,7 +210,10 @@ async function createNativeFixture(modelId: string, contextWindow = 200_000) {
 
 describe("native Codex skill delivery", () => {
   it("persists a complete large history seed without inference and delivers it before ordinary current input", async () => {
-    const { fixture, attemptOptions, createParams } = await createNativeFixture("large-history-carrier-model", 700_000);
+    const { fixture, attemptOptions, createParams } = await createNativeFixture(
+      "large-history-carrier-model",
+      700_000,
+    );
     let client: Awaited<ReturnType<typeof createIsolatedCodexAppServerClient>> | undefined;
     let rolloutPath: string | undefined;
     let seedAcknowledged = false;
@@ -227,7 +233,9 @@ describe("native Codex skill delivery", () => {
       const historicalImageMessage = userMessage("NATIVE_IMAGE_CAPTION", 3);
       params.hostCapabilities = Object.freeze({
         ...params.hostCapabilities,
-        prepareContextMedia: async ({ message }: Parameters<NonNullable<typeof params.hostCapabilities.prepareContextMedia>>[0]) => ({
+        prepareContextMedia: async ({
+          message,
+        }: Parameters<NonNullable<typeof params.hostCapabilities.prepareContextMedia>>[0]) => ({
           images: message === historicalImageMessage ? [image] : [],
         }),
       });
@@ -252,16 +260,40 @@ describe("native Codex skill delivery", () => {
           vi.spyOn(client, "request").mockImplementation((method, request, requestOptions) => {
             return originalRequest(method, request, requestOptions).then(async (response) => {
               if (method === "thread/start") {
-                rolloutPath = resolveCodexThreadRolloutPath(assertCodexThreadStartResponse(response).thread);
+                rolloutPath = resolveCodexThreadRolloutPath(
+                  assertCodexThreadStartResponse(response).thread,
+                );
               }
-              if (method === "thread/inject_items" && JSON.stringify(request).includes("NATIVE_HISTORY_START")) {
+              if (
+                method === "thread/inject_items" &&
+                JSON.stringify(request).includes("NATIVE_HISTORY_START")
+              ) {
                 expect(fixture.requests).toHaveLength(0);
                 expect(rolloutPath).toBeDefined();
                 const persisted = await fs.readFile(rolloutPath!, "utf8");
-                const rows = persisted.split("\n").filter(Boolean).map((line) => JSON.parse(line) as unknown);
-                const history = rows.flatMap((row) => isJsonObject(row) && isJsonObject(row.payload) && isJsonObject(row.payload.item) ? [row.payload.item] : []);
-                const savedText = history.flatMap((item) => Array.isArray(item.content) ? item.content.flatMap((part) => isJsonObject(part) && typeof part.text === "string" ? [part.text] : []) : []).join("");
-                expect(savedText).toContain(rawHistory.replace("$historical", "＄historical").replace("[@historical]", "[＠historical]"));
+                const rows = persisted
+                  .split("\n")
+                  .filter(Boolean)
+                  .map((line) => JSON.parse(line) as unknown);
+                const history = rows.flatMap((row) =>
+                  isJsonObject(row) && isJsonObject(row.payload) && isJsonObject(row.payload.item)
+                    ? [row.payload.item]
+                    : [],
+                );
+                const savedText = history
+                  .flatMap((item) =>
+                    Array.isArray(item.content)
+                      ? item.content.flatMap((part) =>
+                          isJsonObject(part) && typeof part.text === "string" ? [part.text] : [],
+                        )
+                      : [],
+                  )
+                  .join("");
+                expect(savedText).toContain(
+                  rawHistory
+                    .replace("$historical", "＄historical")
+                    .replace("[@historical]", "[＠historical]"),
+                );
                 expect(savedText).not.toContain(params.prompt);
                 seedAcknowledged = true;
               }
@@ -281,22 +313,37 @@ describe("native Codex skill delivery", () => {
       expect(fixture.requests).toHaveLength(1);
       const input = fixture.requests[0]?.input;
       expect(Array.isArray(input)).toBe(true);
-      const users = Array.isArray(input) ? input.filter((item) => isJsonObject(item) && item.role === "user") : [];
-      const historical = users.find((item) => JSON.stringify(item).includes("NATIVE_HISTORY_START"));
+      const users = Array.isArray(input)
+        ? input.filter((item) => isJsonObject(item) && item.role === "user")
+        : [];
+      const historical = users.find((item) =>
+        JSON.stringify(item).includes("NATIVE_HISTORY_START"),
+      );
       const current = users.find((item) => JSON.stringify(item).includes(params.prompt));
       expect(historical).toBeDefined();
       expect(current).toBeDefined();
-      const content = isJsonObject(historical) && Array.isArray(historical.content) ? historical.content : [];
-      const text = content.flatMap((part) => isJsonObject(part) && typeof part.text === "string" ? [part.text] : []).join("");
+      const content =
+        isJsonObject(historical) && Array.isArray(historical.content) ? historical.content : [];
+      const text = content
+        .flatMap((part) => (isJsonObject(part) && typeof part.text === "string" ? [part.text] : []))
+        .join("");
       expect(text.length).toBeGreaterThan(1 << 20);
-      expect(text).toContain(rawHistory.replace("$historical", "＄historical").replace("[@historical]", "[＠historical]"));
+      expect(text).toContain(
+        rawHistory
+          .replace("$historical", "＄historical")
+          .replace("[@historical]", "[＠historical]"),
+      );
       expect(text).toContain('[user sender={"id":"native-speaker"}]');
       expect(text).not.toContain("truncated");
       expect(users.indexOf(historical!)).toBeLessThan(users.indexOf(current!));
-      const imageIndex = content.findIndex((part) => isJsonObject(part) && part.type === "input_image");
+      const imageIndex = content.findIndex(
+        (part) => isJsonObject(part) && part.type === "input_image",
+      );
       expect(imageIndex).toBeGreaterThan(0);
       expect(JSON.stringify(content.slice(0, imageIndex))).toContain("NATIVE_IMAGE_CAPTION");
-      expect(JSON.stringify(content.slice(imageIndex + 1))).toContain("NATIVE_ASSISTANT_AFTER_IMAGE");
+      expect(JSON.stringify(content.slice(imageIndex + 1))).toContain(
+        "NATIVE_ASSISTANT_AFTER_IMAGE",
+      );
     } finally {
       if (client) {
         expect(await client.closeAndWait()).toMatchObject({ exited: true });

@@ -253,8 +253,7 @@ export function resolveEmbeddedRuntimeModelPolicy(params: {
         }
       : ctxInfo;
   const effectiveModel =
-    !params.nativeModelOwned &&
-    contextTokenBudget < (params.runtimeModel.contextWindow ?? Infinity)
+    !params.nativeModelOwned && contextTokenBudget < (params.runtimeModel.contextWindow ?? Infinity)
       ? { ...params.runtimeModel, contextWindow: contextTokenBudget }
       : params.runtimeModel;
   return {

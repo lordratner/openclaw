@@ -41,12 +41,12 @@ import { normalizeToolPolicyName } from "../tool-policy.js";
 import type { SystemAgentToolOptions } from "../tools/system-agent-tool.js";
 import { copyCoreTtsAttemptResultProvenance } from "../tools/tts-tool-result-provenance.js";
 import { createOpenClawAgentHarness, isBuiltInOpenClawAgentHarness } from "./builtin-openclaw.js";
-import { beginContextEngineLogicalTurn } from "./context-engine-turn-begin.js";
 import {
   readContextEngineAssemblySettings,
   runWithContextEngineAssemblyAttempt,
   type ContextEngineAssemblySnapshot,
 } from "./context-engine-assembly-attempt.js";
+import { beginContextEngineLogicalTurn } from "./context-engine-turn-begin.js";
 import { AgentHarnessPreflightError } from "./errors.js";
 import {
   assertAgentHarnessExecutionEnvironment,
@@ -365,90 +365,91 @@ export async function runAgentHarnessAttempt(
   let result: EmbeddedRunAttemptResult;
   let assembly: ContextEngineAssemblySnapshot | undefined;
   try {
-    const run = () => runAgentHarnessOperation(harness, params, () =>
-      runWithAgentRingZeroTools(ringZeroTools, async () => {
-        // Resolve plugin policy after entering the host scope. Ring-zero tools are
-        // trusted setup authority and must survive ordinary deny-all policy.
-        const hostOpenClawAuthority =
-          isHostScopedAgentToolActive("openclaw") &&
-          isSystemAgentOnlyAllowlist(pluginAttempt.params.toolsAllow);
-        const nativePermissionsConsented = await assertAgentHarnessExecutionEnvironment(
-          harness,
-          params,
-        );
-        const preparedParams = selection.builtIn
-          ? pluginAttempt.params
-          : await preparePluginHarnessParams(
-              pluginAttempt.params,
-              harness,
-              nativePermissionsConsented,
-              pluginAttempt.setInputAttachmentReadAllowed,
-            );
-        const effectiveAttemptParams =
-          hostOpenClawAuthority && preparedParams.pluginHarnessToolPolicyRestricted
-            ? { ...preparedParams, pluginHarnessToolPolicyRestricted: false }
-            : preparedParams;
-        assertPluginHarnessConversationToolPolicySupport(
-          harness,
-          effectiveAttemptParams.pluginHarnessToolPolicyRestricted === true &&
-            !nativePermissionsConsented,
-        );
-        // Load the calculator only after admission and final host policy preparation.
-        return import("./tool-authority.runtime.js").then(
-          ({ withPreparedEmbeddedRunToolAuthority }) =>
-            withPreparedEmbeddedRunToolAuthority(
-              internalParams,
-              effectiveAttemptParams,
-              selection.builtIn
-                ? undefined
-                : (input, sandbox) => {
-                    const policies = resolvePluginHarnessToolPolicies(
-                      {
-                        ...input.run,
-                        modelId: input.run.model,
-                        sandboxSessionKey: input.run.runtimePolicySessionKey,
-                        messageChannel: input.originatingChannel,
-                        toolsAllow: input.toolsAllow,
-                        disableTools: input.disableTools,
-                      },
-                      undefined,
-                      undefined,
-                      sandbox,
-                    );
-                    return resolvePluginHarnessDenyAllToolPolicyPrompt(policies)
-                      ? { ...input, toolsAllow: [] }
-                      : input;
-                  },
-              (prepared) =>
-                pluginAttempt.runWithHostScope(async () => {
-                  if (prepared.trigger !== "user" || !prepared.sessionKey) {
-                    return runPreparedAttempt(prepared);
-                  }
-                  const note = await claimHeartbeatContextForUserRun({
-                    ...prepared,
-                    agentId: resolveSessionAgentIds(prepared).sessionAgentId,
-                    storePath: prepared.sessionTarget?.storePath,
-                    detached: prepared.sessionPersistence === "detached",
-                    assertCurrent: resolveAdmittedRunActiveAssertion(
-                      internalParams.admittedRunContext,
-                      prepared.abortSignal,
-                    ),
-                  });
-                  if (!note) {
-                    return runPreparedAttempt(prepared);
-                  }
-                  return runPreparedAttempt({
-                    ...prepared,
-                    currentInboundContext: appendCurrentInboundContext(
-                      prepared.currentInboundContext,
-                      [{ kind: "heartbeat-outcome", text: note }],
-                    ),
-                  });
-                }),
-            ),
-        );
-      }),
-    );
+    const run = () =>
+      runAgentHarnessOperation(harness, params, () =>
+        runWithAgentRingZeroTools(ringZeroTools, async () => {
+          // Resolve plugin policy after entering the host scope. Ring-zero tools are
+          // trusted setup authority and must survive ordinary deny-all policy.
+          const hostOpenClawAuthority =
+            isHostScopedAgentToolActive("openclaw") &&
+            isSystemAgentOnlyAllowlist(pluginAttempt.params.toolsAllow);
+          const nativePermissionsConsented = await assertAgentHarnessExecutionEnvironment(
+            harness,
+            params,
+          );
+          const preparedParams = selection.builtIn
+            ? pluginAttempt.params
+            : await preparePluginHarnessParams(
+                pluginAttempt.params,
+                harness,
+                nativePermissionsConsented,
+                pluginAttempt.setInputAttachmentReadAllowed,
+              );
+          const effectiveAttemptParams =
+            hostOpenClawAuthority && preparedParams.pluginHarnessToolPolicyRestricted
+              ? { ...preparedParams, pluginHarnessToolPolicyRestricted: false }
+              : preparedParams;
+          assertPluginHarnessConversationToolPolicySupport(
+            harness,
+            effectiveAttemptParams.pluginHarnessToolPolicyRestricted === true &&
+              !nativePermissionsConsented,
+          );
+          // Load the calculator only after admission and final host policy preparation.
+          return import("./tool-authority.runtime.js").then(
+            ({ withPreparedEmbeddedRunToolAuthority }) =>
+              withPreparedEmbeddedRunToolAuthority(
+                internalParams,
+                effectiveAttemptParams,
+                selection.builtIn
+                  ? undefined
+                  : (input, sandbox) => {
+                      const policies = resolvePluginHarnessToolPolicies(
+                        {
+                          ...input.run,
+                          modelId: input.run.model,
+                          sandboxSessionKey: input.run.runtimePolicySessionKey,
+                          messageChannel: input.originatingChannel,
+                          toolsAllow: input.toolsAllow,
+                          disableTools: input.disableTools,
+                        },
+                        undefined,
+                        undefined,
+                        sandbox,
+                      );
+                      return resolvePluginHarnessDenyAllToolPolicyPrompt(policies)
+                        ? { ...input, toolsAllow: [] }
+                        : input;
+                    },
+                (prepared) =>
+                  pluginAttempt.runWithHostScope(async () => {
+                    if (prepared.trigger !== "user" || !prepared.sessionKey) {
+                      return runPreparedAttempt(prepared);
+                    }
+                    const note = await claimHeartbeatContextForUserRun({
+                      ...prepared,
+                      agentId: resolveSessionAgentIds(prepared).sessionAgentId,
+                      storePath: prepared.sessionTarget?.storePath,
+                      detached: prepared.sessionPersistence === "detached",
+                      assertCurrent: resolveAdmittedRunActiveAssertion(
+                        internalParams.admittedRunContext,
+                        prepared.abortSignal,
+                      ),
+                    });
+                    if (!note) {
+                      return runPreparedAttempt(prepared);
+                    }
+                    return runPreparedAttempt({
+                      ...prepared,
+                      currentInboundContext: appendCurrentInboundContext(
+                        prepared.currentInboundContext,
+                        [{ kind: "heartbeat-outcome", text: note }],
+                      ),
+                    });
+                  }),
+              ),
+          );
+        }),
+      );
     const completed = await runWithContextEngineAssemblyAttempt(run);
     result = completed.result;
     assembly = completed.assembly;

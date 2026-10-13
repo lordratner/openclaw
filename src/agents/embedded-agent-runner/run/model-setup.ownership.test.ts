@@ -404,16 +404,18 @@ describe("model chat and native model ownership", () => {
         providers: {
           openai: {
             baseUrl: "https://api.openai.com/v1",
-            models: [{
-              id: "fixture-model",
-              name: "Configured account-only model",
-              reasoning: true,
-              input: ["text", "image"],
-              cost: { input: 0, output: 0, cacheRead: 0, cacheWrite: 0 },
-              maxTokens: 20_000,
-              contextWindow: 1_000_000,
-              contextTokens: 500_000,
-            }],
+            models: [
+              {
+                id: "fixture-model",
+                name: "Configured account-only model",
+                reasoning: true,
+                input: ["text", "image"],
+                cost: { input: 0, output: 0, cacheRead: 0, cacheWrite: 0 },
+                maxTokens: 20_000,
+                contextWindow: 1_000_000,
+                contextTokens: 500_000,
+              },
+            ],
           },
         },
       },

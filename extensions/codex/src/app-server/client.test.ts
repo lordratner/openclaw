@@ -63,7 +63,13 @@ describe("CodexAppServerClient", () => {
     const harness = createHarness({ maxFrameBytes: 1024 });
     const request = harness.client.request("thread/inject_items", {
       threadId: "fresh-thread",
-      items: [{ type: "message", role: "user", content: [{ type: "input_text", text: "h".repeat(2048) }] }],
+      items: [
+        {
+          type: "message",
+          role: "user",
+          content: [{ type: "input_text", text: "h".repeat(2048) }],
+        },
+      ],
     });
     const error = await request.catch((requestError: unknown) => requestError);
     expect(error).toMatchObject({ message: expect.stringContaining("transport frame limit") });

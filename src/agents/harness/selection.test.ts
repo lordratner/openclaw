@@ -32,8 +32,8 @@ import {
 } from "../../plugins/runtime/gateway-request-scope.js";
 import { mintSecretSentinel } from "../../secrets/sentinel.js";
 import { createUserTurnTranscriptRecorder } from "../../sessions/user-turn-transcript.js";
-import { createDeferredCore } from "../../shared/deferred.js";
 import type { UserTurnTranscriptRecorder } from "../../sessions/user-turn-transcript.types.js";
+import { createDeferredCore } from "../../shared/deferred.js";
 import { closeOpenClawAgentDatabasesAsync } from "../../state/openclaw-agent-db.js";
 import { closeStateDatabaseForTest } from "../../test-utils/database-cleanup.js";
 import {
@@ -74,8 +74,8 @@ import { attachToolAllowlistIntersection } from "../tool-policy.js";
 import { getGatewayToolCallerIdentity } from "../tools/gateway-caller-context.js";
 import { callGatewayTool } from "../tools/gateway.js";
 import type { SystemAgentToolOptions } from "../tools/system-agent-tool.js";
-import type { ContextEngineLogicalTurnLease } from "./context-engine-logical-turn.js";
 import { assembleHarnessContextEngine } from "./context-engine-lifecycle.js";
+import type { ContextEngineLogicalTurnLease } from "./context-engine-logical-turn.js";
 import { prepareAgentHarnessNativeToolPolicyRestricted } from "./execution-environment.js";
 import { resolveAgentHarnessPolicy } from "./policy.js";
 import {

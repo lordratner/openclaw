@@ -5,11 +5,11 @@ import {
   appendTranscriptMessage,
   upsertSessionEntryCore,
 } from "../../config/sessions/session-accessor.js";
+import { OPENCLAW_EMBEDDED_CONTEXT_ENGINE_HOST } from "../../context-engine/host-compat.js";
 import { LegacyContextEngine } from "../../context-engine/legacy.js";
 import { registerContextEngineInRegistry } from "../../context-engine/registry.js";
-import type { ContextEngine } from "../../context-engine/types.js";
-import { OPENCLAW_EMBEDDED_CONTEXT_ENGINE_HOST } from "../../context-engine/host-compat.js";
 import { buildContextEngineRuntimeSettings } from "../../context-engine/runtime-settings.js";
+import type { ContextEngine } from "../../context-engine/types.js";
 import { createEmptyPluginRegistry } from "../../plugins/registry-empty.js";
 import { PluginRegistryInspectionResources } from "../../plugins/registry-inspection-resources.js";
 import { retireInspectionInstances } from "../../plugins/registry-inspection.test-support.js";

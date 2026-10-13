@@ -1,3 +1,4 @@
+import { IMAGE_BLOCK_TOKENS } from "openclaw/plugin-sdk/agent-core";
 import {
   assembleHarnessContextEngine,
   CODEX_APP_SERVER_CONTEXT_ENGINE_HOST,
@@ -5,7 +6,6 @@ import {
   formatErrorMessage,
   resolveAgentHarnessBeforePromptBuildResult,
 } from "openclaw/plugin-sdk/agent-harness-runtime";
-import { IMAGE_BLOCK_TOKENS } from "openclaw/plugin-sdk/agent-core";
 import { getSessionEntryAsync } from "openclaw/plugin-sdk/session-store-runtime";
 import { asOptionalRecord } from "openclaw/plugin-sdk/string-coerce-runtime";
 import {
@@ -311,7 +311,9 @@ export async function prepareCodexAttemptPrompt(context: CodexAttemptContext) {
               `${projection.promptText.slice(0, projection.promptContextRange.end)}\n</conversation_context>`,
               projection.imageGroups,
             )
-          : seedHistory ? [] : undefined;
+          : seedHistory
+            ? []
+            : undefined;
       promptState.promptText = projectionDecision.project
         ? seedHistory
           ? projection.currentRequestText
