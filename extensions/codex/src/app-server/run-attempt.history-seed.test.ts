@@ -102,7 +102,7 @@ describe("Codex configured assembled-history delivery", () => {
         expect(harness.requests.some(({ method }) => method === "turn/start")).toBe(false);
         expect(await readCodexAppServerBinding(params.sessionFile)).toBeUndefined();
         acknowledgeSeed.resolve();
-        await harness.waitForMethod("turn/start");
+        await run.waitForTurnAccepted();
 
         const seed = historySeedRequests(harness)[0]!.params as JsonObject;
         expect(seed.threadId).toBe("thread-1");
@@ -152,7 +152,7 @@ describe("Codex configured assembled-history delivery", () => {
         );
       } finally {
         acknowledgeSeed.resolve();
-        await harness.waitForMethod("turn/start");
+        await run.waitForTurnAccepted();
         await harness.completeTurn();
         await run;
       }
@@ -196,7 +196,8 @@ describe("Codex configured assembled-history delivery", () => {
     expect(harness.requests.some(({ method }) => method === "turn/start")).toBe(false);
     loseAcknowledgment = false;
     const retry = runCodexAppServerAttempt({ ...params, runId: "run-seed-retry" });
-    await harness.waitForMethod("turn/start");
+    // Recording dispatch precedes installing the terminal notification projector.
+    await retry.waitForTurnAccepted();
     expect(acceptedSeeds).toEqual(["thread-seed-1", "thread-seed-2"]);
     await harness.completeTurn("completed", "thread-seed-2");
     await retry;
@@ -220,7 +221,6 @@ describe("Codex configured assembled-history delivery", () => {
   it("reuses an acknowledged bootstrap and rotates only when its projection epoch changes", async () => {
     const { params, assemble } = seedParams("thread_bootstrap");
     let starts = 0;
-    let turnEntered = createDeferred<void>();
     const harness = createStartedThreadHarness(async (method, request) => {
       if (method === "thread/start") {
         return threadStartResult(`thread-epoch-${++starts}`);
@@ -228,15 +228,11 @@ describe("Codex configured assembled-history delivery", () => {
       if (method === "thread/resume" && isJsonObject(request)) {
         return threadStartResult(String(request.threadId));
       }
-      if (method === "turn/start") {
-        turnEntered.resolve();
-      }
       return undefined;
     });
     const runTurn = async (runId: string, threadId: string) => {
-      turnEntered = createDeferred<void>();
       const run = runCodexAppServerAttempt({ ...params, runId });
-      await Promise.race([turnEntered.promise, run]);
+      await run.waitForTurnAccepted();
       await harness.completeTurn("completed", threadId);
       await run;
     };
@@ -265,7 +261,7 @@ describe("Codex configured assembled-history delivery", () => {
     });
     const harness = createStartedThreadHarness();
     const run = runCodexAppServerAttempt(params);
-    await harness.waitForMethod("turn/start");
+    await run.waitForTurnAccepted();
     expect(getRequestInputText(harness)).not.toContain("SMALL_HISTORY");
     expect(historySeedRequests(harness)).toEqual([]);
     const seed = harness.requests.find(
@@ -283,18 +279,14 @@ describe("Codex configured assembled-history delivery", () => {
   it("replaces prior native history when a configured per-turn assembly selects no messages", async () => {
     const { params } = seedParams("per_turn");
     let starts = 0;
-    let turnEntered = createDeferred<void>();
     const harness = createStartedThreadHarness(async (method) => {
       if (method === "thread/start") {
         return threadStartResult(`thread-empty-${++starts}`);
       }
-      if (method === "turn/start") {
-        turnEntered.resolve();
-      }
       return undefined;
     });
     const first = runCodexAppServerAttempt(params);
-    await Promise.race([turnEntered.promise, first]);
+    await first.waitForTurnAccepted();
     await harness.completeTurn("completed", "thread-empty-1");
     await first;
     expect(historySeedRequests(harness)).toHaveLength(1);
@@ -302,9 +294,8 @@ describe("Codex configured assembled-history delivery", () => {
       assemble: async () => ({ messages: [], estimatedTokens: 0 }),
     });
     const offset = harness.requests.length;
-    turnEntered = createDeferred<void>();
     const empty = runCodexAppServerAttempt({ ...params, runId: "empty-projection" });
-    await Promise.race([turnEntered.promise, empty]);
+    await empty.waitForTurnAccepted();
     expect(starts).toBe(2);
     const requests = harness.requests.slice(offset);
     expect(requests.some(({ method }) => method === "thread/inject_items")).toBe(false);

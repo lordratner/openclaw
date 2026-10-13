@@ -1262,8 +1262,8 @@ describe("runAgentHarnessAttempt", () => {
   );
 
   it("keeps concurrent attempt assemblies separate", async () => {
-    const firstAssembled = createDeferredCore<void>();
-    const secondAssembled = createDeferredCore<void>();
+    const firstAssembled = createDeferredCore();
+    const secondAssembled = createDeferredCore();
     registerHarness({
       runAttempt: async (attempt) => {
         await assembleHarnessContextEngine({

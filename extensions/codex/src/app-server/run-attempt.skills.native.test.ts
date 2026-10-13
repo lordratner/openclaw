@@ -276,8 +276,8 @@ describe("native Codex skill delivery", () => {
                   .filter(Boolean)
                   .map((line) => JSON.parse(line) as unknown);
                 const history = rows.flatMap((row) =>
-                  isJsonObject(row) && isJsonObject(row.payload) && isJsonObject(row.payload.item)
-                    ? [row.payload.item]
+                  isJsonObject(row) && row.type === "response_item" && isJsonObject(row.payload)
+                    ? [row.payload]
                     : [],
                 );
                 const savedText = history
