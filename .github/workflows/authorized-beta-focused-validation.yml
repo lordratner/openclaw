@@ -35,8 +35,19 @@ on:
         description: Exact regression names plus named unaffected controls; recovery fixture tests run on repaired only
         required: true
         type: string
+      reuse_production_from_sha:
+        description: Previously tested production source SHA; current delta must contain only tests and their lane registration
+        required: false
+        default: ''
+        type: string
+      reuse_production_run_id:
+        description: Exact prior run with successful production typechecks and canonical build
+        required: false
+        default: ''
+        type: string
 permissions:
   contents: read
+  actions: read
 concurrency:
   group: context-budget-proof-${{ github.run_id }}
   cancel-in-progress: false
@@ -51,6 +62,8 @@ env:
   TEST_FILES_JSON: ${{ inputs.test_files_json }}
   STOCK_TEST_FILES_JSON: ${{ inputs.stock_test_files_json }}
   STOCK_TEST_NAME_PATTERN: ${{ inputs.stock_test_name_pattern }}
+  REUSE_PRODUCTION_SHA: ${{ inputs.reuse_production_from_sha }}
+  REUSE_PRODUCTION_RUN: ${{ inputs.reuse_production_run_id }}
 jobs:
   admit:
     runs-on: ubuntu-24.04
@@ -184,6 +197,7 @@ jobs:
           report = json.loads((proof / 'tests.json').read_text())
           execution = json.loads((proof / 'execution.json').read_text())
           assertions = {}
+          records = []
           for suite in report['testResults']:
               matching = [p for p in source['testFiles'] if suite['name'].endswith('/' + p) or suite['name'] == p]
               assert len(matching) == 1, suite['name']
@@ -191,25 +205,27 @@ jobs:
               assert suite['assertionResults'], ('empty suite', filename)
               for a in suite['assertionResults']:
                   key = (filename, a['fullName'])
-                  assert key not in assertions, ('duplicate assertion', key)
-                  assertions[key] = a['status']
+                  assertions.setdefault(key, []).append(a['status'])
+                  records.append((key, a['status']))
           for p in source['testFiles']:
-              assert any(f == p and status in ('passed', 'failed') for (f, _), status in assertions.items()), p
+              assert any(f == p and status in ('passed', 'failed') for (f, _), status in records), p
               assert hashlib.sha256(Path(p).read_bytes()).hexdigest() == source['testSha256'][p], p
           expected = {(r['file'], r['fullName']) for r in source['expectedRegressions']}
           assert expected.issubset(assertions), ('missing regressions', expected - assertions.keys())
-          failed = {key for key, status in assertions.items() if status == 'failed'}
+          failed_records = [key for key, status in records if status == 'failed']
+          failed = set(failed_records)
           stock = os.environ['ROLE'] == 'stock'
           assert failed == (expected if stock else set()), ('unexpected failed assertions', failed)
-          assert all(assertions[key] == ('failed' if stock else 'passed') for key in expected)
-          assert any(key not in expected and status == 'passed' for key, status in assertions.items()), 'no sibling controls'
+          assert all(assertions[key] == [('failed' if stock else 'passed')] for key in expected), 'expected regression must execute exactly once'
+          assert len(failed_records) == (len(expected) if stock else 0), 'extra failed duplicate cases'
+          assert any(key not in expected and status == 'passed' for key, status in records), 'no sibling controls'
           assert execution['exit'] == (1 if stock else 0), execution
           assert report['success'] is (not stock)
           assert report['numFailedTests'] == len(failed), 'summary/detail mismatch'
           summary = {'role': os.environ['ROLE'], 'wallSeconds': execution['wallSeconds'],
-                     'executed': sum(s in ('passed', 'failed') for s in assertions.values()),
-                     'passed': sum(s == 'passed' for s in assertions.values()),
-                     'failed': len(failed), 'skippedOrPending': sum(s not in ('passed', 'failed') for s in assertions.values()),
+                     'executed': sum(s in ('passed', 'failed') for _, s in records),
+                     'passed': sum(s == 'passed' for _, s in records),
+                     'failed': len(failed), 'skippedOrPending': sum(s not in ('passed', 'failed') for _, s in records),
                      'expectedRegressionNames': sorted([list(x) for x in expected]), 'verified': True}
           (proof / 'validated.json').write_text(json.dumps(summary, indent=2) + '\n')
           print(json.dumps(summary, indent=2))
@@ -243,6 +259,43 @@ jobs:
           git rev-parse HEAD > "$RUNNER_TEMP/proof/head.txt"
           git diff "$BASE_SHA" HEAD --binary > "$RUNNER_TEMP/proof/candidate.patch"
           git diff "$BASE_SHA" HEAD --name-only > "$RUNNER_TEMP/proof/changed-files.txt"
+      - name: Verify and retain unchanged production proof
+        if: inputs.reuse_production_from_sha != ''
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          python3 - <<'PYREUSE'
+          import json, os, re, subprocess
+          from pathlib import Path
+          prior = os.environ['REUSE_PRODUCTION_SHA']
+          run = os.environ['REUSE_PRODUCTION_RUN']
+          assert re.fullmatch('[0-9a-f]{40}', prior)
+          assert re.fullmatch('[1-9][0-9]*', run)
+          proof = Path(os.environ['RUNNER_TEMP']) / 'proof'
+          retained = proof / 'retained-production-proof'
+          subprocess.run(['git', 'fetch', '--no-tags', '--depth=1', 'origin', prior], check=True)
+          delta = subprocess.check_output(['git', 'diff', '--name-only', prior, 'HEAD'], text=True).splitlines()
+          allowed_lane = 'test/vitest/vitest.extension-database-workers-paths.mjs'
+          assert delta and all(p.endswith('.test.ts') or p == allowed_lane for p in delta), delta
+          subprocess.run(['gh', 'run', 'download', run, '--repo', 'lordratner/openclaw',
+                          '--name', 'context-budget-repaired-gates-' + run + '-1',
+                          '--dir', str(retained)], check=True)
+          assert (retained / 'head.txt').read_text().strip() == prior
+          assert (retained / 'generated.patch').stat().st_size == 0
+          jobs = json.loads(subprocess.check_output(['gh', 'api',
+                          'repos/lordratner/openclaw/actions/runs/' + run + '/jobs?per_page=100'], text=True))
+          candidates = [j for j in jobs['jobs'] if j['name'] == 'repaired-gates']
+          assert len(candidates) == 1
+          required = ['Package-owned core production type gate',
+                      'Package-owned extension production type gate',
+                      'Package-owned canonical build gate']
+          steps = {s['name']: s['conclusion'] for s in candidates[0]['steps']}
+          assert all(steps.get(name) == 'success' for name in required), steps
+          receipt = {'current': os.environ['CANDIDATE_SHA'], 'retainedProduction': prior,
+                     'runId': run, 'verifiedSuccessfulSteps': required, 'testOnlyDelta': delta}
+          (proof / 'production-proof-reuse.json').write_text(json.dumps(receipt, indent=2) + '\n')
+          print(json.dumps(receipt, indent=2))
+          PYREUSE
       - name: Frozen environment and compiler containment
         uses: ./.github/actions/setup-node-env
         with:
@@ -258,12 +311,12 @@ jobs:
           test "${#paths[@]}" -gt 0
           /usr/bin/time -p pnpm format:check "${paths[@]}" 2>&1 | tee "$RUNNER_TEMP/proof/format.log"
       - name: Package-owned core production type gate
-        if: '!cancelled()'
+        if: ${{ !cancelled() && inputs.reuse_production_from_sha == '' }}
         run: |
           set -euo pipefail
           /usr/bin/time -p pnpm tsgo:core 2>&1 | tee "$RUNNER_TEMP/proof/type.log"
       - name: Package-owned extension production type gate
-        if: '!cancelled()'
+        if: ${{ !cancelled() && inputs.reuse_production_from_sha == '' }}
         run: |
           set -euo pipefail
           /usr/bin/time -p pnpm tsgo:extensions 2>&1 | tee "$RUNNER_TEMP/proof/extension-type.log"
@@ -275,16 +328,21 @@ jobs:
           from pathlib import Path
           proof = Path(os.environ['RUNNER_TEMP']) / 'proof'
           paths = (proof / 'changed-files.txt').read_text().splitlines()
+          failures = []
           for owner, config in [('src/', 'config/tsconfig/oxlint.core.json'),
-                                ('extensions/', 'extensions/tsconfig.json')]:
-              selected = [p for p in paths if p.startswith(owner) and p.endswith('.ts')]
+                                ('extensions/', 'extensions/tsconfig.json'),
+                                ('test/', 'config/tsconfig/oxlint.scripts.json')]:
+              selected = [p for p in paths if p.startswith(owner) and p.endswith(('.ts', '.mjs'))]
               if selected:
                   with (proof / ('lint-' + owner.rstrip('/') + '.log')).open('w') as log:
-                      subprocess.run(['node', 'scripts/run-oxlint.mjs', '--tsconfig', config, *selected],
-                                     stdout=log, stderr=subprocess.STDOUT, check=True)
+                      result = subprocess.run(['node', 'scripts/run-oxlint.mjs', '--tsconfig', config, *selected],
+                                              stdout=log, stderr=subprocess.STDOUT)
+                      if result.returncode:
+                          failures.append((owner, result.returncode))
+          assert not failures, failures
           PYLINT
       - name: Package-owned canonical build gate
-        if: '!cancelled()'
+        if: ${{ !cancelled() && inputs.reuse_production_from_sha == '' }}
         run: |
           set -euo pipefail
           /usr/bin/time -p pnpm build 2>&1 | tee "$RUNNER_TEMP/proof/build.log"
