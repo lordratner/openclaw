@@ -1,66 +1,302 @@
-# Fork QA branch only; not part of the upstream product patch.
-name: Native context candidate formatting preparation
+# QA-branch-only template. Do not add this workflow to the upstream product PR.
+# Dispatch on an independently pinned QA branch after the candidate is published.
+# Fill exact candidate/base SHAs, intended existing production paths and regression
+# fullNames at dispatch; no guessed fixed test totals and no model/review secrets.
+name: Configured native context focused proof
 on:
   workflow_dispatch:
     inputs:
       candidate_sha:
+        description: Candidate commit, exactly 40 lowercase hexadecimal characters
         required: true
         type: string
       base_sha:
+        description: Frozen upstream base, exactly 40 lowercase hexadecimal characters
+        required: true
+        default: 55a3be43fe8ab39300d8ea7b5aa408d29f941f90
+        type: string
+      production_paths_json:
+        description: JSON array of intended EXISTING production files to restore on stock
+        required: true
+        type: string
+      regression_names_json:
+        description: JSON array of objects with file and exact Vitest fullName; stock must fail each
+        required: true
+        type: string
+      test_files_json:
+        description: JSON array of focused production-boundary and sibling test files
+        required: true
+        type: string
+      stock_test_files_json:
+        description: JSON array of stock-negative and unaffected sibling files
+        required: true
+        type: string
+      stock_test_name_pattern:
+        description: Exact regression names plus named unaffected controls; recovery fixture tests run on repaired only
         required: true
         type: string
 permissions:
   contents: read
+concurrency:
+  group: context-budget-proof-${{ github.run_id }}
+  cancel-in-progress: false
+env:
+  CI: 'true'
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: 'true'
+  NODE_OPTIONS: --max-old-space-size=8192
+  CANDIDATE_SHA: ${{ inputs.candidate_sha }}
+  BASE_SHA: ${{ inputs.base_sha }}
+  PRODUCTION_PATHS_JSON: ${{ inputs.production_paths_json }}
+  REGRESSION_NAMES_JSON: ${{ inputs.regression_names_json }}
+  TEST_FILES_JSON: ${{ inputs.test_files_json }}
+  STOCK_TEST_FILES_JSON: ${{ inputs.stock_test_files_json }}
+  STOCK_TEST_NAME_PATTERN: ${{ inputs.stock_test_name_pattern }}
 jobs:
-  format:
+  admit:
     runs-on: ubuntu-24.04
-    timeout-minutes: 25
-    env:
-      CANDIDATE_SHA: ${{ inputs.candidate_sha }}
-      BASE_SHA: ${{ inputs.base_sha }}
-      CI: 'true'
-      FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: 'true'
+    timeout-minutes: 3
     steps:
-      - name: Admit exact source pins
+      - name: Validate exact source and assertion pins before checkout
         run: |
           python3 - <<'PY'
-          import os, re
-          for field in ['CANDIDATE_SHA', 'BASE_SHA']:
-              assert re.fullmatch('[0-9a-f]{40}', os.environ[field])
+          import json, os, re
+          from pathlib import PurePosixPath
+          for key in ('CANDIDATE_SHA', 'BASE_SHA'):
+              assert re.fullmatch(r'[0-9a-f]{40}', os.environ[key]), key
+          assert os.environ['CANDIDATE_SHA'] != os.environ['BASE_SHA']
+          def valid_path(p):
+              return (isinstance(p, str) and re.fullmatch(r'[A-Za-z0-9_./-]+', p)
+                      and not PurePosixPath(p).is_absolute()
+                      and '..' not in PurePosixPath(p).parts
+                      and (p.startswith('src/agents/harness/') or p.startswith('src/agents/embedded-agent-runner/run/')
+                              or p.startswith('extensions/codex/src/app-server/') or p == 'src/context-engine/types.ts'))
+          paths = json.loads(os.environ['PRODUCTION_PATHS_JSON'])
+          assert isinstance(paths, list) and paths and len(paths) == len(set(paths))
+          assert all(valid_path(p) and p.endswith('.ts') and '.test.' not in p
+                     and '.test-support.' not in p for p in paths)
+          tests = json.loads(os.environ['TEST_FILES_JSON'])
+          assert isinstance(tests, list) and tests and len(tests) == len(set(tests))
+          assert all(valid_path(p) and p.endswith('.test.ts') for p in tests)
+          stock_tests = json.loads(os.environ['STOCK_TEST_FILES_JSON'])
+          assert isinstance(stock_tests, list) and stock_tests and len(stock_tests) == len(set(stock_tests))
+          assert all(valid_path(p) and p.endswith('.test.ts') for p in stock_tests)
+          assert set(stock_tests).issubset(tests)
+          assert os.environ['STOCK_TEST_NAME_PATTERN'].strip()
+          regressions = json.loads(os.environ['REGRESSION_NAMES_JSON'])
+          assert isinstance(regressions, list) and regressions
+          names = []
+          for r in regressions:
+              assert isinstance(r, dict) and set(r) == {'file', 'fullName'}
+              assert valid_path(r['file']) and r['file'].endswith('.test.ts')
+              assert isinstance(r['fullName'], str) and r['fullName'].strip()
+              assert '\n' not in r['fullName'] and '\r' not in r['fullName']
+              names.append((r['file'], r['fullName']))
+          assert len(names) == len(set(names))
           PY
+  regression:
+    needs: admit
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        role: [stock, repaired]
+    env:
+      ROLE: ${{ matrix.role }}
+    steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
           repository: lordratner/openclaw
           ref: ${{ inputs.candidate_sha }}
           fetch-depth: 1
           persist-credentials: false
-      - name: Freeze changed source set
+      - name: Pin baseline; restore only intended production files on stock
         run: |
           set -euo pipefail
           mkdir -p "$RUNNER_TEMP/proof"
           git fetch --no-tags --depth=1 origin "$BASE_SHA"
-          test "$(git rev-parse HEAD)" = "$CANDIDATE_SHA"
-          git diff "$BASE_SHA" HEAD --name-only > "$RUNNER_TEMP/proof/changed-files.txt"
-          git rev-parse HEAD > "$RUNNER_TEMP/proof/head.txt"
-      - name: Package-owned frozen environment
+          python3 - <<'PY'
+          import hashlib, json, os, subprocess
+          from pathlib import Path
+          proof = Path(os.environ['RUNNER_TEMP']) / 'proof'
+          def git(*args):
+              return subprocess.check_output(['git', *args], text=True).strip()
+          assert git('rev-parse', 'HEAD') == os.environ['CANDIDATE_SHA']
+          assert git('rev-parse', os.environ['BASE_SHA'] + '^{commit}') == os.environ['BASE_SHA']
+          assert not git('status', '--porcelain')
+          paths = json.loads(os.environ['PRODUCTION_PATHS_JSON'])
+          regressions = json.loads(os.environ['REGRESSION_NAMES_JSON'])
+          test_files = json.loads(os.environ['STOCK_TEST_FILES_JSON' if os.environ['ROLE'] == 'stock' else 'TEST_FILES_JSON'])
+          assert set(r['file'] for r in regressions).issubset(test_files)
+          tests_before = {p: hashlib.sha256(Path(p).read_bytes()).hexdigest() for p in test_files}
+          # New production files require a reviewed template update, not implicit deletion.
+          for p in paths:
+              assert git('cat-file', '-t', os.environ['BASE_SHA'] + ':' + p) == 'blob', p
+          if os.environ['ROLE'] == 'stock':
+              subprocess.run(['git', 'restore', '--source=' + os.environ['BASE_SHA'],
+                              '--worktree', '--', *paths], check=True)
+          assert tests_before == {p: hashlib.sha256(Path(p).read_bytes()).hexdigest() for p in test_files}
+          changed = git('diff', '--name-only').splitlines()
+          assert set(changed).issubset(paths)
+          assert os.environ['ROLE'] != 'stock' or changed, 'stock source was not changed'
+          receipt = {'candidate': os.environ['CANDIDATE_SHA'], 'base': os.environ['BASE_SHA'],
+                     'role': os.environ['ROLE'], 'restoredPaths': paths if changed else [],
+                     'changedPaths': changed, 'testFiles': test_files, 'testSha256': tests_before,
+                     'sourceSha256': {p: hashlib.sha256(Path(p).read_bytes()).hexdigest() for p in paths},
+                     'expectedRegressions': regressions}
+          (proof / 'source.json').write_text(json.dumps(receipt, indent=2) + '\n')
+          (proof / 'test-files.json').write_text(json.dumps(test_files) + '\n')
+          with (proof / 'applied.patch').open('wb') as f:
+              subprocess.run(['git', 'diff', '--binary'], stdout=f, check=True)
+          PY
+      - name: Frozen package-owned environment
         uses: ./.github/actions/setup-node-env
         with:
           node-version: 24.19.0
           install-bun: 'false'
           frozen-lockfile: 'true'
           cache-mode: off
-      - name: Format only candidate files and retain exact patch
+      - name: Execute focused suites once; retain real exit and wall time
+        run: |
+          python3 - <<'PY'
+          import json, os, subprocess, time
+          from pathlib import Path
+          proof = Path(os.environ['RUNNER_TEMP']) / 'proof'
+          files = json.loads((proof / 'test-files.json').read_text())
+          command = ['pnpm', 'test', *files, '--maxWorkers=1', '--passWithNoTests=false',
+                     '--reporter=verbose', '--reporter=json', '--outputFile=' + str(proof / 'tests.json')]
+          if os.environ['ROLE'] == 'stock':
+              command += ['--testNamePattern=' + os.environ['STOCK_TEST_NAME_PATTERN']]
+          start = time.monotonic()
+          with (proof / 'tests.log').open('w') as log:
+              result = subprocess.run(command, stdout=log, stderr=subprocess.STDOUT)
+          (proof / 'execution.json').write_text(json.dumps({'command': command, 'exit': result.returncode,
+              'wallSeconds': round(time.monotonic() - start, 3)}, indent=2) + '\n')
+          # Validation owns stock's expected nonzero exit. Missing JSON or setup failures fail closed.
+          PY
+      - name: Validate exact regressions, suite execution, and sibling controls
+        run: |
+          python3 - <<'PY'
+          import hashlib, json, os
+          from pathlib import Path
+          proof = Path(os.environ['RUNNER_TEMP']) / 'proof'
+          source = json.loads((proof / 'source.json').read_text())
+          report = json.loads((proof / 'tests.json').read_text())
+          execution = json.loads((proof / 'execution.json').read_text())
+          assertions = {}
+          for suite in report['testResults']:
+              matching = [p for p in source['testFiles'] if suite['name'].endswith('/' + p) or suite['name'] == p]
+              assert len(matching) == 1, suite['name']
+              filename = matching[0]
+              assert suite['assertionResults'], ('empty suite', filename)
+              for a in suite['assertionResults']:
+                  key = (filename, a['fullName'])
+                  assert key not in assertions, ('duplicate assertion', key)
+                  assertions[key] = a['status']
+          for p in source['testFiles']:
+              assert any(f == p and status in ('passed', 'failed') for (f, _), status in assertions.items()), p
+              assert hashlib.sha256(Path(p).read_bytes()).hexdigest() == source['testSha256'][p], p
+          expected = {(r['file'], r['fullName']) for r in source['expectedRegressions']}
+          assert expected.issubset(assertions), ('missing regressions', expected - assertions.keys())
+          failed = {key for key, status in assertions.items() if status == 'failed'}
+          stock = os.environ['ROLE'] == 'stock'
+          assert failed == (expected if stock else set()), ('unexpected failed assertions', failed)
+          assert all(assertions[key] == ('failed' if stock else 'passed') for key in expected)
+          assert any(key not in expected and status == 'passed' for key, status in assertions.items()), 'no sibling controls'
+          assert execution['exit'] == (1 if stock else 0), execution
+          assert report['success'] is (not stock)
+          assert report['numFailedTests'] == len(failed), 'summary/detail mismatch'
+          summary = {'role': os.environ['ROLE'], 'wallSeconds': execution['wallSeconds'],
+                     'executed': sum(s in ('passed', 'failed') for s in assertions.values()),
+                     'passed': sum(s == 'passed' for s in assertions.values()),
+                     'failed': len(failed), 'skippedOrPending': sum(s not in ('passed', 'failed') for s in assertions.values()),
+                     'expectedRegressionNames': sorted([list(x) for x in expected]), 'verified': True}
+          (proof / 'validated.json').write_text(json.dumps(summary, indent=2) + '\n')
+          print(json.dumps(summary, indent=2))
+          PY
+      - name: Retain exact-head and stock receipts
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: context-budget-${{ matrix.role }}-${{ github.run_id }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/proof
+          retention-days: 14
+  repaired-gates:
+    needs: admit
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          repository: lordratner/openclaw
+          ref: ${{ inputs.candidate_sha }}
+          fetch-depth: 1
+          persist-credentials: false
+      - name: Exact repaired source receipt
+        run: |
+          set -euo pipefail
+          mkdir -p "$RUNNER_TEMP/proof"
+          git fetch --no-tags --depth=1 origin "$BASE_SHA"
+          test "$(git rev-parse HEAD)" = "$CANDIDATE_SHA"
+          test "$(git rev-parse "$BASE_SHA^{commit}")" = "$BASE_SHA"
+          test -z "$(git status --porcelain)"
+          git rev-parse HEAD > "$RUNNER_TEMP/proof/head.txt"
+          git diff "$BASE_SHA" HEAD --binary > "$RUNNER_TEMP/proof/candidate.patch"
+          git diff "$BASE_SHA" HEAD --name-only > "$RUNNER_TEMP/proof/changed-files.txt"
+      - name: Frozen environment and compiler containment
+        uses: ./.github/actions/setup-node-env
+        with:
+          node-version: 24.19.0
+          semantic-checks: 'true'
+          install-bun: 'false'
+          frozen-lockfile: 'true'
+          cache-mode: off
+      - name: Package-owned focused format gate
         run: |
           set -euo pipefail
           mapfile -t paths < "$RUNNER_TEMP/proof/changed-files.txt"
           test "${#paths[@]}" -gt 0
-          pnpm format:fix "${paths[@]}" 2>&1 | tee "$RUNNER_TEMP/proof/format.log"
-          git diff --check
-          git diff --binary > "$RUNNER_TEMP/proof/format.patch"
-          git diff --name-only > "$RUNNER_TEMP/proof/formatted-files.txt"
-      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+          /usr/bin/time -p pnpm format:check "${paths[@]}" 2>&1 | tee "$RUNNER_TEMP/proof/format.log"
+      - name: Package-owned core production type gate
+        if: '!cancelled()'
+        run: |
+          set -euo pipefail
+          /usr/bin/time -p pnpm tsgo:core 2>&1 | tee "$RUNNER_TEMP/proof/type.log"
+      - name: Package-owned extension production type gate
+        if: '!cancelled()'
+        run: |
+          set -euo pipefail
+          /usr/bin/time -p pnpm tsgo:extensions 2>&1 | tee "$RUNNER_TEMP/proof/extension-type.log"
+      - name: Package-owned focused lint gate
+        if: '!cancelled()'
+        run: |
+          python3 - <<'PYLINT'
+          import os, subprocess
+          from pathlib import Path
+          proof = Path(os.environ['RUNNER_TEMP']) / 'proof'
+          paths = (proof / 'changed-files.txt').read_text().splitlines()
+          for owner, config in [('src/', 'config/tsconfig/oxlint.core.json'),
+                                ('extensions/', 'extensions/tsconfig.json')]:
+              selected = [p for p in paths if p.startswith(owner) and p.endswith('.ts')]
+              if selected:
+                  with (proof / ('lint-' + owner.rstrip('/') + '.log')).open('w') as log:
+                      subprocess.run(['node', 'scripts/run-oxlint.mjs', '--tsconfig', config, *selected],
+                                     stdout=log, stderr=subprocess.STDOUT, check=True)
+          PYLINT
+      - name: Package-owned canonical build gate
+        if: '!cancelled()'
+        run: |
+          set -euo pipefail
+          /usr/bin/time -p pnpm build 2>&1 | tee "$RUNNER_TEMP/proof/build.log"
+      - name: Retain repaired gate receipts
         if: always()
+        run: |
+          git status --short > "$RUNNER_TEMP/proof/final-status.txt"
+          git diff --binary > "$RUNNER_TEMP/proof/generated.patch"
+      - name: Upload repaired gate artifacts
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
         with:
-          name: native-context-format-${{ github.run_id }}
+          name: context-budget-repaired-gates-${{ github.run_id }}-${{ github.run_attempt }}
           path: ${{ runner.temp }}/proof
           retention-days: 14
