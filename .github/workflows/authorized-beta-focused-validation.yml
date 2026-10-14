@@ -1,95 +1,127 @@
-name: Authorized Beta Focused Validation
-
+name: History media test lint delta proof
 on:
   workflow_dispatch:
-
+    inputs:
+      candidate_sha:
+        required: true
+        type: string
 permissions:
-  actions: read
-  attestations: write
   contents: read
-  id-token: write
-
-concurrency:
-  group: authorized-beta-focused-validation
-  cancel-in-progress: false
-
+  actions: read
 env:
-  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
-  NODE_VERSION: "24.21.0"
-
+  CI: 'true'
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: 'true'
+  CANDIDATE_SHA: ${{ inputs.candidate_sha }}
+  NODE_OPTIONS: --max-old-space-size=8192
 jobs:
-  validate:
-    runs-on: ubuntu-latest
-    timeout-minutes: 30
+  layout:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
     steps:
-      - name: Validate protected tooling identity
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          repository: lordratner/openclaw
+          ref: ${{ inputs.candidate_sha }}
+          fetch-depth: 16
+          persist-credentials: false
+      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c
+        with:
+          github-token: ${{ github.token }}
+          repository: lordratner/openclaw
+          run-id: 38599164164
+          name: context-budget-repaired-38599164164-1
+          path: ${{ runner.temp }}/prior-tests
+      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c
+        with:
+          github-token: ${{ github.token }}
+          repository: lordratner/openclaw
+          run-id: 38599164164
+          name: context-budget-repaired-gates-38599164164-1
+          path: ${{ runner.temp }}/prior-gates
+      - name: Admit exact one-test-layout delta and unchanged production/retained tests
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          set -euo pipefail
-          if [[ ! "${GITHUB_REF}" =~ ^refs/tags/release-publish/([a-f0-9]{12})-[1-9][0-9]*$ ]]; then
-            echo "Authorized beta focused validation requires a protected release-publish tag." >&2
-            exit 1
-          fi
-          if [[ "${GITHUB_SHA:0:12}" != "${BASH_REMATCH[1]}" ]]; then
-            echo "Protected release-publish tag does not match the workflow SHA." >&2
-            exit 1
-          fi
-          tag="${GITHUB_REF#refs/tags/}"
-          remote_sha="$(
-            gh api "repos/${GITHUB_REPOSITORY}/git/ref/tags/${tag}" \
-              --jq '.object | select(.type == "commit") | .sha'
-          )"
-          [[ "${remote_sha}" == "${GITHUB_SHA}" ]] || {
-            echo "Protected release-publish tag moved after dispatch." >&2
-            exit 1
-          }
-
-      - name: Checkout trusted tooling
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          ref: ${{ github.sha }}
-          fetch-depth: 0
-          persist-credentials: false
-
-      - name: Checkout frozen candidate
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          ref: 3fbe94065c2b94f4c08acb6742a69938bf408d94
-          path: candidate
-          fetch-depth: 0
-          persist-credentials: false
-
-      - name: Setup Node environment
+          python3 - <<'PY'
+          import os,json,hashlib,subprocess,re
+          from pathlib import Path
+          prior='5b2b566b10af9ed39f0bbb930251a7d2ee222cb5';production='5b2b566b10af9ed39f0bbb930251a7d2ee222cb5';file='extensions/codex/src/app-server/context-engine-projection.test.ts'
+          candidate=os.environ['CANDIDATE_SHA'];assert re.fullmatch('[0-9a-f]{40}',candidate)
+          def git(*args):return subprocess.check_output(['git',*args],text=True).strip()
+          assert git('rev-parse','HEAD')==candidate and not git('status','--porcelain')
+          subprocess.run(['git','fetch','--no-tags','--depth=1','origin',prior],check=True)
+          assert git('diff','--name-only',prior,candidate).splitlines()==[file]
+          assert hashlib.sha256(Path(file).read_bytes()).hexdigest()=='a36cea1a883de15f7988314a96eeb161e618aeec8a8740b168a7db741fbd56b2'
+          previousTests=Path(os.environ['RUNNER_TEMP'])/'prior-tests';previousGates=Path(os.environ['RUNNER_TEMP'])/'prior-gates'
+          source=json.loads((previousTests/'source.json').read_text());assert source['candidate']==prior and source['role']=='repaired'
+          for p,sha in source['sourceSha256'].items():assert hashlib.sha256(Path(p).read_bytes()).hexdigest()==sha,p
+          assert (previousGates/'head.txt').read_text().strip()==prior
+          typeJob=json.loads(subprocess.check_output(['gh','api','repos/lordratner/openclaw/actions/jobs/115973655591'],text=True))
+          assert typeJob['run_id']==38599164164 and typeJob['name']=='repaired-gates'
+          requiredTypes={'Package-owned core production type gate','Package-owned extension production type gate'}
+          assert all(any(step['name']==name and step['conclusion']=='success' for step in typeJob['steps']) for name in requiredTypes)
+          report=json.loads((previousTests/'tests.json').read_text());retained=[];passed=0
+          for p,sha in source['testSha256'].items():
+              if p==file:continue
+              assert hashlib.sha256(Path(p).read_bytes()).hexdigest()==sha,p
+              suites=[s for s in report['testResults'] if s['name'].endswith('/'+p)]
+              assert len(suites)==1 and suites[0]['assertionResults']
+              assertions=suites[0]['assertionResults'];assert all(a['status']=='passed' for a in assertions)
+              retained.append({'path':p,'sha256':sha,'passed':len(assertions)});passed+=len(assertions)
+          receipt={'candidate':candidate,'priorSource':prior,'productionSource':production,'delta':[file],'retainedPassed':passed,'retainedFiles':retained,'semantics':'Exact test table global NaN becomes Number.NaN; production unchanged','retainedTypedJob':115973655591,'retainedTypedSteps':sorted(requiredTypes),'priorOverall':'Failed test-only lint; only observed successful type steps and unchanged passing tests credited','packageProof':'Separate canonical package run required; no package-build credit from this test workflow'}
+          assert receipt['retainedPassed']==178 and len(receipt['retainedFiles'])==10
+          proof=Path(os.environ['RUNNER_TEMP'])/'proof';proof.mkdir(exist_ok=True);(proof/'source.json').write_text(json.dumps(receipt,indent=2)+'\n')
+          (proof/'prior-type-job.json').write_text(json.dumps(typeJob,indent=2)+'\n')
+          (proof/'test-files.json').write_text(json.dumps([file])+'\n')
+          PY
+      - name: Frozen package-owned semantic environment
         uses: ./.github/actions/setup-node-env
         with:
-          cache-mode: restore
-          node-version: ${{ env.NODE_VERSION }}
-          install-bun: "false"
-
-      - name: Build focused evidence
-        env:
-          GH_TOKEN: ${{ github.token }}
+          node-version: 24.19.0
+          semantic-checks: 'true'
+          install-bun: 'false'
+          frozen-lockfile: 'true'
+          cache-mode: off
+      - name: Execute changed projection/builder suite once
+        run: |
+          python3 - <<'PY'
+          import os,json,subprocess,time
+          from pathlib import Path
+          proof=Path(os.environ['RUNNER_TEMP'])/'proof';file=json.loads((proof/'test-files.json').read_text())[0]
+          command=['pnpm','test',file,'--maxWorkers=1','--passWithNoTests=false','--reporter=verbose','--reporter=json','--outputFile='+str(proof/'tests.json')]
+          start=time.monotonic()
+          with (proof/'tests.log').open('w') as log:result=subprocess.run(command,stdout=log,stderr=subprocess.STDOUT)
+          elapsed=round(time.monotonic()-start,3);(proof/'execution.json').write_text(json.dumps({'command':command,'exit':result.returncode,'wallSeconds':elapsed},indent=2)+'\n')
+          report=json.loads((proof/'tests.json').read_text());assert result.returncode==0 and report['success'] is True
+          records=[a for s in report['testResults'] for a in s['assertionResults']];assert len(records)==45 and all(a['status']=='passed' for a in records)
+          assert sum(a['fullName'].startswith('buildCodexHistoryItems ') for a in records)==13
+          (proof/'validated.json').write_text(json.dumps({'freshPassed':45,'failed':0,'skipped':0,'wallSeconds':elapsed,'retainedPassed':178},indent=2)+'\n')
+          PY
+      - name: Fresh scoped format
+        if: '!cancelled()'
         run: |
           set -euo pipefail
-          mkdir -p "${RUNNER_TEMP}/authorized-beta-focused"
-          node --import tsx scripts/validate-authorized-beta-focused-evidence.mts create \
-            --candidate-root candidate \
-            --output "${RUNNER_TEMP}/authorized-beta-focused/evidence.json" \
-            --producer-run-id "${GITHUB_RUN_ID}" \
-            --producer-run-attempt "${GITHUB_RUN_ATTEMPT}" \
-            --producer-workflow-full-ref "${GITHUB_REF}" \
-            --producer-workflow-sha "${GITHUB_SHA}"
-
-      - name: Attest focused evidence
-        uses: actions/attest@1e69f48acb82d1966a394da916b4c1698aa569d6 # v4.2.2
+          pnpm format:check extensions/codex/src/app-server/context-engine-projection.test.ts 2>&1 | tee "$RUNNER_TEMP/proof/format.log"
+      - name: Fresh assertion-safety at frozen fork
+        if: '!cancelled()'
+        run: |
+          set -euo pipefail
+          git fetch --no-tags --depth=1 origin 55a3be43fe8ab39300d8ea7b5aa408d29f941f90
+          pnpm check:assertion-safety --base 55a3be43fe8ab39300d8ea7b5aa408d29f941f90 2>&1 | tee "$RUNNER_TEMP/proof/assertion-safety.log"
+      - name: Fresh scoped lint
+        if: '!cancelled()'
+        run: |
+          set -euo pipefail
+          node scripts/run-oxlint.mjs --tsconfig extensions/tsconfig.json extensions/codex/src/app-server/context-engine-projection.test.ts 2>&1 | tee "$RUNNER_TEMP/proof/lint.log"
+      - name: Capture clean source readback
+        if: always()
+        run: |
+          git rev-parse HEAD > "$RUNNER_TEMP/proof/head.txt"
+          git diff --binary > "$RUNNER_TEMP/proof/generated.patch"
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        if: always()
         with:
-          subject-path: ${{ runner.temp }}/authorized-beta-focused/evidence.json
-
-      - name: Upload focused evidence
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
-        with:
-          name: authorized-beta-focused-v1-${{ github.run_id }}-${{ github.run_attempt }}
-          path: ${{ runner.temp }}/authorized-beta-focused/evidence.json
+          name: history-media-nan-${{ github.run_id }}
+          path: ${{ runner.temp }}/proof
           if-no-files-found: error
-          retention-days: 30
+          retention-days: 14
