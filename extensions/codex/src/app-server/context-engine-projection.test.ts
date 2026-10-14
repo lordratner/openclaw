@@ -67,7 +67,12 @@ describe("projectContextEngineAssemblyForCodex", () => {
             );
             expect(part.text.startsWith(CODEX_HISTORY_FRAGMENT_PREFIX)).toBe(true);
             expect(part.text.endsWith(CODEX_HISTORY_FRAGMENT_SUFFIX)).toBe(true);
-            return [part.text.slice(CODEX_HISTORY_FRAGMENT_PREFIX.length, -CODEX_HISTORY_FRAGMENT_SUFFIX.length)];
+            return [
+              part.text.slice(
+                CODEX_HISTORY_FRAGMENT_PREFIX.length,
+                -CODEX_HISTORY_FRAGMENT_SUFFIX.length,
+              ),
+            ];
           })
         : [];
     });
@@ -82,25 +87,51 @@ describe("projectContextEngineAssemblyForCodex", () => {
     const caption = "CAPTION".repeat(2_000);
     const after = "AFTER_IMAGE".repeat(2_000);
     const image = { type: "image" as const, mimeType: "image/png", data: "iVBORw0KGgo=" };
-    const items = buildCodexHistoryItems(caption + after, [{ start: 0, end: caption.length, images: [image] }]);
-    const content = items.flatMap((item) => isJsonObject(item) && Array.isArray(item.content) ? item.content : []);
-    const imageIndex = content.findIndex((part) => isJsonObject(part) && part.type === "input_image");
+    const items = buildCodexHistoryItems(caption + after, [
+      { start: 0, end: caption.length, images: [image] },
+    ]);
+    const content = items.flatMap((item) =>
+      isJsonObject(item) && Array.isArray(item.content) ? item.content : [],
+    );
+    const imageIndex = content.findIndex(
+      (part) => isJsonObject(part) && part.type === "input_image",
+    );
     expect(imageIndex).toBeGreaterThan(0);
-    expect(content[imageIndex]).toEqual({ type: "input_image", image_url: `data:image/png;base64,${image.data}` });
-    const reconstruct = (parts: typeof content) => parts.flatMap((part) => {
-      if (!isJsonObject(part) || typeof part.text !== "string") { return []; }
-      let value = part.text;
-      if (value.startsWith(CODEX_HISTORY_FRAGMENT_PREFIX)) { value = value.slice(CODEX_HISTORY_FRAGMENT_PREFIX.length); }
-      if (value.endsWith(CODEX_HISTORY_FRAGMENT_SUFFIX)) { value = value.slice(0, -CODEX_HISTORY_FRAGMENT_SUFFIX.length); }
-      return [value];
-    }).join("");
+    expect(content[imageIndex]).toEqual({
+      type: "input_image",
+      image_url: `data:image/png;base64,${image.data}`,
+    });
+    const reconstruct = (parts: typeof content) =>
+      parts
+        .flatMap((part) => {
+          if (!isJsonObject(part) || typeof part.text !== "string") {
+            return [];
+          }
+          let value = part.text;
+          if (value.startsWith(CODEX_HISTORY_FRAGMENT_PREFIX)) {
+            value = value.slice(CODEX_HISTORY_FRAGMENT_PREFIX.length);
+          }
+          if (value.endsWith(CODEX_HISTORY_FRAGMENT_SUFFIX)) {
+            value = value.slice(0, -CODEX_HISTORY_FRAGMENT_SUFFIX.length);
+          }
+          return [value];
+        })
+        .join("");
     expect(reconstruct(content.slice(0, imageIndex))).toBe(caption);
     expect(reconstruct(content.slice(imageIndex + 1))).toBe(after);
-    expect(content.filter((part) => isJsonObject(part) && part.type === "input_image")).toHaveLength(1);
+    expect(
+      content.filter((part) => isJsonObject(part) && part.type === "input_image"),
+    ).toHaveLength(1);
     for (const item of items) {
-      if (!isJsonObject(item) || !Array.isArray(item.content)) { continue; }
-      const text = item.content.flatMap((part) => isJsonObject(part) && typeof part.text === "string" ? [part.text] : []).join("");
-      expect(Buffer.byteLength(text, "utf8")).toBeLessThanOrEqual(CODEX_HISTORY_ITEM_TEXT_MAX_BYTES);
+      if (!isJsonObject(item) || !Array.isArray(item.content)) {
+        continue;
+      }
+      const text = item.content
+        .flatMap((part) => (isJsonObject(part) && typeof part.text === "string" ? [part.text] : []))
+        .join("");
+      expect(Buffer.byteLength(text, "utf8")).toBeLessThanOrEqual(
+        CODEX_HISTORY_ITEM_TEXT_MAX_BYTES,
+      );
     }
   });
 
@@ -108,8 +139,16 @@ describe("projectContextEngineAssemblyForCodex", () => {
     const budget = 8_192;
     const text = "🙂".repeat(budget * 2);
     const items = buildCodexHistoryItems(text);
-    const expectedFramingEstimate = items.length * (Math.ceil(Buffer.byteLength(CODEX_HISTORY_FRAGMENT_PREFIX + CODEX_HISTORY_FRAGMENT_SUFFIX, "utf8") / 4) + 32);
-    expect(resolveCodexHistoryItemReserveTokens(budget)).toBeGreaterThanOrEqual(expectedFramingEstimate);
+    const expectedFramingEstimate =
+      items.length *
+      (Math.ceil(
+        Buffer.byteLength(CODEX_HISTORY_FRAGMENT_PREFIX + CODEX_HISTORY_FRAGMENT_SUFFIX, "utf8") /
+          4,
+      ) +
+        32);
+    expect(resolveCodexHistoryItemReserveTokens(budget)).toBeGreaterThanOrEqual(
+      expectedFramingEstimate,
+    );
     expect(resolveCodexHistoryItemReserveTokens(budget)).toBeLessThan(budget / 5);
   });
   it("charges restored file content to the selected window before reading older attachments", async () => {

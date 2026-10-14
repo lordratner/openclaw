@@ -356,24 +356,40 @@ describe("native Codex skill delivery", () => {
       const users = Array.isArray(input)
         ? input.filter((item) => isJsonObject(item) && item.role === "user")
         : [];
-      const historical = users.filter((item) =>
-        isJsonObject(item) && Array.isArray(item.content) && item.content.some(
-          (part) => isJsonObject(part) && typeof part.text === "string" &&
-            part.text.startsWith(CODEX_HISTORY_FRAGMENT_PREFIX),
-        ),
+      const historical = users.filter(
+        (item) =>
+          isJsonObject(item) &&
+          Array.isArray(item.content) &&
+          item.content.some(
+            (part) =>
+              isJsonObject(part) &&
+              typeof part.text === "string" &&
+              part.text.startsWith(CODEX_HISTORY_FRAGMENT_PREFIX),
+          ),
       );
       const current = users.find((item) => JSON.stringify(item).includes(params.prompt));
       expect(historical.length).toBeGreaterThan(1);
       expect(current).toBeDefined();
-      const content = historical.flatMap((item) => isJsonObject(item) && Array.isArray(item.content) ? item.content : []);
+      const content = historical.flatMap((item) =>
+        isJsonObject(item) && Array.isArray(item.content) ? item.content : [],
+      );
       for (const item of historical) {
-        const textParts = isJsonObject(item) && Array.isArray(item.content)
-          ? item.content.flatMap((part) => isJsonObject(part) && typeof part.text === "string" ? [part.text] : [])
-          : [];
-        expect(Buffer.byteLength(textParts.join(""), "utf8")).toBeLessThanOrEqual(CODEX_HISTORY_ITEM_TEXT_MAX_BYTES);
+        const textParts =
+          isJsonObject(item) && Array.isArray(item.content)
+            ? item.content.flatMap((part) =>
+                isJsonObject(part) && typeof part.text === "string" ? [part.text] : [],
+              )
+            : [];
+        expect(Buffer.byteLength(textParts.join(""), "utf8")).toBeLessThanOrEqual(
+          CODEX_HISTORY_ITEM_TEXT_MAX_BYTES,
+        );
       }
       const text = content
-        .flatMap((part) => (isJsonObject(part) && typeof part.text === "string" ? [historicalFragmentText(part.text)] : []))
+        .flatMap((part) =>
+          isJsonObject(part) && typeof part.text === "string"
+            ? [historicalFragmentText(part.text)]
+            : [],
+        )
         .join("");
       expect(text.length).toBeGreaterThan(1 << 20);
       expect(text).toContain(
@@ -383,7 +399,9 @@ describe("native Codex skill delivery", () => {
       );
       expect(text).toContain('[user sender={"id":"native-speaker"}]');
       expect(text).not.toContain("truncated");
-      expect(users.indexOf(historical[historical.length - 1]!)).toBeLessThan(users.indexOf(current!));
+      expect(users.indexOf(historical[historical.length - 1]!)).toBeLessThan(
+        users.indexOf(current!),
+      );
       const imageIndex = content.findIndex(
         (part) => isJsonObject(part) && part.type === "input_image",
       );

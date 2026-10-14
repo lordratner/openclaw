@@ -256,9 +256,11 @@ describe("Codex configured assembled-history delivery", () => {
         const content = historyItems.flatMap((item) => {
           expect(item).toMatchObject({ type: "message", role: "user" });
           const parts = isJsonObject(item) && Array.isArray(item.content) ? item.content : [];
-          const itemText = parts.flatMap((part) =>
-            isJsonObject(part) && typeof part.text === "string" ? [part.text] : [],
-          ).join("");
+          const itemText = parts
+            .flatMap((part) =>
+              isJsonObject(part) && typeof part.text === "string" ? [part.text] : [],
+            )
+            .join("");
           expect(Buffer.byteLength(itemText, "utf8")).toBeLessThanOrEqual(
             CODEX_HISTORY_ITEM_TEXT_MAX_BYTES,
           );
@@ -289,15 +291,18 @@ describe("Codex configured assembled-history delivery", () => {
         const imageIndex = content.findIndex(
           (part) => isJsonObject(part) && part.type === "input_image",
         );
-        expect(content.filter((part) => isJsonObject(part) && part.type === "input_image")).toEqual([
-          { type: "input_image", image_url: `data:image/png;base64,${historicalImage.data}` },
-        ]);
+        expect(content.filter((part) => isJsonObject(part) && part.type === "input_image")).toEqual(
+          [{ type: "input_image", image_url: `data:image/png;base64,${historicalImage.data}` }],
+        );
         expect(content.slice(0, imageIndex).map(stripFragmentFrame).join("")).toContain(
           "IMAGE_MESSAGE_CAPTION",
         );
-        expect(content.slice(imageIndex + 1).map(stripFragmentFrame).join("")).toContain(
-          "ASSISTANT_AFTER_IMAGE",
-        );
+        expect(
+          content
+            .slice(imageIndex + 1)
+            .map(stripFragmentFrame)
+            .join(""),
+        ).toContain("ASSISTANT_AFTER_IMAGE");
         const current = getRequestInputText(harness);
         expect(current).toContain(params.prompt);
         expect(current).toContain("CURRENT_INBOUND_REFERENCE");
@@ -448,12 +453,15 @@ describe("Codex configured assembled-history delivery", () => {
   it("reuses the native per-turn thread when assembly selects no new messages", async () => {
     const { params } = seedParams("per_turn");
     let starts = 0;
-    const harness = createStartedThreadHarness(async (method) => {
-      if (method === "thread/start") {
-        return threadStartResult(`thread-empty-${++starts}`);
-      }
-      return undefined;
-    }, { persistedThreads: [] });
+    const harness = createStartedThreadHarness(
+      async (method) => {
+        if (method === "thread/start") {
+          return threadStartResult(`thread-empty-${++starts}`);
+        }
+        return undefined;
+      },
+      { persistedThreads: [] },
+    );
     const first = runCodexAppServerAttempt(params);
     await first.waitForTurnAccepted();
     await harness.completeTurn("completed", "thread-empty-1");
@@ -481,12 +489,15 @@ describe("Codex configured assembled-history delivery", () => {
   it("injects each selected per-turn quote on the same retained native thread", async () => {
     const { params } = seedParams("per_turn");
     let starts = 0;
-    const harness = createStartedThreadHarness(async (method) => {
-      if (method === "thread/start") {
-        return threadStartResult(`thread-retained-${++starts}`);
-      }
-      return undefined;
-    }, { persistedThreads: [] });
+    const harness = createStartedThreadHarness(
+      async (method) => {
+        if (method === "thread/start") {
+          return threadStartResult(`thread-retained-${++starts}`);
+        }
+        return undefined;
+      },
+      { persistedThreads: [] },
+    );
     const first = runCodexAppServerAttempt(params);
     await first.waitForTurnAccepted();
     await harness.completeTurn("completed", "thread-retained-1");
@@ -513,9 +524,12 @@ describe("Codex configured assembled-history delivery", () => {
 
   it("injects selected per-turn history after a cold native resume without rotating the thread", async () => {
     const { params } = seedParams("per_turn");
-    const firstHarness = createStartedThreadHarness(async (method) => {
-      return method === "thread/start" ? threadStartResult("thread-cold-history") : undefined;
-    }, { persistedThreads: [] });
+    const firstHarness = createStartedThreadHarness(
+      async (method) => {
+        return method === "thread/start" ? threadStartResult("thread-cold-history") : undefined;
+      },
+      { persistedThreads: [] },
+    );
     const first = runCodexAppServerAttempt(params);
     await first.waitForTurnAccepted();
     await firstHarness.completeTurn("completed", "thread-cold-history");
@@ -529,10 +543,12 @@ describe("Codex configured assembled-history delivery", () => {
     expect(resumedHarness.requests.some(({ method }) => method === "thread/start")).toBe(false);
     expect(resumedHarness.requests.some(({ method }) => method === "thread/resume")).toBe(true);
     expect(historySeedRequests(resumedHarness)).toHaveLength(1);
-    expect(resumedHarness.requests.findIndex(({ method }) => method === "thread/inject_items")).toBeLessThan(
-      resumedHarness.requests.findIndex(({ method }) => method === "turn/start"),
-    );
-    expect(resumedHarness.requests.find(({ method }) => method === "turn/start")?.params).toMatchObject({
+    expect(
+      resumedHarness.requests.findIndex(({ method }) => method === "thread/inject_items"),
+    ).toBeLessThan(resumedHarness.requests.findIndex(({ method }) => method === "turn/start"));
+    expect(
+      resumedHarness.requests.find(({ method }) => method === "turn/start")?.params,
+    ).toMatchObject({
       threadId: "thread-cold-history",
     });
     await resumedHarness.completeTurn("completed", "thread-cold-history");
@@ -547,8 +563,11 @@ describe("Codex configured assembled-history delivery", () => {
       if (method === "thread/start") {
         return threadStartResult(`thread-warm-retry-${++starts}`);
       }
-      if (loseAcknowledgment && method === "thread/inject_items" &&
-          JSON.stringify(request).includes(ANCHOR)) {
+      if (
+        loseAcknowledgment &&
+        method === "thread/inject_items" &&
+        JSON.stringify(request).includes(ANCHOR)
+      ) {
         throw new Error("Synthetic lost reused-history acknowledgment");
       }
       return undefined;
@@ -576,13 +595,17 @@ describe("Codex configured assembled-history delivery", () => {
     expect(historySeedRequests(retryHarness)).toHaveLength(1);
     await retryHarness.completeTurn("completed", "thread-warm-retry-2");
     await retry;
-    expect((await readCodexAppServerBinding(params.sessionFile))?.threadId).toBe("thread-warm-retry-2");
+    expect((await readCodexAppServerBinding(params.sessionFile))?.threadId).toBe(
+      "thread-warm-retry-2",
+    );
   });
 
   it("keeps the ordinary assembly-error fallback with a configured cap", async () => {
     const { params } = seedParams("per_turn");
     params.contextEngine = createContextEngine({
-      assemble: async () => { throw new Error("Synthetic ordinary assembly failure"); },
+      assemble: async () => {
+        throw new Error("Synthetic ordinary assembly failure");
+      },
     });
     const harness = createStartedThreadHarness();
     const run = runCodexAppServerAttempt(params);

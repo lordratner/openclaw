@@ -193,7 +193,9 @@ export async function startOrResumeThread(
             withCurrent: authority.withCurrent,
           });
           if (!released) {
-            await (params.abandonClient ?? (() => closeCodexStartupClientBestEffort(params.client)))();
+            await (
+              params.abandonClient ?? (() => closeCodexStartupClientBestEffort(params.client))
+            )();
             throw new CodexAppServerUnsafeSubscriptionError("Codex reused history cleanup failed", {
               cause: error,
             });
