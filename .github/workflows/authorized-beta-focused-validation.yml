@@ -1,95 +1,66 @@
-name: Authorized Beta Focused Validation
-
+# Fork QA branch only; not part of the upstream product patch.
+name: Native context candidate formatting preparation
 on:
   workflow_dispatch:
-
+    inputs:
+      candidate_sha:
+        required: true
+        type: string
+      base_sha:
+        required: true
+        type: string
 permissions:
-  actions: read
-  attestations: write
   contents: read
-  id-token: write
-
-concurrency:
-  group: authorized-beta-focused-validation
-  cancel-in-progress: false
-
-env:
-  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
-  NODE_VERSION: "24.21.0"
-
 jobs:
-  validate:
-    runs-on: ubuntu-latest
-    timeout-minutes: 30
+  format:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    env:
+      CANDIDATE_SHA: ${{ inputs.candidate_sha }}
+      BASE_SHA: ${{ inputs.base_sha }}
+      CI: 'true'
+      FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: 'true'
     steps:
-      - name: Validate protected tooling identity
-        env:
-          GH_TOKEN: ${{ github.token }}
+      - name: Admit exact source pins
+        run: |
+          python3 - <<'PY'
+          import os, re
+          for field in ['CANDIDATE_SHA', 'BASE_SHA']:
+              assert re.fullmatch('[0-9a-f]{40}', os.environ[field])
+          PY
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          repository: lordratner/openclaw
+          ref: ${{ inputs.candidate_sha }}
+          fetch-depth: 1
+          persist-credentials: false
+      - name: Freeze changed source set
         run: |
           set -euo pipefail
-          if [[ ! "${GITHUB_REF}" =~ ^refs/tags/release-publish/([a-f0-9]{12})-[1-9][0-9]*$ ]]; then
-            echo "Authorized beta focused validation requires a protected release-publish tag." >&2
-            exit 1
-          fi
-          if [[ "${GITHUB_SHA:0:12}" != "${BASH_REMATCH[1]}" ]]; then
-            echo "Protected release-publish tag does not match the workflow SHA." >&2
-            exit 1
-          fi
-          tag="${GITHUB_REF#refs/tags/}"
-          remote_sha="$(
-            gh api "repos/${GITHUB_REPOSITORY}/git/ref/tags/${tag}" \
-              --jq '.object | select(.type == "commit") | .sha'
-          )"
-          [[ "${remote_sha}" == "${GITHUB_SHA}" ]] || {
-            echo "Protected release-publish tag moved after dispatch." >&2
-            exit 1
-          }
-
-      - name: Checkout trusted tooling
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          ref: ${{ github.sha }}
-          fetch-depth: 0
-          persist-credentials: false
-
-      - name: Checkout frozen candidate
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          ref: 3fbe94065c2b94f4c08acb6742a69938bf408d94
-          path: candidate
-          fetch-depth: 0
-          persist-credentials: false
-
-      - name: Setup Node environment
+          mkdir -p "$RUNNER_TEMP/proof"
+          git fetch --no-tags --depth=1 origin "$BASE_SHA"
+          test "$(git rev-parse HEAD)" = "$CANDIDATE_SHA"
+          git diff "$BASE_SHA" HEAD --name-only > "$RUNNER_TEMP/proof/changed-files.txt"
+          git rev-parse HEAD > "$RUNNER_TEMP/proof/head.txt"
+      - name: Package-owned frozen environment
         uses: ./.github/actions/setup-node-env
         with:
-          cache-mode: restore
-          node-version: ${{ env.NODE_VERSION }}
-          install-bun: "false"
-
-      - name: Build focused evidence
-        env:
-          GH_TOKEN: ${{ github.token }}
+          node-version: 24.19.0
+          install-bun: 'false'
+          frozen-lockfile: 'true'
+          cache-mode: off
+      - name: Format only candidate files and retain exact patch
         run: |
           set -euo pipefail
-          mkdir -p "${RUNNER_TEMP}/authorized-beta-focused"
-          node --import tsx scripts/validate-authorized-beta-focused-evidence.mts create \
-            --candidate-root candidate \
-            --output "${RUNNER_TEMP}/authorized-beta-focused/evidence.json" \
-            --producer-run-id "${GITHUB_RUN_ID}" \
-            --producer-run-attempt "${GITHUB_RUN_ATTEMPT}" \
-            --producer-workflow-full-ref "${GITHUB_REF}" \
-            --producer-workflow-sha "${GITHUB_SHA}"
-
-      - name: Attest focused evidence
-        uses: actions/attest@1e69f48acb82d1966a394da916b4c1698aa569d6 # v4.2.2
+          mapfile -t paths < "$RUNNER_TEMP/proof/changed-files.txt"
+          test "${#paths[@]}" -gt 0
+          pnpm format:fix "${paths[@]}" 2>&1 | tee "$RUNNER_TEMP/proof/format.log"
+          git diff --check
+          git diff --binary > "$RUNNER_TEMP/proof/format.patch"
+          git diff --name-only > "$RUNNER_TEMP/proof/formatted-files.txt"
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        if: always()
         with:
-          subject-path: ${{ runner.temp }}/authorized-beta-focused/evidence.json
-
-      - name: Upload focused evidence
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
-        with:
-          name: authorized-beta-focused-v1-${{ github.run_id }}-${{ github.run_attempt }}
-          path: ${{ runner.temp }}/authorized-beta-focused/evidence.json
-          if-no-files-found: error
-          retention-days: 30
+          name: native-context-format-${{ github.run_id }}
+          path: ${{ runner.temp }}/proof
+          retention-days: 14
