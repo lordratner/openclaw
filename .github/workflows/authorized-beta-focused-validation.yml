@@ -1,95 +1,94 @@
-name: Authorized Beta Focused Validation
-
+name: Attribute inherited bounded-continuity failure
 on:
   workflow_dispatch:
-
 permissions:
-  actions: read
-  attestations: write
   contents: read
-  id-token: write
-
-concurrency:
-  group: authorized-beta-focused-validation
-  cancel-in-progress: false
-
 env:
-  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
-  NODE_VERSION: "24.21.0"
-
+  CI: 'true'
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: 'true'
+  NODE_OPTIONS: --max-old-space-size=8192
+  MAIN_SHA: 92a6a23f14e93e388cf012dbf8caa5be5e374fec
+  CANDIDATE_SHA: 6c69c5d3e9f7a574cfc33ebf2af6bb653945c08e
+  BASE_SHA: 55a3be43fe8ab39300d8ea7b5aa408d29f941f90
 jobs:
-  validate:
-    runs-on: ubuntu-latest
-    timeout-minutes: 30
+  inherited:
+    strategy:
+      fail-fast: false
+      matrix:
+        role: [main, merged]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    env:
+      PROOF_ROLE: ${{ matrix.role }}
     steps:
-      - name: Validate protected tooling identity
-        env:
-          GH_TOKEN: ${{ github.token }}
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          repository: openclaw/openclaw
+          ref: ${{ env.MAIN_SHA }}
+          fetch-depth: 1
+          persist-credentials: false
+      - name: Admit unchanged baseline fixture and optional isolated merged tree
         run: |
           set -euo pipefail
-          if [[ ! "${GITHUB_REF}" =~ ^refs/tags/release-publish/([a-f0-9]{12})-[1-9][0-9]*$ ]]; then
-            echo "Authorized beta focused validation requires a protected release-publish tag." >&2
-            exit 1
-          fi
-          if [[ "${GITHUB_SHA:0:12}" != "${BASH_REMATCH[1]}" ]]; then
-            echo "Protected release-publish tag does not match the workflow SHA." >&2
-            exit 1
-          fi
-          tag="${GITHUB_REF#refs/tags/}"
-          remote_sha="$(
-            gh api "repos/${GITHUB_REPOSITORY}/git/ref/tags/${tag}" \
-              --jq '.object | select(.type == "commit") | .sha'
-          )"
-          [[ "${remote_sha}" == "${GITHUB_SHA}" ]] || {
-            echo "Protected release-publish tag moved after dispatch." >&2
-            exit 1
-          }
-
-      - name: Checkout trusted tooling
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          ref: ${{ github.sha }}
-          fetch-depth: 0
-          persist-credentials: false
-
-      - name: Checkout frozen candidate
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          ref: 3fbe94065c2b94f4c08acb6742a69938bf408d94
-          path: candidate
-          fetch-depth: 0
-          persist-credentials: false
-
-      - name: Setup Node environment
+          mkdir -p "$RUNNER_TEMP/bounded-baseline"
+          git fetch --no-tags --depth=1 https://github.com/lordratner/openclaw.git "$CANDIDATE_SHA"
+          git fetch --no-tags --depth=1 https://github.com/openclaw/openclaw.git "$BASE_SHA"
+          python3 - <<'PY'
+          import os,json,hashlib,subprocess
+          from pathlib import Path
+          P=Path(os.environ['RUNNER_TEMP'])/'bounded-baseline';main=os.environ['MAIN_SHA'];candidate=os.environ['CANDIDATE_SHA'];base=os.environ['BASE_SHA'];role=os.environ['PROOF_ROLE']
+          def git(*args):return subprocess.check_output(['git',*args],text=True).strip()
+          assert git('rev-parse','HEAD')==main and not git('status','--porcelain');refs=git('for-each-ref','--format=%(refname) %(objectname)')
+          tree=git('write-tree')
+          if role=='merged':
+              result=subprocess.run(['git','merge-tree','--write-tree','--merge-base='+base,main,candidate],text=True,capture_output=True)
+              (P/'merge-engine.log').write_text(result.stdout+result.stderr);assert result.returncode==0,'No conflict override'
+              tree=result.stdout.splitlines()[0];subprocess.run(['git','read-tree','--reset','-u',tree],check=True)
+          else:assert role=='main'
+          assert git('write-tree')==tree and git('rev-parse','HEAD')==main and git('for-each-ref','--format=%(refname) %(objectname)')==refs and not git('diff','--name-only')
+          file='extensions/codex/src/app-server/run-attempt.bounded-continuity.test.ts';old=Path(file).read_bytes();sha=hashlib.sha256(old).hexdigest()
+          assert sha=='52595ce24cbe1f50b9590fa0c86bfc853fce00ebf170723f3ea7a054b3754c40'
+          assert old==subprocess.check_output(['git','show',main+':'+file])==subprocess.check_output(['git','show',candidate+':'+file])
+          text=old.decode();needle='    const history = await readHistory(params);';assert text.count(needle)==1
+          logger='\n    console.log("BOUNDED_BASELINE_PROBE " + JSON.stringify({phase:"canonical read before binding/harness/native attempt",roles:history?.map((message)=>message.role),bytes:Buffer.byteLength(JSON.stringify(history)),hasOriginalRequest:JSON.stringify(history).includes("Explain the synthetic migration plan."),hasLatestAnswer:JSON.stringify(history).includes(explanation)}));'
+          patched=text.replace(needle,needle+logger);Path(file).write_text(patched)
+          assert patched.replace(logger,'')==text
+          (P/'source.json').write_text(json.dumps({'role':role,'main':main,'candidate':candidate,'base':base,'treeBeforeDiagnostic':tree,'fixture':file,'originalFixtureSha256':sha,'diagnosticFixtureSha256':hashlib.sha256(patched.encode()).hexdigest(),'referencesUnchanged':True,'assertionsUnchanged':True,'diagnostic':'One synthetic-only print before unchanged failing assertion; no implementation override'},indent=2)+'\n')
+          PY
+      - name: Frozen package-owned semantic environment
         uses: ./.github/actions/setup-node-env
         with:
-          cache-mode: restore
-          node-version: ${{ env.NODE_VERSION }}
-          install-bun: "false"
-
-      - name: Build focused evidence
-        env:
-          GH_TOKEN: ${{ github.token }}
+          node-version: 24.19.0
+          semantic-checks: 'true'
+          install-bun: 'false'
+          frozen-lockfile: 'true'
+          cache-mode: off
+      - name: Execute original two cases once and require the exact inherited failure
         run: |
-          set -euo pipefail
-          mkdir -p "${RUNNER_TEMP}/authorized-beta-focused"
-          node --import tsx scripts/validate-authorized-beta-focused-evidence.mts create \
-            --candidate-root candidate \
-            --output "${RUNNER_TEMP}/authorized-beta-focused/evidence.json" \
-            --producer-run-id "${GITHUB_RUN_ID}" \
-            --producer-run-attempt "${GITHUB_RUN_ATTEMPT}" \
-            --producer-workflow-full-ref "${GITHUB_REF}" \
-            --producer-workflow-sha "${GITHUB_SHA}"
-
-      - name: Attest focused evidence
-        uses: actions/attest@1e69f48acb82d1966a394da916b4c1698aa569d6 # v4.2.2
+          python3 - <<'PY'
+          import os,json,re,subprocess,time
+          from pathlib import Path
+          P=Path(os.environ['RUNNER_TEMP'])/'bounded-baseline';source=json.loads((P/'source.json').read_text())
+          cmd=['pnpm','test',source['fixture'],'--maxWorkers=1','--passWithNoTests=false','--reporter=verbose','--reporter=json','--outputFile='+str(P/'tests.json')]
+          start=time.monotonic()
+          with (P/'tests.log').open('w') as out:r=subprocess.run(cmd,stdout=out,stderr=subprocess.STDOUT)
+          elapsed=round(time.monotonic()-start,3);(P/'execution.json').write_text(json.dumps({'command':cmd,'exit':r.returncode,'wallSeconds':elapsed},indent=2)+'\n')
+          report=json.loads((P/'tests.json').read_text());records=[a for s in report['testResults'] for a in s['assertionResults']]
+          assert r.returncode==1 and len(records)==2 and report['success'] is False and report['numFailedTests']==1 and report['numPendingTests']==0
+          failed=[a for a in records if a['status']=='failed'];passed=[a for a in records if a['status']=='passed'];assert len(failed)==len(passed)==1
+          assert failed[0]['fullName']=='Codex bounded assistant continuity retains an assistant-only bounded suffix on a rotated native thread'
+          message='\n'.join(failed[0]['failureMessages']);assert 'AssertionError' in message and "expected false to be true" in message
+          assert not any(x in message for x in ('ReferenceError','TypeError','timed out','Timeout'))
+          assert passed[0]['fullName']=='Codex bounded assistant continuity applies prompt hooks once per build without duplicating continuity input'
+          diagnostics=[json.loads(m.group(1)) for m in re.finditer(r'BOUNDED_BASELINE_PROBE (\{[^\n]*\})',(P/'tests.log').read_text())];assert len(diagnostics)==1
+          d=diagnostics[0];assert 'user' in d['roles'] and d['hasOriginalRequest'] and d['hasLatestAnswer'] and d['bytes']<=8192
+          result={'qualifiedInheritedFailure':True,'role':source['role'],'main':source['main'],'candidate':source['candidate'],'failed':1,'positivePassed':1,'skipped':0,'failureName':failed[0]['fullName'],'failureMessage':message,'diagnostic':d,'wallSeconds':elapsed,'meaning':'Failure before native attempt is also present without any PR implementation'}
+          (P/'validated.json').write_text(json.dumps(result,indent=2)+'\n')
+          PY
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        if: always()
         with:
-          subject-path: ${{ runner.temp }}/authorized-beta-focused/evidence.json
-
-      - name: Upload focused evidence
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
-        with:
-          name: authorized-beta-focused-v1-${{ github.run_id }}-${{ github.run_attempt }}
-          path: ${{ runner.temp }}/authorized-beta-focused/evidence.json
+          name: history-bounded-baseline-${{ matrix.role }}-${{ github.run_id }}
+          path: ${{ runner.temp }}/bounded-baseline
           if-no-files-found: error
-          retention-days: 30
+          retention-days: 14
