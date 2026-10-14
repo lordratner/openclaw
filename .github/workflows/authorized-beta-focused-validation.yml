@@ -2,7 +2,7 @@
 # Dispatch on an independently pinned QA branch after the candidate is published.
 # Fill exact candidate/base SHAs, intended existing production paths and regression
 # fullNames at dispatch; no guessed fixed test totals and no model/review secrets.
-name: Split budget final fixture delta proof
+name: Independent selected-history focused proof
 on:
   workflow_dispatch:
     inputs:
@@ -279,32 +279,6 @@ jobs:
           assert set(selected).issubset(changed)
           (proof / 'gate-files.txt').write_text('\n'.join(selected or changed) + '\n')
           PYSCOPE
-      - name: Verify test-only revision and retained successful production gates
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: |
-          python3 - <<'PYRETAIN'
-          import os,json,subprocess,hashlib
-          from pathlib import Path
-          p=Path(os.environ['RUNNER_TEMP'])/'proof';prior='9c8e201da62814f721c16cf0e9f1bb9b54e9cf02';run='38500334640';file='extensions/codex/src/app-server/run-attempt.context-engine.test.ts'
-          changed=subprocess.check_output(['git','diff','--name-only',prior,'HEAD'],text=True).splitlines();assert changed==[file],changed
-          subprocess.run(['gh','run','download',run,'--repo','lordratner/openclaw','--name','context-budget-repaired-gates-'+run+'-1','--dir',str(p/'retained-gates')],check=True)
-          assert (p/'retained-gates/head.txt').read_text().strip()==prior and (p/'retained-gates/generated.patch').stat().st_size==0
-          jobs=json.loads(subprocess.check_output(['gh','api','repos/lordratner/openclaw/actions/runs/'+run+'/jobs?per_page=100'],text=True));gates=[j for j in jobs['jobs'] if j['name']=='repaired-gates'];assert len(gates)==1
-          steps={x['name']:x['conclusion'] for x in gates[0]['steps']};required=['Package-owned core production type gate','Package-owned extension production type gate','Fresh assertion-safety against the verified frozen fork point'];assert all(steps.get(n)=='success' for n in required),steps
-          subprocess.run(['gh','run','download',run,'--repo','lordratner/openclaw','--name','context-budget-repaired-'+run+'-1','--dir',str(p/'retained-tests')],check=True)
-          src=json.loads((p/'retained-tests/source.json').read_text());r=json.loads((p/'retained-tests/tests.json').read_text());assert src['candidate']==prior
-          retained=[];passes=0
-          for f,h in src['testSha256'].items():
-              if f==file:continue
-              assert hashlib.sha256(Path(f).read_bytes()).hexdigest()==h,f
-              suites=[t for t in r['testResults'] if t['name'].endswith('/'+f)];assert len(suites)==1
-              a=suites[0]['assertionResults'];assert a and all(x['status']=='passed' for x in a),f
-              passes+=len(a);retained.append(f)
-          assert len(retained)==10 and passes==279,(len(retained),passes)
-          receipt={'candidate':os.environ['CANDIDATE_SHA'],'prior':prior,'delta':changed,'retainedRun':run,'successfulProductionSteps':required,'retainedUnchangedTestFiles':retained,'retainedPassedTests':passes,'qualification':'component proof only, not a repeated301test current-headrun'}
-          (p/'retained-proof.json').write_text(json.dumps(receipt,indent=2)+'\n');print(json.dumps(receipt,indent=2))
-          PYRETAIN
       - name: Frozen environment and compiler containment
         uses: ./.github/actions/setup-node-env
         with:
@@ -319,6 +293,22 @@ jobs:
           mapfile -t paths < "$RUNNER_TEMP/proof/gate-files.txt"
           test "${#paths[@]}" -gt 0
           /usr/bin/time -p pnpm format:check "${paths[@]}" 2>&1 | tee "$RUNNER_TEMP/proof/format.log"
+      - name: Fresh assertion-safety against the verified frozen fork point
+        if: '!cancelled()'
+        run: |
+          set -euo pipefail
+          test "$(git merge-base HEAD "$BASE_SHA")" = "$BASE_SHA"
+          /usr/bin/time -p pnpm check:assertion-safety --base "$BASE_SHA" 2>&1 | tee "$RUNNER_TEMP/proof/assertion-safety.log"
+      - name: Package-owned core production type gate
+        if: '!cancelled()'
+        run: |
+          set -euo pipefail
+          /usr/bin/time -p pnpm tsgo:core 2>&1 | tee "$RUNNER_TEMP/proof/type.log"
+      - name: Package-owned extension production type gate
+        if: '!cancelled()'
+        run: |
+          set -euo pipefail
+          /usr/bin/time -p pnpm tsgo:extensions 2>&1 | tee "$RUNNER_TEMP/proof/extension-type.log"
       - name: Package-owned focused lint gate
         if: '!cancelled()'
         run: |
