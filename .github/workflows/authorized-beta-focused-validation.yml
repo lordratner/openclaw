@@ -1,4 +1,4 @@
-name: Budget installed Gateway stable-state and recovery proof
+name: Budget retained-package stable-state and recovery proof
 on:
   workflow_dispatch:
     inputs:
@@ -9,6 +9,7 @@ on:
         type: string
 permissions:
   contents: read
+  actions: read
 env:
   CI: 'true'
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: 'true'
@@ -17,7 +18,7 @@ env:
 jobs:
   shipped:
     runs-on: ubuntu-24.04
-    timeout-minutes: 60
+    timeout-minutes: 25
     steps:
       - name: Admit exact reviewed source
         run: test "$CANDIDATE_SHA" = cf4186f7d2154842b1686961b393d39e243799ef
@@ -33,28 +34,47 @@ jobs:
           path: .proof-tools
           persist-credentials: false
           sparse-checkout: .qa
-      - name: Frozen package-owned environment
-        uses: ./.github/actions/setup-node-env
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020
         with:
           node-version: 24.19.0
-          install-bun: 'true'
-          frozen-lockfile: 'true'
-          cache-mode: restore
-          build-all-cache-scope: full
-      - name: Canonically build and pack exact candidate with patched Codex
-        env:
-          GIT_COMMIT: ${{ inputs.candidate_sha }}
+      - name: Download immutable exact candidate package
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c
+        with:
+          github-token: ${{ github.token }}
+          repository: lordratner/openclaw
+          run-id: 38515883196
+          artifact-ids: '11872904440'
+          path: ${{ runner.temp }}/budget-package
+      - name: Download prior actual passing pilot evidence
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c
+        with:
+          github-token: ${{ github.token }}
+          repository: lordratner/openclaw
+          run-id: 38515883196
+          artifact-ids: '11873725881'
+          path: ${{ runner.temp }}/prior-shipped-proof
+      - name: Admit exact archived package and retained pilot
         run: |
-          set -euo pipefail
-          test "$(git rev-parse HEAD)" = "$CANDIDATE_SHA"
-          mkdir -p "$RUNNER_TEMP/budget-package" "$RUNNER_TEMP/budget-shipped-full-evidence"
-          node scripts/package-openclaw-for-docker.mjs --bundle-plugin codex --allow-unreleased-changelog --output-dir "$RUNNER_TEMP/budget-package" --output-name openclaw-2026.10.2.tgz --pack-json "$RUNNER_TEMP/budget-package/pack.json"
-          sha256sum "$RUNNER_TEMP/budget-package/openclaw-2026.10.2.tgz" > "$RUNNER_TEMP/budget-shipped-full-evidence/package.sha256"
-          cp "$RUNNER_TEMP/budget-package/pack.json" "$RUNNER_TEMP/budget-shipped-full-evidence/pack.json"
-      - name: Corrected actual Gateway pilot prerequisite
-        env:
-          PROOF_TOOL_DIR: ${{ github.workspace }}/.proof-tools/.qa
-        run: node .proof-tools/.qa/budget-shipped-pilot.mjs
+          python3 - <<'PY'
+          import os,json,hashlib,tarfile,shutil
+          from pathlib import Path
+          root=Path(os.environ['RUNNER_TEMP']);package=root/'budget-package'/'openclaw-2026.10.2.tgz'
+          expected='e1eeae94bc8b6635f1cfb712f7913754e90b26863498591ed7637ae03c8bce29'
+          assert hashlib.sha256(package.read_bytes()).hexdigest()==expected
+          with tarfile.open(package) as archive:
+              build=json.load(archive.extractfile('package/dist/build-info.json'))
+              assert build['commit']==os.environ['CANDIDATE_SHA'] and build['version']=='2026.10.2'
+              plugin=json.load(archive.extractfile('package/dist/extensions/codex/package.json'))
+              assert plugin['version']=='2026.10.2' and plugin['openclaw']['build']['bundledDist'] is True
+          source=root/'prior-shipped-proof'/'budget-shipped-evidence';pilot=json.loads((source/'pilot-receipt.json').read_text())
+          assert pilot['passed'] is True and pilot['candidate']==os.environ['CANDIDATE_SHA']
+          assert pilot['assemblyAllowance']==pilot['commitAllowance']==pilot['maintenanceAllowance']==345407
+          shutil.copytree(source,root/'budget-shipped-evidence')
+          evidence=root/'budget-shipped-full-evidence';evidence.mkdir(exist_ok=True)
+          (evidence/'retained-proof.json').write_text(json.dumps({'packageRun':38515883196,'packageArtifact':11872904440,'packageSha256':expected,'packageBuildInfo':build,'pilotRun':38515883196,'pilotArtifact':11873725881,'pilotExecution':'Retained real passing execution, NOT rerun on this job','previousFullScenario':'Failed before callbacks; no credit'},indent=2)+'\n')
+          PY
+      - name: Install only matching stock native binary in isolated helper prefix
+        run: npm install --prefix "$RUNNER_TEMP/budget-native" @openai/codex@0.160.0 --no-fund --no-audit
       - name: Install published stable in task-owned prefix
         run: |
           set -euo pipefail
@@ -66,6 +86,7 @@ jobs:
           INSTALLED_PREFIX: ${{ runner.temp }}/budget-installed
           INSTALLED_ENTRY: ${{ runner.temp }}/budget-installed/lib/node_modules/openclaw/openclaw.mjs
           CANDIDATE_TARBALL: ${{ runner.temp }}/budget-package/openclaw-2026.10.2.tgz
+          PROOF_NATIVE_LAUNCHER: ${{ runner.temp }}/budget-native/node_modules/@openai/codex/bin/codex.js
         run: node .proof-tools/.qa/budget-shipped-full.mjs
       - name: Capture exact source and proof tool identities
         if: always()
@@ -99,11 +120,3 @@ jobs:
             ${{ runner.temp }}/budget-shipped-evidence
           if-no-files-found: error
           retention-days: 14
-      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
-        if: always()
-        with:
-          name: budget-installed-candidate-${{ github.run_id }}
-          path: ${{ runner.temp }}/budget-package
-          if-no-files-found: warn
-          retention-days: 7
-          compression-level: 0

@@ -56,7 +56,7 @@ await fs.writeFile(path.join(codexHome,'config.toml'),[
   'supports_websockets=false','request_max_retries=0','stream_max_retries=0',
 ].join('\n'));
 const require = createRequire(path.join(repo,'extensions/codex/package.json'));
-const codexLauncher = path.join(path.dirname(require.resolve('@openai/codex/package.json')),'bin/codex.js');
+const codexLauncher = process.env.PROOF_NATIVE_LAUNCHER ?? path.join(path.dirname(require.resolve('@openai/codex/package.json')),'bin/codex.js');
 const pluginDir = path.join(root,'plugin'); await fs.mkdir(pluginDir,{recursive:true});
 await fs.copyFile(path.join(process.env.PROOF_TOOL_DIR,'budget-shipped-probe-plugin.mjs'),path.join(pluginDir,'index.mjs'));
 await fs.writeFile(path.join(pluginDir,'package.json'),JSON.stringify({name:'budget-proof',version:'1.0.0',type:'module',openclaw:{extensions:['./index.mjs']}}));
@@ -65,7 +65,7 @@ const state = path.join(root,'state'); await fs.mkdir(state,{recursive:true});
 const configPath = path.join(state,'openclaw.json');
 const config = {gateway:{mode:'local',bind:'loopback',port:gatewayPort,auth:{mode:'none'},controlUi:{enabled:false}},
   agents:{defaults:{workspace,model:{primary:'openai/'+model},heartbeat:{every:'0m'}}},
-  models:{providers:{openai:{models:[{id:model,name:'Synthetic budget proof',contextTokens:400000,maxTokens:2000,agentRuntime:{id:'codex'}}]}}},
+  models:{providers:{openai:{models:[{id:model,name:'Synthetic budget proof',api:'openai-responses',contextTokens:400000,maxTokens:2000,agentRuntime:{id:'codex'}}]}}},
   plugins:{allow:['codex','budget-proof'],load:{paths:[pluginDir]},slots:{contextEngine:'budget-proof'},
     entries:{codex:{enabled:true,config:{appServer:{command:process.execPath,args:[codexLauncher,'app-server'],
       homeScope:'user',sandbox:'read-only',approvalPolicy:'never'},sessionCatalog:{enabled:false}}},'budget-proof':{enabled:true}}}};
@@ -231,7 +231,7 @@ try {
   assert(events.length>=4&&events.every(x=>x.model===model));
   await fs.writeFile(path.join(evidence,'full-receipt.json'),JSON.stringify({candidate:process.env.CANDIDATE_SHA,
     entryPoint:'installed shipped CLI -> real Gateway -> stock Codex app-server -> credential-free synthetic Responses endpoint',
-    stableVersion,candidateVersion,nativeVersion,nativeCommandContract:'Explicit external appServer command resolving real pinned 0.160.0 from source Codex dependency ownership; not automatic installed-plugin binary discovery',
+    stableVersion,candidateVersion,nativeVersion,nativeCommandContract:'Explicit external appServer command using official pinned 0.160.0 in task-owned proof prefix, matching the source dependency pin; not automatic installed-plugin binary discovery',
     stableBuildInfo,candidateBuildInfo,activeCodexSourceSha256:activeSourceSha256,
     upgradeKind:'Published stable state reopened by exact patched-source installation; lower declared candidate version, NOT normal higher-semver managed updater',
     stableQueuedLegacy:legacy.advancement_key,legacySettingsAbsent:true,existingSettingsPreserved:true,
