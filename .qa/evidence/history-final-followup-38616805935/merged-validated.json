@@ -1,0 +1,18 @@
+{
+  "candidate": "09b8620728e5b41ebf309fc0c08d6441ee26be54",
+  "main": "92a6a23f14e93e388cf012dbf8caa5be5e374fec",
+  "passed": 3,
+  "failed": 0,
+  "skipped": 0,
+  "wallSeconds": 103.173,
+  "command": [
+    "pnpm",
+    "test",
+    "extensions/codex/src/app-server/run-attempt.bounded-continuity.test.ts",
+    "--maxWorkers=1",
+    "--passWithNoTests=false",
+    "--reporter=verbose",
+    "--reporter=json",
+    "--outputFile=/home/runner/work/_temp/merged-test-types/tests.json"
+  ]
+}

@@ -1,0 +1,5 @@
+$ oxfmt --check extensions/codex/src/app-server/context-engine-projection.test.ts extensions/codex/src/app-server/run-attempt.history-seed.test.ts extensions/codex/src/app-server/run-attempt.continuity-media.test.ts extensions/codex/src/app-server/run-attempt.bounded-continuity.test.ts extensions/codex/src/app-server/context-engine-projection.ts
+Checking formatting...
+
+All matched files use the correct format.
+Finished in 26ms on 5 files using 4 threads.

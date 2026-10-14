@@ -1,0 +1,85 @@
+{
+  "qualified": true,
+  "runId": 38612992584,
+  "url": "https://github.com/lordratner/openclaw/actions/runs/38612992584",
+  "main": "92a6a23f14e93e388cf012dbf8caa5be5e374fec",
+  "candidate": "6c69c5d3e9f7a574cfc33ebf2af6bb653945c08e",
+  "meaning": "Original canonical-reader Boolean failure reproduced on main-only and same-main candidate merge before any native attempt; hook positive passes in both. New consumer tests check owning contract instead of a particular core selection strategy.",
+  "roles": {
+    "main": {
+      "qualifiedInheritedFailure": true,
+      "role": "main",
+      "main": "92a6a23f14e93e388cf012dbf8caa5be5e374fec",
+      "candidate": "6c69c5d3e9f7a574cfc33ebf2af6bb653945c08e",
+      "failed": 1,
+      "positivePassed": 1,
+      "skipped": 0,
+      "failureName": "Codex bounded assistant continuity retains an assistant-only bounded suffix on a rotated native thread",
+      "failureMessage": "AssertionError: expected false to be true // Object.is equality\n    at /home/runner/work/openclaw/openclaw/extensions/codex/src/app-server/run-attempt.bounded-continuity.test.ts:85:93\n    at file:///home/runner/work/openclaw/openclaw/node_modules/.pnpm/vitest@5.0.1_patch_hash=90ba2969491e095cc2e92a4d38256dfcf64f85078ec29e1762b9429a00b3590_97a01857a58f4497e41a6517ab9b01b5/node_modules/vitest/dist/chunks/run.C5UmxDPh.js:2783:20",
+      "diagnostic": {
+        "phase": "canonical read before binding/harness/native attempt",
+        "roles": [
+          "user",
+          "assistant",
+          "toolResult",
+          "assistant",
+          "toolResult",
+          "assistant",
+          "toolResult",
+          "assistant",
+          "toolResult",
+          "assistant"
+        ],
+        "bytes": 3450,
+        "hasOriginalRequest": true,
+        "hasLatestAnswer": true
+      },
+      "wallSeconds": 87.665,
+      "meaning": "Failure before native attempt is also present without any PR implementation"
+    },
+    "merged": {
+      "qualifiedInheritedFailure": true,
+      "role": "merged",
+      "main": "92a6a23f14e93e388cf012dbf8caa5be5e374fec",
+      "candidate": "6c69c5d3e9f7a574cfc33ebf2af6bb653945c08e",
+      "failed": 1,
+      "positivePassed": 1,
+      "skipped": 0,
+      "failureName": "Codex bounded assistant continuity retains an assistant-only bounded suffix on a rotated native thread",
+      "failureMessage": "AssertionError: expected false to be true // Object.is equality\n    at /home/runner/work/openclaw/openclaw/extensions/codex/src/app-server/run-attempt.bounded-continuity.test.ts:85:93\n    at file:///home/runner/work/openclaw/openclaw/node_modules/.pnpm/vitest@5.0.1_patch_hash=90ba2969491e095cc2e92a4d38256dfcf64f85078ec29e1762b9429a00b3590_97a01857a58f4497e41a6517ab9b01b5/node_modules/vitest/dist/chunks/run.C5UmxDPh.js:2783:20",
+      "diagnostic": {
+        "phase": "canonical read before binding/harness/native attempt",
+        "roles": [
+          "user",
+          "assistant",
+          "toolResult",
+          "assistant",
+          "toolResult",
+          "assistant",
+          "toolResult",
+          "assistant",
+          "toolResult",
+          "assistant"
+        ],
+        "bytes": 3450,
+        "hasOriginalRequest": true,
+        "hasLatestAnswer": true
+      },
+      "wallSeconds": 145.207,
+      "meaning": "Failure before native attempt is also present without any PR implementation"
+    }
+  },
+  "artifactHashes": {
+    "merged/validated.json": "23a6e9035b9b3e3856005f99352e5883654929fe4a196bb7992b5f864421e66c",
+    "merged/tests.log": "434f7621e57cbdc63206335d3c83d35413769368bb3667408aef88407cb3c86a",
+    "merged/merge-engine.log": "de6ddcd4f7ffd865a39b5e7153eea7277a69fc353f34077fd8159a826049b43c",
+    "merged/source.json": "b43cf59fad1fd203a75fec78bf6a2eb61c8d46393f5b07196147d6e4df8da194",
+    "merged/tests.json": "4463d4bd4005389f97c0b28d414771029088bf3895a8fe1fd97b4512db90a9c9",
+    "merged/execution.json": "314d6d8c086040037dba14168c4412fe856a895e63390e53ad33bbb37fe46af5",
+    "main/validated.json": "1bb9e3031941cba72c430e69830fb552537576ad407431fc75eb0a65210fe3bb",
+    "main/tests.log": "5e30f69d7a0dc21ce3c7eaa5cc622754c8cd7a381fd099f1a30f279f6c670b1b",
+    "main/source.json": "c63b64a6c1861107f171df103a1b1cbdde90e21c94f1f236d1fbf5547c246a85",
+    "main/tests.json": "37fe678917944edfc27d6d75e1ad5465d464b582fcf5a220d67620262f11b529",
+    "main/execution.json": "1220d50efa5ecdfdbb9d5c86a435074b12c47e687d643fb6bf8bb4f625c54511"
+  }
+}

@@ -1,0 +1,134 @@
+{
+  "qualified": true,
+  "candidate": "09b8620728e5b41ebf309fc0c08d6441ee26be54",
+  "runId": 38616805935,
+  "url": "https://github.com/lordratner/openclaw/actions/runs/38616805935",
+  "freshPassed": 67,
+  "retainedPassed": 157,
+  "retainedFiles": 7,
+  "freshWallSeconds": 127.481,
+  "freshMergedContinuityPassed": 3,
+  "mergedMain": "92a6a23f14e93e388cf012dbf8caa5be5e374fec",
+  "mergedTree": "1888abbfd64785b1f7e779c7a4377bd0a6b16634",
+  "freshMergedExtensionTestTypes": true,
+  "retainedBehaviorProofSource": "5b2b566b10af9ed39f0bbb930251a7d2ee222cb5",
+  "controlledErrorLiteralException": {
+    "old": "Selected history or restored attachments exceed their rendered allowance",
+    "new": "Selected history or restored attachments exceed their rendered allowance. Start a new conversation with a smaller attachment."
+  },
+  "sourceHashIdentity": {
+    "candidate": "09b8620728e5b41ebf309fc0c08d6441ee26be54",
+    "priorSource": "6c69c5d3e9f7a574cfc33ebf2af6bb653945c08e",
+    "productionSource": "5b2b566b10af9ed39f0bbb930251a7d2ee222cb5",
+    "delta": [
+      "extensions/codex/src/app-server/context-engine-projection.test.ts",
+      "extensions/codex/src/app-server/run-attempt.history-seed.test.ts",
+      "extensions/codex/src/app-server/run-attempt.continuity-media.test.ts",
+      "extensions/codex/src/app-server/run-attempt.bounded-continuity.test.ts",
+      "extensions/codex/src/app-server/context-engine-projection.ts"
+    ],
+    "changedSourceSha256": {
+      "extensions/codex/src/app-server/context-engine-projection.test.ts": "fc96bb032e3191bbf522c04972ed08b0b7ee2da0de7908ea6ce22cbc79098e58",
+      "extensions/codex/src/app-server/run-attempt.history-seed.test.ts": "0e9061192d665e0929abfdab2b9ba96e84d0a985bef61d72b3ee7192c5c58288",
+      "extensions/codex/src/app-server/run-attempt.continuity-media.test.ts": "b4a013907d22b7e1241aaaafc6f111c017a9a8ae7ae343303c815dea8103715b",
+      "extensions/codex/src/app-server/run-attempt.bounded-continuity.test.ts": "c088f5c7bc2b8ac88b211315bb39eca2f0cb4dbb41fff309e2733b75e60ebdb0",
+      "extensions/codex/src/app-server/context-engine-projection.ts": "1315dfc1d3b1db4a72f2dc0b3a6b780d2f8408c069adb65c496bde942cb25f7e"
+    },
+    "retainedPassed": 157,
+    "retainedFiles": [
+      {
+        "path": "extensions/codex/src/app-server/client.test.ts",
+        "sha256": "ff2ffcf599f1ea3c34c4959b6a09e08bfc90b26da6aeec57b4d308e66f8f5d2b",
+        "passed": 28
+      },
+      {
+        "path": "extensions/codex/src/app-server/run-attempt.context-engine-overflow.test.ts",
+        "sha256": "a2d746682f3f8d5e025cfd9703195c4f2c4e8df196749d46f116e07aa57c60a3",
+        "passed": 7
+      },
+      {
+        "path": "extensions/codex/src/app-server/run-attempt.context-engine.test.ts",
+        "sha256": "e39a012349c6369ee7a63d118f80b8bb14e5cf84eec3c047b1a96e9da9d3a6cb",
+        "passed": 18
+      },
+      {
+        "path": "extensions/codex/src/app-server/run-attempt.skills.native.test.ts",
+        "sha256": "0ab94ac6391b74cd641dda733dd944fea7c3ccb443c0ae32795770734abcdd22",
+        "passed": 4
+      },
+      {
+        "path": "extensions/codex/src/app-server/thread-lifecycle.binding.test.ts",
+        "sha256": "21a2df74754341fcb50b7f800dc9221c52dab72f01537096f41e7463ab4f0ead",
+        "passed": 84
+      },
+      {
+        "path": "extensions/codex/src/app-server/thread-lifecycle.handoff-cancellation.test.ts",
+        "sha256": "60839723653b95bf3dff4aaec6ff840a0037a115c3b85182a7e4875c4066003e",
+        "passed": 5
+      },
+      {
+        "path": "extensions/codex/src/app-server/thread-lifecycle.native-config.test.ts",
+        "sha256": "a18079a9e1972bd2c7a4da63278d3f797ec596d10616c99b58f6592a68bb7d04",
+        "passed": 11
+      }
+    ],
+    "semantics": "Explicit own Vitest mocks, typed request spy, cross-version canonical continuity contract and recovery-only overflow wording; carrier behavior unchanged",
+    "retainedTypedJob": 115973655591,
+    "retainedTypedSteps": [
+      "Package-owned core production type gate",
+      "Package-owned extension production type gate"
+    ],
+    "priorOverall": "Failed test-only lint; only observed successful type steps and unchanged passing tests credited",
+    "packageProof": "Historical exact5b installed carrier proof retained with a named error-copy-only source exception; no finalsource binary identity claimed"
+  },
+  "mergedSource": {
+    "candidate": "09b8620728e5b41ebf309fc0c08d6441ee26be54",
+    "main": "92a6a23f14e93e388cf012dbf8caa5be5e374fec",
+    "base": "55a3be43fe8ab39300d8ea7b5aa408d29f941f90",
+    "mergedTree": "1888abbfd64785b1f7e779c7a4377bd0a6b16634",
+    "headStillMain": true,
+    "refsUnchanged": true,
+    "conflictOverrides": false,
+    "testSha256": {
+      "extensions/codex/src/app-server/context-engine-projection.test.ts": "52a4fea758f5f3d99914fb8060e24a7df137388d4b092862e8aee21e36be7eef",
+      "extensions/codex/src/app-server/run-attempt.history-seed.test.ts": "0e9061192d665e0929abfdab2b9ba96e84d0a985bef61d72b3ee7192c5c58288"
+    }
+  },
+  "historicalInstalledClaimBoundary": "Source5b package and actualinstalled5turn traces prove unchanged carrier/media/continuity behavior; finalsource includes a named recovery-only error literal change and test updates. Finalsource not repacked/installed; no finalbinaryidentity claim.",
+  "priorFailures": "Old lint/import/types/consumer failures are not counted as passing overall runs.",
+  "artifactHashes": {
+    "merged/validated.json": "77b97b6f8d23bb2afe7e52bbb27657bf701ba92aae67f08c9f5963b258cf8f13",
+    "merged/tests.log": "876e040ea75e8a094d420767dd9ba380e9d94745d712614eb0185d3a6ace33d4",
+    "merged/final-status.txt": "308bc957c2dfec61f14130f46d4cd726a72c9088de68cc9b7af91091f84a484b",
+    "merged/merge-engine.log": "cb7cd14f441a33c2802a3970edb76ca4e4babdd61bc1930247008ac2e17be2a4",
+    "merged/format.log": "97a088f7a5f078d1a89aee5cc94b0bfc089e228597aff621c5a658d02bd87969",
+    "merged/source.json": "62eda8c356540fba1325fe758098f4b78f13438c09e9cf9bb088f29ee5a09612",
+    "merged/extension-test-types.log": "d50fa2bbd2ef76e7a6af21a122aff6478b0b04104d28b5ae7588ae03963ea0e2",
+    "merged/tests.json": "d89a187e7586eef745954b126f9bdf6aa1692e1950ebd8367e601ca1433e7bf4",
+    "merged/lint.log": "01cb36f9bad0f046586545b81ae0b11fd8210c0555f298614ce7d78b57d585d1",
+    "delta/validated.json": "3a27288fb20cee4be5cb07565eef51ecf6f560edeb4b346e9ce93ef7911b0418",
+    "delta/tests.log": "34e4235e920763f3f623a7402a9fae16c7f903d863dde88eef0598c9abfd92cd",
+    "delta/generated.patch": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "delta/test-files.json": "58ed2b9868ff3617a8f38adc246bee36b952de1378891faccfbb9aa0001dc463",
+    "delta/format.log": "464ed7cbbb191f8a8dbed2a541d33cdfa714c896510503da8e924e220968a1fd",
+    "delta/prior-type-job.json": "7d0c5750f493ab12d5d5c0ca2677c6ed58692e78db3912304151a5448def7cd0",
+    "delta/assertion-safety.log": "b9cbd91f9bd2d25fa58baf0bb3cd89775414a0b0c3754be5ff4e7be17beb1919",
+    "delta/source.json": "075b43c54702b3bf8550842167aa34d1f55c4eba07c790a1fe29375f8846b9ef",
+    "delta/head.txt": "92715eac5b374a09e82b75535342590db6ca6681193323854138088b0d92c610",
+    "delta/tests.json": "9cfdac6155745d07187d4c7ccf013a97e35dda6c552e53930c05f17c6ffdb7f6",
+    "delta/lint.log": "8028003b334e0a759ac133b679be7e29f177099be9981a08da6102d04cf0996f",
+    "delta/execution.json": "168b2ea1fb2cdee23ee5b96ee791a09d9404249fac679b9cb5ba43cb3b88b362",
+    "delta/tests.json.reports-NOGYJU/index.json": "5afb13d68ad4aab7e7dc6828834eb3b7cd1161713ce558c2e980a8794620a83f",
+    "delta/tests.json.reports-NOGYJU/aggregate.json.capture.json": "6171914f87923ed0fec77f4b148538dc137cfbee7d25922c8d990c9dccf0c61c",
+    "delta/tests.json.reports-NOGYJU/aggregate.json": "9cfdac6155745d07187d4c7ccf013a97e35dda6c552e53930c05f17c6ffdb7f6",
+    "delta/tests.json.reports-NOGYJU/vitest.merge.config.mjs": "5c405a5e3616dc12bcca36d82cf16a3d4040ec99fc77953aa2a61fd584cfed34",
+    "delta/tests.json.reports-NOGYJU/accepted-blobs/1.json": "328a9ed829cb6eac4b1f3ce25876429433213646905424e3f77f50791d1a0d26",
+    "delta/tests.json.reports-NOGYJU/accepted-blobs/0.json": "a72a5fbd44f829c8274e51f255866a2d20b739f0a707cf73d39928d8160c1cf8",
+    "delta/tests.json.reports-NOGYJU/2/1/blob.json": "328a9ed829cb6eac4b1f3ce25876429433213646905424e3f77f50791d1a0d26",
+    "delta/tests.json.reports-NOGYJU/2/1/report.json": "2364e57500e16d234a2675f63a4c99d7df5f4c3546e7a3187ff7ae14d3008eb3",
+    "delta/tests.json.reports-NOGYJU/2/1/report.json.capture.json": "9c70075de1a170239c2698136713b05ac9097532ddbdb822d2ff8cc20d576648",
+    "delta/tests.json.reports-NOGYJU/1/1/blob.json": "a72a5fbd44f829c8274e51f255866a2d20b739f0a707cf73d39928d8160c1cf8",
+    "delta/tests.json.reports-NOGYJU/1/1/report.json": "5fd95641f984e83024e2f78092d3faa373b893b30521538dfcf1ff17951c2096",
+    "delta/tests.json.reports-NOGYJU/1/1/report.json.capture.json": "1f421e23e2d7090c4b8f381fa3a2ecaecde7ffc86996bb45ea2b3e63a3ac0ee0"
+  }
+}

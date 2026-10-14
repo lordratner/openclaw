@@ -1,0 +1,161 @@
+{
+  "reviewer": "budget_route_review",
+  "approvedForPublication": true,
+  "qualified": true,
+  "runId": 38612992584,
+  "url": "https://github.com/lordratner/openclaw/actions/runs/38612992584",
+  "main": "92a6a23f14e93e388cf012dbf8caa5be5e374fec",
+  "candidate": "6c69c5d3e9f7a574cfc33ebf2af6bb653945c08e",
+  "qaHead": "f89017787d4f88239babea72696f3975ab89a089",
+  "observedRunConclusion": "success",
+  "roleResults": {
+    "main": {
+      "qualifiedInheritedFailure": true,
+      "role": "main",
+      "main": "92a6a23f14e93e388cf012dbf8caa5be5e374fec",
+      "candidate": "6c69c5d3e9f7a574cfc33ebf2af6bb653945c08e",
+      "failed": 1,
+      "positivePassed": 1,
+      "skipped": 0,
+      "failureName": "Codex bounded assistant continuity retains an assistant-only bounded suffix on a rotated native thread",
+      "failureMessage": "AssertionError: expected false to be true // Object.is equality\n    at /home/runner/work/openclaw/openclaw/extensions/codex/src/app-server/run-attempt.bounded-continuity.test.ts:85:93\n    at file:///home/runner/work/openclaw/openclaw/node_modules/.pnpm/vitest@5.0.1_patch_hash=90ba2969491e095cc2e92a4d38256dfcf64f85078ec29e1762b9429a00b3590_97a01857a58f4497e41a6517ab9b01b5/node_modules/vitest/dist/chunks/run.C5UmxDPh.js:2783:20",
+      "diagnostic": {
+        "phase": "canonical read before binding/harness/native attempt",
+        "roles": [
+          "user",
+          "assistant",
+          "toolResult",
+          "assistant",
+          "toolResult",
+          "assistant",
+          "toolResult",
+          "assistant",
+          "toolResult",
+          "assistant"
+        ],
+        "bytes": 3450,
+        "hasOriginalRequest": true,
+        "hasLatestAnswer": true
+      },
+      "wallSeconds": 87.665,
+      "meaning": "Failure before native attempt is also present without any PR implementation"
+    },
+    "merged": {
+      "qualifiedInheritedFailure": true,
+      "role": "merged",
+      "main": "92a6a23f14e93e388cf012dbf8caa5be5e374fec",
+      "candidate": "6c69c5d3e9f7a574cfc33ebf2af6bb653945c08e",
+      "failed": 1,
+      "positivePassed": 1,
+      "skipped": 0,
+      "failureName": "Codex bounded assistant continuity retains an assistant-only bounded suffix on a rotated native thread",
+      "failureMessage": "AssertionError: expected false to be true // Object.is equality\n    at /home/runner/work/openclaw/openclaw/extensions/codex/src/app-server/run-attempt.bounded-continuity.test.ts:85:93\n    at file:///home/runner/work/openclaw/openclaw/node_modules/.pnpm/vitest@5.0.1_patch_hash=90ba2969491e095cc2e92a4d38256dfcf64f85078ec29e1762b9429a00b3590_97a01857a58f4497e41a6517ab9b01b5/node_modules/vitest/dist/chunks/run.C5UmxDPh.js:2783:20",
+      "diagnostic": {
+        "phase": "canonical read before binding/harness/native attempt",
+        "roles": [
+          "user",
+          "assistant",
+          "toolResult",
+          "assistant",
+          "toolResult",
+          "assistant",
+          "toolResult",
+          "assistant",
+          "toolResult",
+          "assistant"
+        ],
+        "bytes": 3450,
+        "hasOriginalRequest": true,
+        "hasLatestAnswer": true
+      },
+      "wallSeconds": 145.207,
+      "meaning": "Failure before native attempt is also present without any PR implementation"
+    }
+  },
+  "testedTrees": {
+    "main": "1ba7bd2f22a12241410553ee7bffd255fdc41e02",
+    "merged": "9a695b4e0ccaa85269716f45a8ac9eccc1f8d0d2"
+  },
+  "originalFixtureSha256": "52595ce24cbe1f50b9590fa0c86bfc853fce00ebf170723f3ea7a054b3754c40",
+  "diagnosticFixtureSha256": "12fe60f4ab6833ba174ee04d7ab13c14f78f58f1030bbec369e923f25053b44e",
+  "publicationFiles": [
+    {
+      "path": "main/execution.json",
+      "sha256": "1220d50efa5ecdfdbb9d5c86a435074b12c47e687d643fb6bf8bb4f625c54511",
+      "bytes": 336
+    },
+    {
+      "path": "main/source.json",
+      "sha256": "c63b64a6c1861107f171df103a1b1cbdde90e21c94f1f236d1fbf5547c246a85",
+      "bytes": 706
+    },
+    {
+      "path": "main/tests.json",
+      "sha256": "37fe678917944edfc27d6d75e1ad5465d464b582fcf5a220d67620262f11b529",
+      "bytes": 1863
+    },
+    {
+      "path": "main/tests.log",
+      "sha256": "5e30f69d7a0dc21ce3c7eaa5cc622754c8cd7a381fd099f1a30f279f6c670b1b",
+      "bytes": 8703
+    },
+    {
+      "path": "main/validated.json",
+      "sha256": "1bb9e3031941cba72c430e69830fb552537576ad407431fc75eb0a65210fe3bb",
+      "bytes": 1301
+    },
+    {
+      "path": "merged/execution.json",
+      "sha256": "314d6d8c086040037dba14168c4412fe856a895e63390e53ad33bbb37fe46af5",
+      "bytes": 337
+    },
+    {
+      "path": "merged/merge-engine.log",
+      "sha256": "de6ddcd4f7ffd865a39b5e7153eea7277a69fc353f34077fd8159a826049b43c",
+      "bytes": 41
+    },
+    {
+      "path": "merged/source.json",
+      "sha256": "b43cf59fad1fd203a75fec78bf6a2eb61c8d46393f5b07196147d6e4df8da194",
+      "bytes": 708
+    },
+    {
+      "path": "merged/tests.json",
+      "sha256": "4463d4bd4005389f97c0b28d414771029088bf3895a8fe1fd97b4512db90a9c9",
+      "bytes": 1862
+    },
+    {
+      "path": "merged/tests.log",
+      "sha256": "434f7621e57cbdc63206335d3c83d35413769368bb3667408aef88407cb3c86a",
+      "bytes": 8757
+    },
+    {
+      "path": "merged/validated.json",
+      "sha256": "23a6e9035b9b3e3856005f99352e5883654929fe4a196bb7992b5f864421e66c",
+      "bytes": 1304
+    }
+  ],
+  "qualifiedSummarySha256": "8535ac476b224ad43c7dca37ad4a11d2ae070ba391d062e5223d8c7d43f69806",
+  "attributionVerdict": "The exact original test-fixture assumption fails on main-only92a without any carrier implementation, and identically on its cleanpublished6c69 merge. It fails atcanonicalreader role expectation before binding/harness/nativeattempt, not a newhistorycarrier regression. Owningconsumer test contract needs known-source boundedframe semantics and separate actualassistant-only fixture, not corefilter restoration.",
+  "independentlyVerified": [
+    "Fresh GitHubmetadata bothmain/merged jobsteps success, exactQAhead. Actualtests eachordinaryexit1/reportfalse/twouniquecases: oneexactBooleanAssertionError and onepositivehookpass, zero skips/setup/timeouts.",
+    "Bothfailuremessages exactequal includingfailedname andstack :85:93; workflowdiagnostic isinsertedbeforeunchangedfirstBoolassertion andnewbinding/nativecallstillafterit.",
+    "Rawdiagnostics exactequal:1user+4assistant/toolResultpairs+latestassistant,3450bytes/originalrequest/latestanswertrue. Reader remainsbounded, originalcontextretention simplyinvalidatesoldassistant-only assumption whenfixturecontainsuser.",
+    "Sourcefixtures beforediagnostic exactpublic main/publishedcandidate same52595bytes; singleloggerremovalidentityguard andsame12fe patchedfixturehashbothroles. Main-onlytree1ba7 vscleanmerged9a69, HEAD/ref/assertionimmobilityverified bysourceartifact guards.",
+    "All11rawartifacthashes matchedparentqualifiedsummary andparsedreports/logs/witnesses; no application/sourceexecution byreviewer."
+  ],
+  "privacy": {
+    "approvedReviewedScope": "All eleven baseline raw JSON/report/testlogs/merge log files listed in publicationFiles, plus qualifiedsummary fields. Not approval of unrelated futurepublicmanifest.",
+    "result": "Synthetic scenario strings,roles/presencebooleans/counts, publicsource/dependency stackpaths and hostedrunner temporarymetadata only. No operatorconversation/state, credentials,bearer/callbacksecrets or privatefamilydata discovered.",
+    "diagnostic": "No fullmessagecontent logged:whitelistedrolelist/bytecount/knownsynthetictext presence only.",
+    "additionalRedactionRequired": false,
+    "method": "Parsed full JSON andtestlogs; token/private-key/bearer/operatorprivate-marker patterns plus sourcefixture/environment inspection."
+  },
+  "limits": [
+    "Baselineintentionalonefail+onepass perrole; jobsuccess meansvalidatorattribution passed, not originaltests allgreen.",
+    "Specificfrozenmain92a/published6c69, not unobservedfuturemain/core correctness inallscenarios.",
+    "Repairedthreecaseconsumer/finalcandidate0106 followup67/gates/mergedtypes mustfinish independently; thisreceipt doesnotapprove pendingresults.",
+    "Actualnewpublicevidence fullmanifest/privacy andhumanP0context review remainseparate."
+  ],
+  "verification": "Independent offline rawmetadata/reports/assertion/diagnostic/source/hash/attribution/privacy inspection andread-onlyGitHubrun readback; receiptwriteonly. No productedits, applicationchecks/testre-runs/GitHubpublication/refs/main-sync/live changes."
+}

@@ -1,0 +1,31 @@
+{
+  "status": "Requested Codex consumer test repair implemented; independent review/remote gates pending",
+  "implementer": "history_lifecycle",
+  "file": "extensions/codex/src/app-server/run-attempt.bounded-continuity.test.ts",
+  "sha256": "d82ca926734149cbb1b9aa562d1b4523a22ce455ad56cf8f8af2fccda084f233",
+  "caseCount": 3,
+  "caseNames": [
+    "Codex bounded assistant continuity retains bounded closed-frame history on a rotated native thread (with historical user)",
+    "Codex bounded assistant continuity retains bounded closed-frame history on a rotated native thread (assistant only)",
+    "Codex bounded assistant continuity applies prompt hooks once per build without duplicating continuity input"
+  ],
+  "contract": [
+    "Latest answer and nonempty bounded selected history retained; bytes bounded by existing public resolveAgentHarnessHistoryLimits.",
+    "Known-source user optional according to canonical reader strategy; any returned user equals a canonical original source user, not an injected/fabricated checkpoint.",
+    "Separate no-user fixture retains strict assistant/toolResult-only assertion; preserves explicit assistant-only continuity coverage.",
+    "All existing retained tool-result owning-call closure assertions unchanged.",
+    "Canonical full source snapshot before/after public model-context read exact unchanged.",
+    "Every original native rotation/current input/tool elision/quote safety/context delimiters/text size assertion and every prompt-hook assertion retained."
+  ],
+  "publicAPIs": [
+    "SessionManager.buildSessionContext",
+    "resolveAgentHarnessHistoryLimits from agent-harness-attempt-runtime",
+    "Existing mirrored-history reader/native attempt harness"
+  ],
+  "privateCoreImportsAdded": false,
+  "productionEdits": false,
+  "strategyCompatibility": "No unconditional user retention or omission notice expectation; valid old55 suffix selection and currentmain request-preferential omission both accepted under same consumer bounds/identity/frame guarantees.",
+  "negativeControlPending": "Parent original published6c69 main-only/merged probe must still establish inherited baseline attribution; new fixtures then run standalone/current main.",
+  "localApplicationExecution": false,
+  "githubWrites": false
+}

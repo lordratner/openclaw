@@ -1,0 +1,64 @@
+{
+  "reviewer": "budget_route_review",
+  "approvedForRemoteQualification": true,
+  "reviewedFiles": {
+    "extensions/codex/src/app-server/context-engine-projection.ts": "1315dfc1d3b1db4a72f2dc0b3a6b780d2f8408c069adb65c496bde942cb25f7e"
+  },
+  "controlledLiteralOnly": true,
+  "reverseExactPreviousProduction": true,
+  "previousProductionSource": "5b2b566b10af9ed39f0bbb930251a7d2ee222cb5",
+  "previousModuleSha256": "59cfaa2e27b9fbf8eaa9b7c7a6cba9c802fe1e44e835bc996350fbf220da34aa",
+  "changedLiteral": {
+    "old": "Selected history or restored attachments exceed their rendered allowance",
+    "new": "Selected history or restored attachments exceed their rendered allowance. Start a new conversation with a smaller attachment."
+  },
+  "scope": "Recovery-facing P3 copy only; same error type/conditions, projection/carrier/allowance/media/native lifecycle/control flow unchanged.",
+  "retentionVerdict": "A named exact reviewed literal-only exception plus fresh scoped source/error/test-type checks is sufficient. Appliedinstructions do not require another canonical35minute installable package rebuild solely for this ASCII next-step string. Oldinstalled5b evidence remains its exacthistoricalbuilt source and samecarrier behavior, not exactfinalpackage bytes.",
+  "evidenceRequirements": [
+    "Freshprojection+seed+realmanagedmedia64cases and actualmergedcurrentmain extensiontesttypes, scopedformat/lint/ratchet. Current changedtest dependency/typedseam must be proven; string-onlynewmessage statically inspected, may also be asserted in existingoversizecase withoutadditionalcase.",
+    "Retain159allpassedcases/eight unchangedtestfiles only after exacthash/report verification; prioroverall failedlint/testtypes not reclassifiedgreen.",
+    "Whole current production diff from5b must contain only reviewed overflowliteral expansion inthismodule; reverse exactexpectedliteral restoresknown59cf module hash and all otherproduction/dependency/package/config/modulebytes match. No blanketproductiondiff or whitespaceignore.",
+    "Fresh currentsource receipt cannot claimbyte-equal5b production: preserve actual changedmodulehash1315..., disclose errorcopyexception explicitly in PR/componentproof.",
+    "Old canonicalpackage/installedGateway source5b/binary/hash andrun remain immutablehistoricalproof ofunchangedcarrier/native/media behavior. Finalsource itself is not installed/repacked; final recoverywording is newsource proof. No claim oldarchive builtnewSHA.",
+    "Normal upstream PR CI broad build/checks still apply asrun; scopedretention doesnot waive actualfailingtesttype gates, maintainerhumanmanualreview, finalpublicprivacy checks ormergeauthority."
+  ],
+  "appliedRules": [
+    {
+      "path": "openclaw-history-source/.agents/skills/openclaw-testing/SKILL.md",
+      "section": "Proof policy",
+      "quote": "Prove changed contract, complete required gates, finish. Broaden/repeat only for changed inputs, failures, or named unresolved risk.",
+      "application": "Only failurewording changed; recheck source/errors/touchedtesttypes, reuse prior unchanged integration contract."
+    },
+    {
+      "path": "openclaw-history-source/.agents/skills/openclaw-testing/SKILL.md",
+      "section": "Select the proof",
+      "quote": "Build output, lazy imports, package boundaries: include `pnpm build`.",
+      "application": "No build-output/lazy-loading/package contract change; this clause doesnot require fullpack for a plainASCIIerrorliteral. Futureupstream normalbuild remains exactcurrentCI evidence."
+    },
+    {
+      "path": "openclaw-history-source/AGENTS.md",
+      "section": "Execution discipline",
+      "quote": "New check needs named unknown, risk, or required gate. Reuse valid proof.",
+      "application": "A35min newpackage solelyto repeat unchanged successfulnative carrier behavior is not requirednamedrisk after exactliteralguard."
+    },
+    {
+      "path": "openclaw-history-source/AGENTS.md",
+      "section": "Authority and safety",
+      "quote": "Narrow baseline, snapshot, ignore, expected-failure exceptions: implementer decisions when each entry verified against source and PR records reason (e.g. tool-owned metadata in upgrade snapshot while user data stays exact). Never mask real regression or user-data change.",
+      "application": "One reviewedliteral reverse exception is explicitsource-proven andPR-recorded; not a blanketexception masking genuineprojection oruserdata mutation."
+    }
+  ],
+  "remainingLimits": [
+    "No claim of exact finalsource installablearchive orshippederror wording before anactualfinalbuild/runtime proof.",
+    "Baseline bounded-continuity CI failure beforeattempt/carrier stillneeds independentmain-only classification; no proofscope expansion or silence abouta newfailure.",
+    "P0 contextpolicy>manualreview humanmaintainer acceptance remains separate."
+  ],
+  "verification": "Read-only exactsource/reversehash/reference search and appliedrule review plus requestedreceipt write; no appexecution/localchecks/tests/build/install, sourceedit orpublication.",
+  "independentMediaAssertionReview": {
+    "file": "extensions/codex/src/app-server/run-attempt.continuity-media.test.ts",
+    "sha256": "b4a013907d22b7e1241aaaafc6f111c017a9a8ae7ae343303c815dea8103715b",
+    "newCases": 0,
+    "exactDelta": "Oneextra case-insensitive recovery phrase assertion inexisting oversizedrealmanageddocument rejection; existingfailure/no-native-effect/sourceimmutable assertions andfittingcontrol unchanged.",
+    "remoteGate": "Fresh realmedia suite mustpass beforefinalpublication."
+  }
+}

@@ -1,0 +1,13 @@
+{
+  "role": "main",
+  "main": "92a6a23f14e93e388cf012dbf8caa5be5e374fec",
+  "candidate": "6c69c5d3e9f7a574cfc33ebf2af6bb653945c08e",
+  "base": "55a3be43fe8ab39300d8ea7b5aa408d29f941f90",
+  "treeBeforeDiagnostic": "1ba7bd2f22a12241410553ee7bffd255fdc41e02",
+  "fixture": "extensions/codex/src/app-server/run-attempt.bounded-continuity.test.ts",
+  "originalFixtureSha256": "52595ce24cbe1f50b9590fa0c86bfc853fce00ebf170723f3ea7a054b3754c40",
+  "diagnosticFixtureSha256": "12fe60f4ab6833ba174ee04d7ab13c14f78f58f1030bbec369e923f25053b44e",
+  "referencesUnchanged": true,
+  "assertionsUnchanged": true,
+  "diagnostic": "One synthetic-only print before unchanged failing assertion; no implementation override"
+}

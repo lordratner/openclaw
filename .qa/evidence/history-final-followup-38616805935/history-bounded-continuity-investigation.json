@@ -1,0 +1,52 @@
+{
+  "status": "Read-only causal investigation complete; main-only/merged runtime negative control pending",
+  "upstreamObservedFailure": "run-attempt.bounded-continuity.test.ts line84 assistant/toolResult-only canonical read assertion",
+  "frozenBase": "55a3be43fe8ab39300d8ea7b5aa408d29f941f90",
+  "main": "92a6a23f14e93e388cf012dbf8caa5be5e374fec",
+  "unchangedCallerAndTestBlobs": [
+    {
+      "path": "extensions/codex/src/app-server/run-attempt.bounded-continuity.test.ts",
+      "sha256": "52595ce24cbe1f50b9590fa0c86bfc853fce00ebf170723f3ea7a054b3754c40",
+      "matchesFrozen55AndMain92": true
+    },
+    {
+      "path": "extensions/codex/src/app-server/attempt-context.ts",
+      "sha256": "87c60d42266d77875ae1618438905208014a7ffa50d159b1269a3dea905fa03a",
+      "matchesFrozen55AndMain92": true
+    },
+    {
+      "path": "extensions/codex/src/app-server/session-history.ts",
+      "sha256": "30bff61db75f978863effd86a9e22065823f601f2f385deb7ae6e25b52eccf4d",
+      "matchesFrozen55AndMain92": true
+    }
+  ],
+  "candidateCodeCannotHaveProducedCheckpoint": "Failure occurs immediately after direct canonical model-context read, before binding/harness/attempt/native transport construction; no context engine/authored cap; fresh synthetic SQLite transcript only.",
+  "correctedPriorPremise": "This exact2-case suite WAS in original223/223 source5b focused run and retained178 metadata. It was not newly added on main.",
+  "coreCause": "Upstream session-model-context-window.ts now replaces oversized tool-result bodies before suffix selection, preferring earlier requests; candidateBytes<=limit causes cut0 return retaining original historical user. Older frozen55 selected suffix first and dropped user.",
+  "intentEvidence": {
+    "file": "src/agents/sessions/session-manager-model-context-limits.test.ts",
+    "currentMainCase": "preserves early requests under $label pressure with a nonempty recent suffix",
+    "assertions": "Original goal+constraint retained, body-omitted notice, all owned frames and serialized bytes within limit; strict mode continues to drop older goal."
+  },
+  "expectedFixtureGeometry": "Caller maxBytes=1024*8=8192;4tool-results each4000 dense payload plus frames, original historical user and latest explanation. New omission savings make original user fit without source mutation.",
+  "minimalLikelyRemedy": "Codex test only, after GHA baseline attribution confirms: replace stale assistant-only strategy assumption with bounded/closed-frame/known-source consumer contract. Preserve all native rotation/current-input/tool-elision/safety/size/hooks assertions. No production/core change.",
+  "crossBaselineContract": [
+    "Latest answer present, nonempty selected messages, JSONserialized bytes<=public history limit.",
+    "Each tool result owns a retained call; only actual canonical user/assistant/tool result roles permitted.",
+    "If user is retained, it equals the fixture original canonical request; no new fabricated quote/checkpoint.",
+    "Canonical original source immutable across read; old suffix and new request-preferential selection both valid."
+  ],
+  "negativeControlPlan": {
+    "compute": "Secretless GHA only, parent stages/dispatches",
+    "roles": [
+      "frozen main92, no candidate files",
+      "clean temporary merged main92+exact candidate"
+    ],
+    "scope": "Existing unchanged bounded-continuity2-case suite only. Optional QA-only logger before unchanged assertion reports roles/bytes/original-user/latest-answer using synthetic data; no source/product mutation.",
+    "expected": "Same first AssertionError in both, hook case passes both; failureMessages must exclude timeout/TypeError/ReferenceError and occur before any native attempt.",
+    "retainedPrior": "Exact frozen55/5b2-case passing proof already available; no redundant oldcore rerun necessary."
+  },
+  "sourceEdits": false,
+  "localApplicationExecution": false,
+  "githubWrites": false
+}

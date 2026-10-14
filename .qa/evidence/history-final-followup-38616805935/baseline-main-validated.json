@@ -1,0 +1,31 @@
+{
+  "qualifiedInheritedFailure": true,
+  "role": "main",
+  "main": "92a6a23f14e93e388cf012dbf8caa5be5e374fec",
+  "candidate": "6c69c5d3e9f7a574cfc33ebf2af6bb653945c08e",
+  "failed": 1,
+  "positivePassed": 1,
+  "skipped": 0,
+  "failureName": "Codex bounded assistant continuity retains an assistant-only bounded suffix on a rotated native thread",
+  "failureMessage": "AssertionError: expected false to be true // Object.is equality\n    at /home/runner/work/openclaw/openclaw/extensions/codex/src/app-server/run-attempt.bounded-continuity.test.ts:85:93\n    at file:///home/runner/work/openclaw/openclaw/node_modules/.pnpm/vitest@5.0.1_patch_hash=90ba2969491e095cc2e92a4d38256dfcf64f85078ec29e1762b9429a00b3590_97a01857a58f4497e41a6517ab9b01b5/node_modules/vitest/dist/chunks/run.C5UmxDPh.js:2783:20",
+  "diagnostic": {
+    "phase": "canonical read before binding/harness/native attempt",
+    "roles": [
+      "user",
+      "assistant",
+      "toolResult",
+      "assistant",
+      "toolResult",
+      "assistant",
+      "toolResult",
+      "assistant",
+      "toolResult",
+      "assistant"
+    ],
+    "bytes": 3450,
+    "hasOriginalRequest": true,
+    "hasLatestAnswer": true
+  },
+  "wallSeconds": 87.665,
+  "meaning": "Failure before native attempt is also present without any PR implementation"
+}

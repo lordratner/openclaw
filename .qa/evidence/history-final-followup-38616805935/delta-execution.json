@@ -1,0 +1,17 @@
+{
+  "command": [
+    "pnpm",
+    "test",
+    "extensions/codex/src/app-server/context-engine-projection.test.ts",
+    "extensions/codex/src/app-server/run-attempt.history-seed.test.ts",
+    "extensions/codex/src/app-server/run-attempt.continuity-media.test.ts",
+    "extensions/codex/src/app-server/run-attempt.bounded-continuity.test.ts",
+    "--maxWorkers=1",
+    "--passWithNoTests=false",
+    "--reporter=verbose",
+    "--reporter=json",
+    "--outputFile=/home/runner/work/_temp/proof/tests.json"
+  ],
+  "exit": 0,
+  "wallSeconds": 127.481
+}

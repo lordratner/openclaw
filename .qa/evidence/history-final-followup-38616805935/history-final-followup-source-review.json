@@ -1,0 +1,71 @@
+{
+  "reviewer": "budget_route_review",
+  "approvedForRemoteQualification": true,
+  "reviewedFiles": {
+    "extensions/codex/src/app-server/context-engine-projection.ts": "1315dfc1d3b1db4a72f2dc0b3a6b780d2f8408c069adb65c496bde942cb25f7e",
+    "extensions/codex/src/app-server/context-engine-projection.test.ts": "fc96bb032e3191bbf522c04972ed08b0b7ee2da0de7908ea6ce22cbc79098e58",
+    "extensions/codex/src/app-server/run-attempt.history-seed.test.ts": "0e9061192d665e0929abfdab2b9ba96e84d0a985bef61d72b3ee7192c5c58288",
+    "extensions/codex/src/app-server/run-attempt.continuity-media.test.ts": "b4a013907d22b7e1241aaaafc6f111c017a9a8ae7ae343303c815dea8103715b",
+    "extensions/codex/src/app-server/run-attempt.bounded-continuity.test.ts": "c088f5c7bc2b8ac88b211315bb39eca2f0cb4dbb41fff309e2733b75e60ebdb0"
+  },
+  "scope": "Finalfivefollow-up paths: productionerrorcopy only, test-ownedVitestdependency/typednative spy/recoveryassertion and inheritedconsumercontract repair. No newproductionlogic/core changes.",
+  "consumerContractReview": {
+    "hash": "c088f5c7bc2b8ac88b211315bb39eca2f0cb4dbb41fff309e2733b75e60ebdb0",
+    "cases": 3,
+    "verdict": "Soundcanonicalreadercontract; not weakerstrategyassertions or implementation override.",
+    "confirmed": [
+      "Mixedhistoricaluser fixture maykeeporomitonlyactualoriginalsourceusers accordingpublicboundedreader policy; anyretaineduserdeep-equalscanonicalsourceuser, no fabricatedcurrentrequest/carriercheckpoint.",
+      "Separate actualno-user fixture retainsstrictassistant/toolResult-onlyassertionandoldrequestabsence check, preservingoriginalassistant-only scenario ratherthandroppingcoverage.",
+      "Latestcompleteanswer, nonempty bounded suffix, alltoolresult-owningcallclosure checks, freshphysicalthread/currentinput/quote-safety/delimiter/toolbodyelision/textsize assertions retained.",
+      "BytebudgetderivedfromexistingpublicresolveAgentHarnessHistoryLimits, not customcore/private import; before/after canonical source JSON comparison enforcesreadonly identity.",
+      "Entireprompt-hookpositivecase bytes unchanged. Exactlyone additional explicitfixture scenario makes3cases, nothiddenfilter/assertionwaiver."
+    ]
+  },
+  "recoveryAssertionReview": {
+    "hash": "b4a013907d22b7e1241aaaafc6f111c017a9a8ae7ae343303c815dea8103715b",
+    "newCases": 0,
+    "verdict": "Exactoneextra regexassertion newconversation/smallerattachment inexistingrealmanagedoversize rejection; originalrejection/no-nativeeffects/sourceimmutable guards andfittingcase unchanged."
+  },
+  "otherFollowupReferences": [
+    "proof/history-test-types-projection-review.json",
+    "proof/history-test-types-seed-review.json",
+    "proof/history-overflow-guidance-review.json"
+  ],
+  "retentionPlan": {
+    "fresh": 67,
+    "freshSuites": "Projection45+seed14+managedmedia5+boundedconsumer3, plusmerged92a extensiontesttypes andscopedgates.",
+    "retained": 157,
+    "retainedFiles": 7,
+    "countBoundary": "Prior223case set changed byoneadditionalconsumerfixture; new67+retained157=224components, not223fresh/reclassifiedpriorfailures.",
+    "productionException": "Exactreviewedliteral-only exception(errorcopyexpandsASCII); no shrink-only claim. Installed5bproof historicalsamecarrier behavior, not exactfinalpackagebyteidentity."
+  },
+  "remainingGates": [
+    "Actualmain-only/merged original2case attribution mustfinishbeforeclaiminheritedfailureclassification.",
+    "New67cases/mergedtesttypes/format/lint/ratchet andexact5path/source18 guard mustpass beforepublication.",
+    "Independentfinalpublicmanifestprivacy approval andhumanP0maintainerreview remain separate."
+  ],
+  "verification": "Read-only source/reverse-diff/contracts/oldhook-byte/newfixture/unchangedassertion/publicSDK boundary inspection and requestedreceiptwrites; no localappchecks/tests/build/install, publication orGitHub/live mutations.",
+  "previousSourceReview": "proof/history-final-followup-source-review-0106.json",
+  "formattedSourceCandidate": "09b8620728e5b41ebf309fc0c08d6441ee26be54",
+  "canonicalLayoutReview": {
+    "formatterRun": 38615275770,
+    "formatterSource": "0106dd79e9461612bf4b332e92ef8cb17808a3dc",
+    "patchSha256": "fc7320d3b119b3918463973a797889e67569524e2a25adb7f5714fba3dab6b35",
+    "changedFile": "extensions/codex/src/app-server/run-attempt.bounded-continuity.test.ts",
+    "beforeSha256": "d82ca926734149cbb1b9aa562d1b4523a22ce455ad56cf8f8af2fccda084f233",
+    "afterSha256": "c088f5c7bc2b8ac88b211315bb39eca2f0cb4dbb41fff309e2733b75e60ebdb0",
+    "exactThreeLayoutTransformsVerified": true,
+    "effects": "Only explanationline and twoexpect-call trailingcomma/line layout; same text/Booleanpredicates/assertions/hook bodies/case count. Otherfour sourcehashes unchanged.",
+    "newApplicationExecutionByReviewer": false,
+    "remainingProof": "Finalcandidate67+157components andmergedtesttypes/consumer3 +freshgates rerun pending; original0106formatfailure not reclassifiedgreen."
+  },
+  "currentSourceInventoryVerified": {
+    "candidate": "09b8620728e5b41ebf309fc0c08d6441ee26be54",
+    "files": 18,
+    "everyManifestHashMatches": true,
+    "coreBase": "55a3be43fe8ab39300d8ea7b5aa408d29f941f90",
+    "coreCompared": 26135,
+    "differentCorePaths": [],
+    "method": "Staticbyte/GitblobSHA comparison only"
+  }
+}

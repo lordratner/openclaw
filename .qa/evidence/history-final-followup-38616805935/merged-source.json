@@ -1,0 +1,13 @@
+{
+  "candidate": "09b8620728e5b41ebf309fc0c08d6441ee26be54",
+  "main": "92a6a23f14e93e388cf012dbf8caa5be5e374fec",
+  "base": "55a3be43fe8ab39300d8ea7b5aa408d29f941f90",
+  "mergedTree": "1888abbfd64785b1f7e779c7a4377bd0a6b16634",
+  "headStillMain": true,
+  "refsUnchanged": true,
+  "conflictOverrides": false,
+  "testSha256": {
+    "extensions/codex/src/app-server/context-engine-projection.test.ts": "52a4fea758f5f3d99914fb8060e24a7df137388d4b092862e8aee21e36be7eef",
+    "extensions/codex/src/app-server/run-attempt.history-seed.test.ts": "0e9061192d665e0929abfdab2b9ba96e84d0a985bef61d72b3ee7192c5c58288"
+  }
+}

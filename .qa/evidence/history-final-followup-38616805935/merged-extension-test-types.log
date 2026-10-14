@@ -1,0 +1,4 @@
+$ node scripts/run-tsgo.mjs -p test/tsconfig/tsconfig.extensions.test.json --incremental --tsBuildInfoFile .artifacts/tsgo-cache/extensions-test.tsbuildinfo
+real 142.74
+user 269.81
+sys 8.90

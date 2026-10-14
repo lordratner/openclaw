@@ -1,0 +1,2 @@
+$ node --import ./scripts/tsx.mjs scripts/check-assertion-safety-ratchet.mts --base 55a3be43fe8ab39300d8ea7b5aa408d29f941f90
+assertion SAFETY ratchet OK: 2725 files, 6393 grandfathered assertions.

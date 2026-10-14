@@ -1,0 +1,14 @@
+{
+  "command": [
+    "pnpm",
+    "test",
+    "extensions/codex/src/app-server/run-attempt.bounded-continuity.test.ts",
+    "--maxWorkers=1",
+    "--passWithNoTests=false",
+    "--reporter=verbose",
+    "--reporter=json",
+    "--outputFile=/home/runner/work/_temp/bounded-baseline/tests.json"
+  ],
+  "exit": 1,
+  "wallSeconds": 145.207
+}

@@ -1,0 +1,65 @@
+{
+  "candidate": "09b8620728e5b41ebf309fc0c08d6441ee26be54",
+  "priorSource": "6c69c5d3e9f7a574cfc33ebf2af6bb653945c08e",
+  "productionSource": "5b2b566b10af9ed39f0bbb930251a7d2ee222cb5",
+  "delta": [
+    "extensions/codex/src/app-server/context-engine-projection.test.ts",
+    "extensions/codex/src/app-server/run-attempt.history-seed.test.ts",
+    "extensions/codex/src/app-server/run-attempt.continuity-media.test.ts",
+    "extensions/codex/src/app-server/run-attempt.bounded-continuity.test.ts",
+    "extensions/codex/src/app-server/context-engine-projection.ts"
+  ],
+  "changedSourceSha256": {
+    "extensions/codex/src/app-server/context-engine-projection.test.ts": "fc96bb032e3191bbf522c04972ed08b0b7ee2da0de7908ea6ce22cbc79098e58",
+    "extensions/codex/src/app-server/run-attempt.history-seed.test.ts": "0e9061192d665e0929abfdab2b9ba96e84d0a985bef61d72b3ee7192c5c58288",
+    "extensions/codex/src/app-server/run-attempt.continuity-media.test.ts": "b4a013907d22b7e1241aaaafc6f111c017a9a8ae7ae343303c815dea8103715b",
+    "extensions/codex/src/app-server/run-attempt.bounded-continuity.test.ts": "c088f5c7bc2b8ac88b211315bb39eca2f0cb4dbb41fff309e2733b75e60ebdb0",
+    "extensions/codex/src/app-server/context-engine-projection.ts": "1315dfc1d3b1db4a72f2dc0b3a6b780d2f8408c069adb65c496bde942cb25f7e"
+  },
+  "retainedPassed": 157,
+  "retainedFiles": [
+    {
+      "path": "extensions/codex/src/app-server/client.test.ts",
+      "sha256": "ff2ffcf599f1ea3c34c4959b6a09e08bfc90b26da6aeec57b4d308e66f8f5d2b",
+      "passed": 28
+    },
+    {
+      "path": "extensions/codex/src/app-server/run-attempt.context-engine-overflow.test.ts",
+      "sha256": "a2d746682f3f8d5e025cfd9703195c4f2c4e8df196749d46f116e07aa57c60a3",
+      "passed": 7
+    },
+    {
+      "path": "extensions/codex/src/app-server/run-attempt.context-engine.test.ts",
+      "sha256": "e39a012349c6369ee7a63d118f80b8bb14e5cf84eec3c047b1a96e9da9d3a6cb",
+      "passed": 18
+    },
+    {
+      "path": "extensions/codex/src/app-server/run-attempt.skills.native.test.ts",
+      "sha256": "0ab94ac6391b74cd641dda733dd944fea7c3ccb443c0ae32795770734abcdd22",
+      "passed": 4
+    },
+    {
+      "path": "extensions/codex/src/app-server/thread-lifecycle.binding.test.ts",
+      "sha256": "21a2df74754341fcb50b7f800dc9221c52dab72f01537096f41e7463ab4f0ead",
+      "passed": 84
+    },
+    {
+      "path": "extensions/codex/src/app-server/thread-lifecycle.handoff-cancellation.test.ts",
+      "sha256": "60839723653b95bf3dff4aaec6ff840a0037a115c3b85182a7e4875c4066003e",
+      "passed": 5
+    },
+    {
+      "path": "extensions/codex/src/app-server/thread-lifecycle.native-config.test.ts",
+      "sha256": "a18079a9e1972bd2c7a4da63278d3f797ec596d10616c99b58f6592a68bb7d04",
+      "passed": 11
+    }
+  ],
+  "semantics": "Explicit own Vitest mocks, typed request spy, cross-version canonical continuity contract and recovery-only overflow wording; carrier behavior unchanged",
+  "retainedTypedJob": 115973655591,
+  "retainedTypedSteps": [
+    "Package-owned core production type gate",
+    "Package-owned extension production type gate"
+  ],
+  "priorOverall": "Failed test-only lint; only observed successful type steps and unchanged passing tests credited",
+  "packageProof": "Historical exact5b installed carrier proof retained with a named error-copy-only source exception; no finalsource binary identity claimed"
+}

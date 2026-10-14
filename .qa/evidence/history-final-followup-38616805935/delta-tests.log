@@ -1,0 +1,211 @@
+$ node scripts/test-projects.mts extensions/codex/src/app-server/context-engine-projection.test.ts extensions/codex/src/app-server/run-attempt.history-seed.test.ts extensions/codex/src/app-server/run-attempt.continuity-media.test.ts extensions/codex/src/app-server/run-attempt.bounded-continuity.test.ts --maxWorkers=1 --passWithNoTests=false --reporter=verbose --reporter=json --outputFile=/home/runner/work/_temp/proof/tests.json
+[test] native report set: /home/runner/work/_temp/proof/tests.json.reports-NOGYJU
+[test] running 2 exact-target plans with parallelism 1 and joined exclusive barriers
+[test] starting test/vitest/vitest.extension-codex.config.ts
+
+[1m[30m[46m RUN [49m[39m[22m [36mv5.0.1 [39m[90m/home/runner/work/openclaw/openclaw[39m
+
+node_modules/.pnpm/@mdx-js+mdx@3.1.1_supports-color@10.2.2/node_modules/@mdx-js/mdx/lib/util/resolve-evaluate-options.js (48:0) [33m[MODULE_LEVEL_DIRECTIVE] [0mThe semantics of the module level directive "" in "node_modules/.pnpm/@mdx-js+mdx@3.1.1_supports-color@10.2.2/node_modules/@mdx-js/mdx/lib/util/resolve-evaluate-options.js" may not be preserved when bundling.
+    [38;5;246m╭[0m[38;5;246m─[0m[38;5;246m[[0m node_modules/.pnpm/@mdx-js+mdx@3.1.1_supports-color@10.2.2/node_modules/@mdx-js/mdx/lib/util/resolve-evaluate-options.js:48:1 [38;5;246m][0m
+    [38;5;246m│[0m
+ [38;5;246m48 │[0m ''
+ [38;5;240m   │[0m ─┬  
+ [38;5;240m   │[0m  ╰── module level directive may not be preserved
+ [38;5;240m   │[0m 
+ [38;5;240m   │[0m [38;5;115mHelp[0m: For more information, see https://rolldown.rs/in-depth/directives#other-directives
+[38;5;246m────╯[0m
+
+node_modules/.pnpm/@mdx-js+mdx@3.1.1_supports-color@10.2.2/node_modules/@mdx-js/mdx/lib/util/estree-util-is-declaration.js (11:0) [33m[MODULE_LEVEL_DIRECTIVE] [0mThe semantics of the module level directive "" in "node_modules/.pnpm/@mdx-js+mdx@3.1.1_supports-color@10.2.2/node_modules/@mdx-js/mdx/lib/util/estree-util-is-declaration.js" may not be preserved when bundling.
+    [38;5;246m╭[0m[38;5;246m─[0m[38;5;246m[[0m node_modules/.pnpm/@mdx-js+mdx@3.1.1_supports-color@10.2.2/node_modules/@mdx-js/mdx/lib/util/estree-util-is-declaration.js:11:1 [38;5;246m][0m
+    [38;5;246m│[0m
+ [38;5;246m11 │[0m ''
+ [38;5;240m   │[0m ─┬  
+ [38;5;240m   │[0m  ╰── module level directive may not be preserved
+ [38;5;240m   │[0m 
+ [38;5;240m   │[0m [38;5;115mHelp[0m: For more information, see https://rolldown.rs/in-depth/directives#other-directives
+[38;5;246m────╯[0m
+
+node_modules/.pnpm/@mdx-js+mdx@3.1.1_supports-color@10.2.2/node_modules/@mdx-js/mdx/lib/util/estree-util-create.js (6:0) [33m[MODULE_LEVEL_DIRECTIVE] [0mThe semantics of the module level directive "" in "node_modules/.pnpm/@mdx-js+mdx@3.1.1_supports-color@10.2.2/node_modules/@mdx-js/mdx/lib/util/estree-util-create.js" may not be preserved when bundling.
+   [38;5;246m╭[0m[38;5;246m─[0m[38;5;246m[[0m node_modules/.pnpm/@mdx-js+mdx@3.1.1_supports-color@10.2.2/node_modules/@mdx-js/mdx/lib/util/estree-util-create.js:6:1 [38;5;246m][0m
+   [38;5;246m│[0m
+ [38;5;246m6 │[0m ''
+ [38;5;240m  │[0m ─┬  
+ [38;5;240m  │[0m  ╰── module level directive may not be preserved
+ [38;5;240m  │[0m 
+ [38;5;240m  │[0m [38;5;115mHelp[0m: For more information, see https://rolldown.rs/in-depth/directives#other-directives
+[38;5;246m───╯[0m
+
+node_modules/.pnpm/hast-util-to-estree@3.1.3_supports-color@10.2.2/node_modules/hast-util-to-estree/lib/handlers/comment.js (12:0) [33m[MODULE_LEVEL_DIRECTIVE] [0mThe semantics of the module level directive "" in "node_modules/.pnpm/hast-util-to-estree@3.1.3_supports-color@10.2.2/node_modules/hast-util-to-estree/lib/handlers/comment.js" may not be preserved when bundling.
+    [38;5;246m╭[0m[38;5;246m─[0m[38;5;246m[[0m node_modules/.pnpm/hast-util-to-estree@3.1.3_supports-color@10.2.2/node_modules/hast-util-to-estree/lib/handlers/comment.js:12:1 [38;5;246m][0m
+    [38;5;246m│[0m
+ [38;5;246m12 │[0m ''
+ [38;5;240m   │[0m ─┬  
+ [38;5;240m   │[0m  ╰── module level directive may not be preserved
+ [38;5;240m   │[0m 
+ [38;5;240m   │[0m [38;5;115mHelp[0m: For more information, see https://rolldown.rs/in-depth/directives#other-directives
+[38;5;246m────╯[0m
+
+node_modules/.pnpm/hast-util-to-estree@3.1.3_supports-color@10.2.2/node_modules/hast-util-to-estree/lib/handlers/text.js (9:0) [33m[MODULE_LEVEL_DIRECTIVE] [0mThe semantics of the module level directive "" in "node_modules/.pnpm/hast-util-to-estree@3.1.3_supports-color@10.2.2/node_modules/hast-util-to-estree/lib/handlers/text.js" may not be preserved when bundling.
+   [38;5;246m╭[0m[38;5;246m─[0m[38;5;246m[[0m node_modules/.pnpm/hast-util-to-estree@3.1.3_supports-color@10.2.2/node_modules/hast-util-to-estree/lib/handlers/text.js:9:1 [38;5;246m][0m
+   [38;5;246m│[0m
+ [38;5;246m9 │[0m ''
+ [38;5;240m  │[0m ─┬  
+ [38;5;240m  │[0m  ╰── module level directive may not be preserved
+ [38;5;240m  │[0m 
+ [38;5;240m  │[0m [38;5;115mHelp[0m: For more information, see https://rolldown.rs/in-depth/directives#other-directives
+[38;5;246m───╯[0m
+
+[vitest-workers] prepared 199041fa0fb1 in 26330ms (13333 inputs, 19785 outputs)
+ [32m✓[39m [30m[42m extension-codex [49m[39m extensions/codex/src/app-server/context-engine-projection.test.ts[2m > [22mprojectContextEngineAssemblyForCodex[2m > [22mcharges restored file content to the selected window before reading older attachments[32m 21[2mms[22m[39m
+ [32m✓[39m [30m[42m extension-codex [49m[39m extensions/codex/src/app-server/context-engine-projection.test.ts[2m > [22mprojectContextEngineAssemblyForCodex[2m > [22momits native document images that exceed the context budget[32m 3[2mms[22m[39m
+ [32m✓[39m [30m[42m extension-codex [49m[39m extensions/codex/src/app-server/context-engine-projection.test.ts[2m > [22mprojectContextEngineAssemblyForCodex[2m > [22mretains captionless prepared images in source order within the context budget[32m 3[2mms[22m[39m
+ [32m✓[39m [30m[42m extension-codex [49m[39m extensions/codex/src/app-server/context-engine-projection.test.ts[2m > [22mprojectContextEngineAssemblyForCodex[2m > [22momits restored images when the context window cuts their owning message[32m 3[2mms[22m[39m
+ [32m✓[39m [30m[42m extension-codex [49m[39m extensions/codex/src/app-server/context-engine-projection.test.ts[2m > [22mprojectContextEngineAssemblyForCodex[2m > [22momits an image if the older-context truncation marker removes its source label[32m 2[2mms[22m[39m
+ [32m✓[39m [30m[42m extension-codex [49m[39m extensions/codex/src/app-server/context-engine-projection.test.ts[2m > [22mprojectContextEngineAssemblyForCodex[2m > [22mdrops a duplicate trailing current prompt from assembled history[32m 2[2mms[22m[39m
+ [32m✓[39m [30m[42m extension-codex [49m[39m extensions/codex/src/app-server/context-engine-projection.test.ts[2m > [22mprojectContextEngineAssemblyForCodex[2m > [22mplaces stable current sender provenance beside the request (history: true)[32m 3[2mms[22m[39m
+ [32m✓[39m [30m[42m extension-codex [49m[39m extensions/codex/src/app-server/context-engine-projection.test.ts[2m > [22mprojectContextEngineAssemblyForCodex[2m > [22mplaces stable current sender provenance beside the request (history: false)[32m 3[2mms[22m[39m
+ [32m✓[39m [30m[42m extension-codex [49m[39m extensions/codex/src/app-server/context-engine-projection.test.ts[2m > [22mprojectContextEngineAssemblyForCodex[2m > [22mdoes not infer current sender identity from display names without a stable ID[32m 3[2mms[22m[39m
+ [32m✓[39m [30m[42m extension-codex [49m[39m extensions/codex/src/app-server/context-engine-projection.test.ts[2m > [22mprojectContextEngineAssemblyForCodex[2m > [22mpreserves role order and falls back to the raw prompt for empty history[32m 2[2mms[22m[39m
+ [32m✓[39m [30m[42m extension-codex [49m[39m extensions/codex/src/app-server/context-engine-projection.test.ts[2m > [22mprojectContextEngineAssemblyForCodex[2m > [22mpreserves stable user provenance while leaving legacy user rows unattributed[32m 2[2mms[22m[39m
+ [32m✓[39m [30m[42m extension-codex [49m[39m extensions/codex/src/app-server/context-engine-projection.test.ts[2m > [22mprojectContextEngineAssemblyForCodex[2m > [22mpreserves canonical compaction summaries as quoted context with neutralized mentions[32m 3[2mms[22m[39m
+ [32m✓[39m [30m[42m extension-codex [49m[39m extensions/codex/src/app-server/context-engine-projection.test.ts[2m > [22mprojectContextEngineAssemblyForCodex[2m > [22mframes projected history as reference data and omits tool payloads[32m 2[2mms[22m[39m
+ [32m✓[39m [30m[42m extension-codex [49m[39m extensions/codex/src/app-server/context-engine-projection.test.ts[2m > [22mprojectContextEngineAssemblyForCodex[2m > [22mpreserves tool payload context for thread bootstrap projections[32m 3[2mms[22m[39m
+ [32m✓[39m [30m[42m extension-codex [49m[39m extensions/codex/src/app-server/context-engine-projection.test.ts[2m > [22mprojectContextEngineAssemblyForCodex[2m > [22mpreserves canonical tool result text while omitting media bytes[32m 2[2mms[22m[39m
+ [32m✓[39m [30m[42m extension-codex [49m[39m extensions/codex/src/app-server/context-engine-projection.test.ts[2m > [22mprojectContextEngineAssemblyForCodex[2m > [22mretains complete user text that fits the continuity window without a runtime budget[32m 2[2mms[22m[39m
+ [32m✓[39m [30m[42m extension-codex [49m[39m extensions/codex/src/app-server/context-engine-projection.test.ts[2m > [22mprojectContextEngineAssemblyForCodex[2m > [22mretains complete assistant text that fits the continuity window without a runtime budget[32m 6[2mms[22m[39m
+ [32m✓[39m [30m[42m extension-codex [49m[39m extensions/codex/src/app-server/context-engine-projection.test.ts[2m > [22mprojectContextEngineAssemblyForCodex[2m > [22mretains complete compaction text that fits the continuity window without a runtime budget[32m 2[2mms[22m[39m
+ [32m✓[39m [30m[42m extension-codex [49m[39m extensions/codex/src/app-server/context-engine-projection.test.ts[2m > [22mprojectContextEngineAssemblyForCodex[2m > [22mreports omitted history within a marker-sized budget[32m 6[2mms[22m[39m
+ [32m✓[39m [30m[42m extension-codex [49m[39m extensions/codex/src/app-server/context-engine-projection.test.ts[2m > [22mprojectContextEngineAssemblyForCodex[2m > [22mkeeps images with complete historical source spans after fitting unchanged context[32m 3[2mms[22m[39m
+ [32m✓[39m [30m[42m extension-codex [49m[39m extensions/codex/src/app-server/context-engine-projection.test.ts[2m > [22mprojectContextEngineAssemblyForCodex[2m > [22mkeeps images with complete historical source spans after fitting hook context[32m 3[2mms[22m[39m
+ [32m✓[39m [30m[42m extension-codex [49m[39m extensions/codex/src/app-server/context-engine-projection.test.ts[2m > [22mprojectContextEngineAssemblyForCodex[2m > [22mkeeps images with complete historical source spans after fitting preserved context[32m 2[2mms[22m[39m
+ [32m✓[39m [30m[42m extension-codex [49m[39m extensions/codex/src/app-server/context-engine-projection.test.ts[2m > [22mprojectContextEngineAssemblyForCodex[2m > [22mdrops historical images when a large current request displaces their context[32m 2[2mms[22m[39m
+ [32m✓[39m [30m[42m extension-codex [49m[39m extensions/codex/src/app-server/context-engine-projection.test.ts[2m > [22mprojectContextEngineAssemblyForCodex[2m > [22mfits projected context under the Codex turn input limit[32m 2[2mms[22m[39m
+ [32m✓[39m [30m[42m extension-codex [49m[39m extensions/codex/src/app-server/context-engine-projection.test.ts[2m > [22mprojectContextEngineAssemblyForCodex[2m > [22mpreserves the request and hook context when non-history text overflows the limit[32m 2[2mms[22m[39m
+ [32m✓[39m [30m[42m extension-codex [49m[39m extensions/codex/src/app-server/context-engine-projection.test.ts[2m > [22mprojectContextEngineAssemblyForCodex[2m > [22mkeeps the original input when a hook appends context without a projection[32m 2[2mms[22m[39m
+ [32m✓[39m [30m[42m extension-codex [49m[39m extensions/codex/src/app-server/context-engine-projection.test.ts[2m > [22mprojectContextEngineAssemblyForCodex[2m > [22mbounds hook output for an empty original input[32m 2[2mms[22m[39m
+ [32m✓[39m [30m[42m extension-codex [49m[39m extensions/codex/src/app-server/context-engine-projection.test.ts[2m > [22mprojectContextEngineAssemblyForCodex[2m > [22mbounds output for a large request under the default Codex turn limit[32m 9[2mms[22m[39m
+ [32m✓[39m [30m[42m extension-codex [49m[39m extensions/codex/src/app-server/context-engine-projection.test.ts[2m > [22mprojectContextEngineAssemblyForCodex[2m > [22mnever splits a UTF-16 surrogate pair at the truncation boundary[32m 4[2mms[22m[39m
+ [32m✓[39m [30m[42m extension-codex [49m[39m extensions/codex/src/app-server/context-engine-projection.test.ts[2m > [22mprojectContextEngineAssemblyForCodex[2m > [22mkeeps the old conservative cap when no runtime budget is available[32m 2[2mms[22m[39m
+ [32m✓[39m [30m[42m extension-codex [49m[39m extensions/codex/src/app-server/context-engine-projection.test.ts[2m > [22mresolveCodexContinuityProjectionMaxChars[2m > [22mbuilds calibration samples only from projection-dominated turns[32m 2[2mms[22m[39m
+ [32m✓[39m [30m[42m extension-codex [49m[39m extensions/codex/src/app-server/context-engine-projection.test.ts[2m > [22mresolveCodexContinuityProjectionMaxChars[2m > [22mstays strictly under the shared whole-window projection cap[32m 2[2mms[22m[39m
+ [32m✓[39m [30m[42m extension-codex [49m[39m extensions/codex/src/app-server/context-engine-projection.test.ts[2m > [22mbuildCodexHistoryItems[2m > [22mrequires a finite preserved-history allowance before preparing media: undefined[32m 3[2mms[22m[39m
+ [32m✓[39m [30m[42m extension-codex [49m[39m extensions/codex/src/app-server/context-engine-projection.test.ts[2m > [22mbuildCodexHistoryItems[2m > [22mrequires a finite preserved-history allowance before preparing media: 0[32m 2[2mms[22m[39m
+ [32m✓[39m [30m[42m extension-codex [49m[39m extensions/codex/src/app-server/context-engine-projection.test.ts[2m > [22mbuildCodexHistoryItems[2m > [22mrequires a finite preserved-history allowance before preparing media: -1[32m 2[2mms[22m[39m
+ [32m✓[39m [30m[42m extension-codex [49m[39m extensions/codex/src/app-server/context-engine-projection.test.ts[2m > [22mbuildCodexHistoryItems[2m > [22mrequires a finite preserved-history allowance before preparing media: NaN[32m 2[2mms[22m[39m
+ [32m✓[39m [30m[42m extension-codex [49m[39m extensions/codex/src/app-server/context-engine-projection.test.ts[2m > [22mbuildCodexHistoryItems[2m > [22mrequires a finite preserved-history allowance before preparing media: Infinity[32m 2[2mms[22m[39m
+ [32m✓[39m [30m[42m extension-codex [49m[39m extensions/codex/src/app-server/context-engine-projection.test.ts[2m > [22mbuildCodexHistoryItems[2m > [22mrequires a finite preserved-history allowance before preparing media: 9007199254740991[32m 2[2mms[22m[39m
+ [32m✓[39m [30m[42m extension-codex [49m[39m extensions/codex/src/app-server/context-engine-projection.test.ts[2m > [22mbuildCodexHistoryItems[2m > [22mpreserves complete selected text beyond the legacy projection ceiling within its allowance[32m 5[2mms[22m[39m
+ [32m✓[39m [30m[42m extension-codex [49m[39m extensions/codex/src/app-server/context-engine-projection.test.ts[2m > [22mbuildCodexHistoryItems[2m > [22mrejects oversized selected text instead of clipping it before media preparation[32m 3[2mms[22m[39m
+ [32m✓[39m [30m[42m extension-codex [49m[39m extensions/codex/src/app-server/context-engine-projection.test.ts[2m > [22mbuildCodexHistoryItems[2m > [22mpasses remaining finite media headroom and rejects a capped restored expansion[32m 2[2mms[22m[39m
+ [32m✓[39m [30m[42m extension-codex [49m[39m extensions/codex/src/app-server/context-engine-projection.test.ts[2m > [22mbuildCodexHistoryItems[2m > [22mcharges the aggregate restored text, image estimate and labels without dropping either[32m 3[2mms[22m[39m
+ [32m✓[39m [30m[42m extension-codex [49m[39m extensions/codex/src/app-server/context-engine-projection.test.ts[2m > [22mbuildCodexHistoryItems[2m > [22mpartitions dense Unicode quoted history without dropping bytes or splitting pairs[32m 5[2mms[22m[39m
+ [32m✓[39m [30m[42m extension-codex [49m[39m extensions/codex/src/app-server/context-engine-projection.test.ts[2m > [22mbuildCodexHistoryItems[2m > [22mkeeps one unchanged image between bounded caption and following history fragments[32m 5[2mms[22m[39m
+ [32m✓[39m [30m[42m extension-codex [49m[39m extensions/codex/src/app-server/context-engine-projection.test.ts[2m > [22mbuildCodexHistoryItems[2m > [22mreserves deterministic fragment overhead before assembly without weakening item bounds[32m 5[2mms[22m[39m
+
+[2m Test Files [22m [1m[32m1 passed[39m[22m[90m (1)[39m
+[2m      Tests [22m [1m[32m45 passed[39m[22m[90m (45)[39m
+[2m   Start at [22m 18:40:25
+[2m   Duration [22m 45.81s[2m (transform 92%, import 6%, setup 1%)[22m
+
+JSON report written to /home/runner/work/_temp/proof/tests.json.reports-NOGYJU/1/1/report.json
+blob report written to /home/runner/work/_temp/proof/tests.json.reports-NOGYJU/1/1/blob.json
+[test] starting test/vitest/vitest.extension-database-workers.config.ts
+
+[1m[30m[46m RUN [49m[39m[22m [36mv5.0.1 [39m[90m/home/runner/work/openclaw/openclaw[39m
+
+(node:3017) [DEP_PLUGIN_SDK] DeprecationWarning: Plugin SDK: patchSessionEntry is deprecated; use prepareSessionEntryPatch or applySessionEntryPatch instead. The legacy contract remains supported during its deprecation period. It will be removed in a later release after stable deprecation.
+(Use `node --trace-deprecation ...` to show where the warning was created)
+(node:3017) [DEP_PLUGIN_SDK] DeprecationWarning: Plugin SDK: NativeSessionBindingStateStoreV2.assertLeaseCurrent is deprecated; use withCurrent backed by api.runtime.state.openKeyedStoreV2 instead. The legacy contract remains supported during its deprecation period. It will be removed in a later release after stable deprecation.
+ [32m✓[39m [30m[42m extension-database-workers [49m[39m extensions/codex/src/app-server/run-attempt.history-seed.test.ts[2m > [22mCodex configured assembled-history delivery[2m > [22mseeds complete history from the existing authored cap without a caller budget[33m 5546[2mms[22m[39m
+ [32m✓[39m [30m[42m extension-database-workers [49m[39m extensions/codex/src/app-server/run-attempt.history-seed.test.ts[2m > [22mCodex configured assembled-history delivery[2m > [22mreplaces a same-epoch legacy binding when only the existing authored cap selects history delivery[33m 400[2mms[22m[39m
+ [32m✓[39m [30m[42m extension-database-workers [49m[39m extensions/codex/src/app-server/run-attempt.history-seed.test.ts[2m > [22mCodex configured assembled-history delivery[2m > [22mreplaces a same-epoch seeded thread when the authored cap changes without a caller budget[33m 625[2mms[22m[39m
+ [32m✓[39m [30m[42m extension-database-workers [49m[39m extensions/codex/src/app-server/run-attempt.history-seed.test.ts[2m > [22mCodex configured assembled-history delivery[2m > [22minstalls the complete large thread_bootstrap seed before publishing ready, separate from current input[33m 309[2mms[22m[39m
+ [32m✓[39m [30m[42m extension-database-workers [49m[39m extensions/codex/src/app-server/run-attempt.history-seed.test.ts[2m > [22mCodex configured assembled-history delivery[2m > [22minstalls the complete large per_turn seed before publishing ready, separate from current input[32m 291[2mms[22m[39m
+ [32m✓[39m [30m[42m extension-database-workers [49m[39m extensions/codex/src/app-server/run-attempt.history-seed.test.ts[2m > [22mCodex configured assembled-history delivery[2m > [22mdiscards an uncertain seed and retries on a different fresh thread without advancing its epoch[33m 309[2mms[22m[39m
+ [32m✓[39m [30m[42m extension-database-workers [49m[39m extensions/codex/src/app-server/run-attempt.history-seed.test.ts[2m > [22mCodex configured assembled-history delivery[2m > [22mdeclines a native model mismatch before injecting the requested model's history[32m 259[2mms[22m[39m
+ [32m✓[39m [30m[42m extension-database-workers [49m[39m extensions/codex/src/app-server/run-attempt.history-seed.test.ts[2m > [22mCodex configured assembled-history delivery[2m > [22mreuses an acknowledged bootstrap and rotates only when its projection epoch changes[33m 580[2mms[22m[39m
+ [32m✓[39m [30m[42m extension-database-workers [49m[39m extensions/codex/src/app-server/run-attempt.history-seed.test.ts[2m > [22mCodex configured assembled-history delivery[2m > [22malso seeds small configured per-turn projections on a fresh checked native thread[32m 239[2mms[22m[39m
+ [32m✓[39m [30m[42m extension-database-workers [49m[39m extensions/codex/src/app-server/run-attempt.history-seed.test.ts[2m > [22mCodex configured assembled-history delivery[2m > [22mreuses the native per-turn thread when assembly selects no new messages[33m 579[2mms[22m[39m
+ [32m✓[39m [30m[42m extension-database-workers [49m[39m extensions/codex/src/app-server/run-attempt.history-seed.test.ts[2m > [22mCodex configured assembled-history delivery[2m > [22minjects each selected per-turn quote on the same retained native thread[33m 557[2mms[22m[39m
+ [32m✓[39m [30m[42m extension-database-workers [49m[39m extensions/codex/src/app-server/run-attempt.history-seed.test.ts[2m > [22mCodex configured assembled-history delivery[2m > [22minjects selected per-turn history after a cold native resume without rotating the thread[33m 550[2mms[22m[39m
+ [32m✓[39m [30m[42m extension-database-workers [49m[39m extensions/codex/src/app-server/run-attempt.history-seed.test.ts[2m > [22mCodex configured assembled-history delivery[2m > [22mpreserves a reused native transcript after an uncertain injection and retries fresh[33m 545[2mms[22m[39m
+ [32m✓[39m [30m[42m extension-database-workers [49m[39m extensions/codex/src/app-server/run-attempt.history-seed.test.ts[2m > [22mCodex configured assembled-history delivery[2m > [22mkeeps the ordinary assembly-error fallback with a configured cap[32m 235[2mms[22m[39m
+(node:3054) [DEP_PLUGIN_SDK] DeprecationWarning: Plugin SDK: patchSessionEntry is deprecated; use prepareSessionEntryPatch or applySessionEntryPatch instead. The legacy contract remains supported during its deprecation period. It will be removed in a later release after stable deprecation.
+(Use `node --trace-deprecation ...` to show where the warning was created)
+ [32m✓[39m [30m[42m extension-database-workers [49m[39m extensions/codex/src/app-server/run-attempt.continuity-media.test.ts[2m > [22mCodex attachment continuity[2m > [22mcharges real managed-document restoration to the selected history allowance (oversized)[33m 7349[2mms[22m[39m
+(node:3054) [DEP_PLUGIN_SDK] DeprecationWarning: Plugin SDK: NativeSessionBindingStateStoreV2.assertLeaseCurrent is deprecated; use withCurrent backed by api.runtime.state.openKeyedStoreV2 instead. The legacy contract remains supported during its deprecation period. It will be removed in a later release after stable deprecation.
+ [32m✓[39m [30m[42m extension-database-workers [49m[39m extensions/codex/src/app-server/run-attempt.continuity-media.test.ts[2m > [22mCodex attachment continuity[2m > [22mcharges real managed-document restoration to the selected history allowance (fitting)[33m 1118[2mms[22m[39m
+ [32m✓[39m [30m[42m extension-database-workers [49m[39m extensions/codex/src/app-server/run-attempt.continuity-media.test.ts[2m > [22mCodex attachment continuity[2m > [22mrestores captionless managed documents in order without changing their transcript[33m 537[2mms[22m[39m
+ [32m✓[39m [30m[42m extension-database-workers [49m[39m extensions/codex/src/app-server/run-attempt.continuity-media.test.ts[2m > [22mCodex attachment continuity[2m > [22mrestores real image bytes with exact source ownership (current)[33m 1085[2mms[22m[39m
+ [32m✓[39m [30m[42m extension-database-workers [49m[39m extensions/codex/src/app-server/run-attempt.continuity-media.test.ts[2m > [22mCodex attachment continuity[2m > [22mrestores real image bytes with exact source ownership (closed)[33m 584[2mms[22m[39m
+(node:3080) [DEP_PLUGIN_SDK] DeprecationWarning: Plugin SDK: patchSessionEntry is deprecated; use prepareSessionEntryPatch or applySessionEntryPatch instead. The legacy contract remains supported during its deprecation period. It will be removed in a later release after stable deprecation.
+(Use `node --trace-deprecation ...` to show where the warning was created)
+(node:3080) [DEP_SESSION_PERSISTENCE] DeprecationWarning: Plugin SDK: SessionManager.open is deprecated; use openAsync instead. Synchronous calls retain their return values and commit before returning. It will be removed in a later release after stable deprecation.
+(node:3080) [DEP_PLUGIN_SDK] DeprecationWarning: Plugin SDK: NativeSessionBindingStateStoreV2.assertLeaseCurrent is deprecated; use withCurrent backed by api.runtime.state.openKeyedStoreV2 instead. The legacy contract remains supported during its deprecation period. It will be removed in a later release after stable deprecation.
+ [32m✓[39m [30m[42m extension-database-workers [49m[39m extensions/codex/src/app-server/run-attempt.bounded-continuity.test.ts[2m > [22mCodex bounded assistant continuity[2m > [22mretains bounded closed-frame history on a rotated native thread (with historical user)[33m 7437[2mms[22m[39m
+ [32m✓[39m [30m[42m extension-database-workers [49m[39m extensions/codex/src/app-server/run-attempt.bounded-continuity.test.ts[2m > [22mCodex bounded assistant continuity[2m > [22mretains bounded closed-frame history on a rotated native thread (assistant only)[33m 644[2mms[22m[39m
+ [32m✓[39m [30m[42m extension-database-workers [49m[39m extensions/codex/src/app-server/run-attempt.bounded-continuity.test.ts[2m > [22mCodex bounded assistant continuity[2m > [22mapplies prompt hooks once per build without duplicating continuity input[33m 496[2mms[22m[39m
+
+[2m Test Files [22m [1m[32m3 passed[39m[22m[90m (3)[39m
+[2m      Tests [22m [1m[32m22 passed[39m[22m[90m (22)[39m
+[2m   Start at [22m 18:41:12
+[2m   Duration [22m 73.79s[2m (tests 42%, transform 38%, import 17%, setup 2%)[22m
+
+JSON report written to /home/runner/work/_temp/proof/tests.json.reports-NOGYJU/2/1/report.json
+blob report written to /home/runner/work/_temp/proof/tests.json.reports-NOGYJU/2/1/blob.json
+[vitest-workers] verifying completed generation before cleanup
+[2m6:42:29 PM[22m [33m[1m[vite][22m[39m [33m[2m(inline)[22m[39m [33mwarning: 
+[36m/home/runner/work/openclaw/openclaw/scripts/lib/tsx-cli-shim.mjs[33m
+[0m76 |  export async function registerToolingTsx() {
+77 |    configureToolingTsx();
+78 |    await import(resolveTsxImport(SHIM_CHECKOUT_ROOT));
+   |                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+79 |  }
+80 |  [0m[33m
+The above dynamic import cannot be analyzed by Vite.
+See [34mhttps://vite.dev/guide/features#dynamic-import[33m for supported dynamic import formats. If this is intended to be left as-is, you can use the /* @vite-ignore */ comment inside the import() call to suppress this warning.
+[33m[39m
+  Plugin: [35mvite:import-analysis[39m
+  File: [36m/home/runner/work/openclaw/openclaw/scripts/lib/tsx-cli-shim.mjs[39m
+[2m6:42:29 PM[22m [33m[1m[vite][22m[39m [33m[2m(inline)[22m[39m [33mwarning: 
+[36m/home/runner/work/openclaw/openclaw/scripts/lib/tsx-cli-shim.mjs[33m
+[0m76 |  export async function registerToolingTsx() {
+77 |    configureToolingTsx();
+78 |    await import(resolveTsxImport(SHIM_CHECKOUT_ROOT));
+   |                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+79 |  }
+80 |  [0m[33m
+The above dynamic import cannot be analyzed by Vite.
+See [34mhttps://vite.dev/guide/features#dynamic-import[33m for supported dynamic import formats. If this is intended to be left as-is, you can use the /* @vite-ignore */ comment inside the import() call to suppress this warning.
+[33m[39m
+  Plugin: [35mvite:import-analysis[39m
+  File: [36m/home/runner/work/openclaw/openclaw/scripts/lib/tsx-cli-shim.mjs[39m
+[2m6:42:29 PM[22m [33m[1m[vite][22m[39m [33m[2m(inline)[22m[39m [33mwarning: 
+[36m/home/runner/work/openclaw/openclaw/scripts/lib/vitest-worker-bootstrap.mts[33m
+[0m23 |  				...args
+24 |  			];
+25 |  			await import(cliUrl.href);
+   |                  ^^^^^^^^^^^
+26 |  		} catch (error) {
+27 |  			console.error(error);[0m[33m
+The above dynamic import cannot be analyzed by Vite.
+See [34mhttps://vite.dev/guide/features#dynamic-import[33m for supported dynamic import formats. If this is intended to be left as-is, you can use the /* @vite-ignore */ comment inside the import() call to suppress this warning.
+[33m[39m
+  Plugin: [35mvite:import-analysis[39m
+  File: [36m/home/runner/work/openclaw/openclaw/scripts/lib/vitest-worker-bootstrap.mts[39m
+[2m6:42:29 PM[22m [33m[1m[vite][22m[39m [33m[2m(inline)[22m[39m [33mwarning: 
+[36m/home/runner/work/openclaw/openclaw/scripts/lib/vitest-worker-bootstrap.mts[33m
+[0m23 |  				...args
+24 |  			];
+25 |  			await import(cliUrl.href);
+   |                  ^^^^^^^^^^^
+26 |  		} catch (error) {
+27 |  			console.error(error);[0m[33m
+The above dynamic import cannot be analyzed by Vite.
+See [34mhttps://vite.dev/guide/features#dynamic-import[33m for supported dynamic import formats. If this is intended to be left as-is, you can use the /* @vite-ignore */ comment inside the import() call to suppress this warning.
+[33m[39m
+  Plugin: [35mvite:import-analysis[39m
+  File: [36m/home/runner/work/openclaw/openclaw/scripts/lib/vitest-worker-bootstrap.mts[39m
+JSON report written to /home/runner/work/_temp/proof/tests.json.reports-NOGYJU/aggregate.json
+[test] native JSON aggregate: /home/runner/work/_temp/proof/tests.json; originals: /home/runner/work/_temp/proof/tests.json.reports-NOGYJU. Native merge omits snapshot summaries and JSON coverageMap; startTime is merge time. Use index.json for process outcomes.
+[test] passed 2 Vitest shards in 126.78s
