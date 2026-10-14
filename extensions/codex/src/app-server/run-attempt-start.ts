@@ -133,6 +133,7 @@ export async function startCodexAttemptRuntime(resources: CodexAttemptResources)
       sandboxExecServerEnabled,
       sandbox,
       contextEngineProjection: promptState.contextEngineProjection,
+      historyBootstrapItems: promptState.historyBootstrapItems,
       startupTimeoutMs,
       signal: runAbortController.signal,
       onStartupTimeout: () => runAbortController.abort("codex_startup_timeout"),

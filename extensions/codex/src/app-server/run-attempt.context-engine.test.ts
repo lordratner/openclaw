@@ -1002,7 +1002,7 @@ describe("Codex configured context budget", () => {
       expect(bootstrapCall?.runtimeSettings?.limits.promptTokenBudget).toBe(500_000);
       expect(getRequestInputText(harness)).toContain(params.prompt);
       expect(getRequestInputText(harness)).toContain("CURRENT_INBOUND_REFERENCE");
-      expect(harness.requests.some(({ method }) => method === "thread/inject_items")).toBe(false);
+      expect(harness.requests.some(({ method }) => method === "thread/inject_items")).toBe(true);
     },
   );
 
@@ -1027,13 +1027,12 @@ describe("Codex configured context budget", () => {
     expect(harness.requests.some(({ method }) => method === "thread/inject_items")).toBe(false);
   });
 
-  it("retains ordinary baseline prompt fallback when configured assembly fails", async () => {
+  it("stops the configured request when context-engine assembly fails", async () => {
     const contextEngine = createContextEngine({
       assemble: vi.fn(async () => {
         throw new Error("Synthetic assembly failure");
       }),
     });
-    const warn = vi.spyOn(embeddedAgentLog, "warn").mockImplementation(() => undefined);
     const harness = createStartedThreadHarness();
     const params = createParams(
       path.join(tempDir, "configured-fallback.jsonl"),
@@ -1045,15 +1044,8 @@ describe("Codex configured context budget", () => {
     params.prompt = "CONFIGURED_BASELINE_REQUEST";
 
     const run = runCodexAppServerAttempt(params);
-    await run.waitForTurnAccepted();
-    await harness.completeTurn();
-    await run;
-
-    expect(getRequestInputText(harness)).toContain(params.prompt);
-    expect(warn).toHaveBeenCalledWith(
-      "context engine assemble failed; using Codex baseline prompt",
-      expect.any(Object),
-    );
+    await expect(run).rejects.toThrow("Synthetic assembly failure");
+    expect(harness.requests.some(({ method }) => method === "turn/start")).toBe(false);
     expect(harness.requests.some(({ method }) => method === "thread/inject_items")).toBe(false);
   });
 });

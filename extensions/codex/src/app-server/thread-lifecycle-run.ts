@@ -487,6 +487,12 @@ export async function startOrResumeThread(
         rotatedContextEngineBinding = true;
       }
     }
+    if (binding?.threadId && params.historyBootstrapItems !== undefined) {
+      // Raw history injection is not idempotent and may queue into active work.
+      // Never append a replacement assembly to an already-used native thread,
+      // including an empty assembly that intentionally excludes its old history.
+      stageBindingReplacement("seeding assembled history on a fresh thread");
+    }
     if (binding?.threadId) {
       if (
         !areUserMcpServersFingerprintsCompatible({
