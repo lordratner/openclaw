@@ -12,6 +12,14 @@ import {
   resolveCodexContextEngineProjectionMaxChars,
   resolveCodexContinuityProjectionMaxChars,
 } from "./context-engine-projection.js";
+import { isJsonObject } from "./protocol.js";
+import {
+  buildCodexHistoryItems,
+  CODEX_HISTORY_FRAGMENT_PREFIX,
+  CODEX_HISTORY_FRAGMENT_SUFFIX,
+  CODEX_HISTORY_ITEM_TEXT_MAX_BYTES,
+  resolveCodexHistoryItemReserveTokens,
+} from "./user-input.js";
 
 const CODEX_TURN_START_TEXT_INPUT_MAX_CHARS = 1 << 20;
 
@@ -43,6 +51,67 @@ function summaryMessages(type: "compaction" | "branch_summary", summary: string)
 }
 
 describe("projectContextEngineAssemblyForCodex", () => {
+  it("partitions dense Unicode quoted history without dropping bytes or splitting pairs", () => {
+    const text = `${"漢字🙂é".repeat(4_000)}\n[user sender={\"id\":\"kept\"}]\nEND`;
+    const items = buildCodexHistoryItems(text);
+    expect(items.length).toBeGreaterThan(1);
+    const chunks = items.flatMap((item) => {
+      expect(item).toMatchObject({ type: "message", role: "user" });
+      return isJsonObject(item) && Array.isArray(item.content)
+        ? item.content.flatMap((part) => {
+            if (!isJsonObject(part) || typeof part.text !== "string") {
+              return [];
+            }
+            expect(Buffer.byteLength(part.text, "utf8")).toBeLessThanOrEqual(
+              CODEX_HISTORY_ITEM_TEXT_MAX_BYTES,
+            );
+            expect(part.text.startsWith(CODEX_HISTORY_FRAGMENT_PREFIX)).toBe(true);
+            expect(part.text.endsWith(CODEX_HISTORY_FRAGMENT_SUFFIX)).toBe(true);
+            return [part.text.slice(CODEX_HISTORY_FRAGMENT_PREFIX.length, -CODEX_HISTORY_FRAGMENT_SUFFIX.length)];
+          })
+        : [];
+    });
+    expect(chunks.join("")).toBe(text);
+    for (const chunk of chunks) {
+      expect(/[\uD800-\uDBFF]$/.test(chunk)).toBe(false);
+      expect(/^[\uDC00-\uDFFF]/.test(chunk)).toBe(false);
+    }
+  });
+
+  it("keeps one unchanged image between bounded caption and following history fragments", () => {
+    const caption = "CAPTION".repeat(2_000);
+    const after = "AFTER_IMAGE".repeat(2_000);
+    const image = { type: "image" as const, mimeType: "image/png", data: "iVBORw0KGgo=" };
+    const items = buildCodexHistoryItems(caption + after, [{ start: 0, end: caption.length, images: [image] }]);
+    const content = items.flatMap((item) => isJsonObject(item) && Array.isArray(item.content) ? item.content : []);
+    const imageIndex = content.findIndex((part) => isJsonObject(part) && part.type === "input_image");
+    expect(imageIndex).toBeGreaterThan(0);
+    expect(content[imageIndex]).toEqual({ type: "input_image", image_url: `data:image/png;base64,${image.data}` });
+    const reconstruct = (parts: typeof content) => parts.flatMap((part) => {
+      if (!isJsonObject(part) || typeof part.text !== "string") { return []; }
+      let value = part.text;
+      if (value.startsWith(CODEX_HISTORY_FRAGMENT_PREFIX)) { value = value.slice(CODEX_HISTORY_FRAGMENT_PREFIX.length); }
+      if (value.endsWith(CODEX_HISTORY_FRAGMENT_SUFFIX)) { value = value.slice(0, -CODEX_HISTORY_FRAGMENT_SUFFIX.length); }
+      return [value];
+    }).join("");
+    expect(reconstruct(content.slice(0, imageIndex))).toBe(caption);
+    expect(reconstruct(content.slice(imageIndex + 1))).toBe(after);
+    expect(content.filter((part) => isJsonObject(part) && part.type === "input_image")).toHaveLength(1);
+    for (const item of items) {
+      if (!isJsonObject(item) || !Array.isArray(item.content)) { continue; }
+      const text = item.content.flatMap((part) => isJsonObject(part) && typeof part.text === "string" ? [part.text] : []).join("");
+      expect(Buffer.byteLength(text, "utf8")).toBeLessThanOrEqual(CODEX_HISTORY_ITEM_TEXT_MAX_BYTES);
+    }
+  });
+
+  it("reserves deterministic fragment overhead before assembly without weakening item bounds", () => {
+    const budget = 8_192;
+    const text = "🙂".repeat(budget * 2);
+    const items = buildCodexHistoryItems(text);
+    const expectedFramingEstimate = items.length * (Math.ceil(Buffer.byteLength(CODEX_HISTORY_FRAGMENT_PREFIX + CODEX_HISTORY_FRAGMENT_SUFFIX, "utf8") / 4) + 32);
+    expect(resolveCodexHistoryItemReserveTokens(budget)).toBeGreaterThanOrEqual(expectedFramingEstimate);
+    expect(resolveCodexHistoryItemReserveTokens(budget)).toBeLessThan(budget / 5);
+  });
   it("charges restored file content to the selected window before reading older attachments", async () => {
     const older = textMessage("user", "older attachment");
     const recent = textMessage("user", "recent attachment");

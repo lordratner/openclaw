@@ -44,7 +44,7 @@ import {
   buildTurnCollaborationMode,
 } from "./turn-params.js";
 import { readMirrorIdentity } from "./upstream-prompt-provenance.js";
-import { buildCodexHistoryItems } from "./user-input.js";
+import { buildCodexHistoryItems, resolveCodexHistoryItemReserveTokens } from "./user-input.js";
 
 export async function prepareCodexAttemptPrompt(context: CodexAttemptContext) {
   const {
@@ -210,6 +210,7 @@ export async function prepareCodexAttemptPrompt(context: CodexAttemptContext) {
               promptBudget: {
                 contextTokens: configuredContextBudget,
                 reserveTokens:
+                  resolveCodexHistoryItemReserveTokens(configuredContextBudget) +
                   configuredContextBudget -
                   resolveProjectionPromptBudgetTokens({
                     contextTokenBudget: configuredContextBudget,
@@ -328,7 +329,6 @@ export async function prepareCodexAttemptPrompt(context: CodexAttemptContext) {
     } catch (assembleErr) {
       if (
         assembleErr instanceof CodexContextAttachmentError ||
-        configuredContextBudget !== undefined ||
         params.continuation ||
         params.pluginRuntimeRefreshMessages
       ) {

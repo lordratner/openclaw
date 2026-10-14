@@ -1,7 +1,12 @@
 import { isDeepStrictEqual } from "node:util";
 import { embeddedAgentLog } from "openclaw/plugin-sdk/agent-harness-runtime";
 import { isIncognitoSessionKey } from "openclaw/plugin-sdk/session-key-runtime";
-import { closeCodexStartupClientBestEffort } from "./attempt-client-cleanup.js";
+import {
+  CODEX_APP_SERVER_UNSUBSCRIBE_TIMEOUT_MS,
+  closeCodexStartupClientBestEffort,
+  CodexAppServerUnsafeSubscriptionError,
+  unsubscribeCodexThreadBestEffort,
+} from "./attempt-client-cleanup.js";
 import { resolveCodexAppServerClientInstanceId } from "./client.js";
 import { hasCodexNativeToolCatalog, loadCodexNativeToolCatalog } from "./native-tool-catalog.js";
 import { buildCodexAppServerConnectionFingerprint } from "./plugin-app-cache-key.js";
@@ -130,6 +135,74 @@ export async function startOrResumeThread(
         ? undefined
         : input.refreshableInstructions;
       return context;
+    };
+    const injectReusedHistory = async (
+      thread: CodexAppServerThreadLifecycleBinding,
+      context: CodexThreadRequestContext,
+    ) => {
+      const items = params.historyBootstrapItems;
+      if (!items?.length) {
+        return;
+      }
+      throwIfAborted();
+      assert();
+      if (
+        thread.model !== context.startModelSelection.model ||
+        (context.startModelProvider && thread.modelProvider !== context.startModelProvider)
+      ) {
+        throw new Error(
+          "Codex selected a different model than the assembled context policy; retry with that model's configured budget.",
+        );
+      }
+      // The existing warm/resume owner admitted an idle thread under this
+      // session lease. Like the baseline per-turn quote, this is additional
+      // context, not replacement of native history or a reason to rotate it.
+      try {
+        await lifecycleTiming.measure("thread-reuse-seed-history", () =>
+          params.client.request(
+            "thread/inject_items",
+            { threadId: thread.threadId, items },
+            {
+              signal: params.signal,
+              assertCurrent: () => {
+                throwIfAborted();
+                params.params.hostCapabilities.assertActive();
+                assert();
+              },
+              withCurrent: authority.withCurrent,
+            },
+          ),
+        );
+      } catch (error) {
+        // A lost acknowledgment may have appended the quote. Do not replay it
+        // on this physical thread: release its binding, preserving its native
+        // transcript, so an ordinary retry starts fresh. Existing startup/warm
+        // cleanup owns its subscription; only a provisional new thread is deleted.
+        await params.bindingStore.mutate(
+          bindingIdentity,
+          { kind: "clear", threadId: thread.threadId, clientId: thread.clientId },
+          assert,
+          authority,
+        );
+        if (!thread.liveThreadOwnership) {
+          // Cold resume acquired a subscription without a transferred warm claim.
+          const released = await unsubscribeCodexThreadBestEffort(params.client, {
+            threadId: thread.threadId,
+            timeoutMs: CODEX_APP_SERVER_UNSUBSCRIBE_TIMEOUT_MS,
+            assertCurrent: assert,
+            withCurrent: authority.withCurrent,
+          });
+          if (!released) {
+            await (params.abandonClient ?? (() => closeCodexStartupClientBestEffort(params.client)))();
+            throw new CodexAppServerUnsafeSubscriptionError("Codex reused history cleanup failed", {
+              cause: error,
+            });
+          }
+        }
+        throw error;
+      }
+      throwIfAborted();
+      assert();
     };
     const releaseRetainedThread = (
       threadId: string,
@@ -487,12 +560,6 @@ export async function startOrResumeThread(
         rotatedContextEngineBinding = true;
       }
     }
-    if (binding?.threadId && params.historyBootstrapItems !== undefined) {
-      // Raw history injection is not idempotent and may queue into active work.
-      // Never append a replacement assembly to an already-used native thread,
-      // including an empty assembly that intentionally excludes its old history.
-      stageBindingReplacement("seeding assembled history on a fresh thread");
-    }
     if (binding?.threadId) {
       if (
         !areUserMcpServersFingerprintsCompatible({
@@ -567,6 +634,7 @@ export async function startOrResumeThread(
         });
         if (warmReuse.kind === "ready") {
           cleanupWarmBinding = warmReuse.cleanupOnFailure;
+          await injectReusedHistory(warmReuse.binding, requestContext);
           return publishCodexThreadInferenceBinding(params, warmReuse.binding, true);
         }
         if (incognito || warmReuse.kind === "rotate") {
@@ -595,6 +663,7 @@ export async function startOrResumeThread(
             },
           });
           if (resumed) {
+            await injectReusedHistory(resumed, requestContext);
             return publishCodexThreadInferenceBinding(params, resumed);
           }
         }

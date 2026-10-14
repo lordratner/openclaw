@@ -155,14 +155,22 @@ that need pre-prompt assembly; generic CLI backends, including `codex-cli`,
 do not provide that host capability.
 
 For explicitly budgeted context-engine projections, history selected by assembly
-is not silently shortened again to fit a single native user input. Bootstrap
-history is seeded into a fresh host-owned native thread before the current
-request starts. Configured per-turn projections also start a fresh thread for
-each assembly, so native history cannot retain messages outside the selected
-assembly; thread-bootstrap projections reuse their ready thread until rotation.
-The current request remains normal user input. A failed or uncertain seed is not
-marked ready or blindly replayed into the same thread. Transport limits still
-apply and produce an error instead of a partial history.
+is not silently shortened again to fit a single native user input. It travels as
+bounded quoted-user fragments, preserving text, sender labels, and image order;
+framing overhead is reserved before assembly. Bootstrap history is seeded before
+the current request starts. Per-turn projections append the selected quote to an
+existing idle native thread, including after resume, rather than replacing its
+history. Thread-bootstrap projections reuse their ready thread until rotation.
+The current request remains normal user input, separate from quoted history.
+
+Ordinary assembly failures retain the existing prompt fallback. Saved attachment
+failures, continuations, and runtime refreshes retain their stricter handling.
+A failed fresh-thread seed is not marked ready. An uncertain append to a reused
+thread releases its OpenClaw binding without deleting the native transcript, so
+a retry starts fresh instead of blindly repeating the append. A crash after an
+append but before the request starts can leave a repeated historical quote on
+retry; this carrier does not introduce an exactly-once durability guarantee.
+Transport limits still apply and produce an error instead of a partial history.
 
 Fresh Codex threads, including ordinary **Fork conversation** sessions, receive
 recent saved history within a bounded continuity window. Conversation text and

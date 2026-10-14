@@ -97,7 +97,7 @@ export type CodexStartOrResumeThreadParams = Omit<
   appServerRuntimeFingerprint?: string;
   pluginThreadConfig?: CodexPluginThreadConfigProvider;
   contextEngineProjection?: CodexContextEngineThreadBootstrapProjection;
-  /** Replace on a fresh idle thread before ready; [] explicitly selects no old history. */
+  /** Selected quoted history, injected before turn/start on the admitted idle thread. */
   historyBootstrapItems?: JsonValue[];
   signal?: AbortSignal;
   timing?: CodexThreadLifecycleTimingOptions;

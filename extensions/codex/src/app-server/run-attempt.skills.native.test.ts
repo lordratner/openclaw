@@ -23,6 +23,21 @@ import {
 } from "./run-attempt-test-harness.js";
 import { createContextEngine } from "./run-attempt.context-engine.test-support.js";
 import { createIsolatedCodexAppServerClient } from "./shared-client.js";
+import {
+  CODEX_HISTORY_FRAGMENT_PREFIX,
+  CODEX_HISTORY_FRAGMENT_SUFFIX,
+  CODEX_HISTORY_ITEM_TEXT_MAX_BYTES,
+} from "./user-input.js";
+
+function historicalFragmentText(text: string): string {
+  const start = text.startsWith(CODEX_HISTORY_FRAGMENT_PREFIX)
+    ? CODEX_HISTORY_FRAGMENT_PREFIX.length
+    : 0;
+  const end = text.endsWith(CODEX_HISTORY_FRAGMENT_SUFFIX)
+    ? text.length - CODEX_HISTORY_FRAGMENT_SUFFIX.length
+    : text.length;
+  return text.slice(start, end);
+}
 import { CODEX_APP_SERVER_VERSION } from "./version.js";
 
 setupRunAttemptTestHooks();
@@ -307,7 +322,9 @@ describe("native Codex skill delivery", () => {
                   .flatMap((item) =>
                     Array.isArray(item.content)
                       ? item.content.flatMap((part) =>
-                          isJsonObject(part) && typeof part.text === "string" ? [part.text] : [],
+                          isJsonObject(part) && typeof part.text === "string"
+                            ? [historicalFragmentText(part.text)]
+                            : [],
                         )
                       : [],
                   )
@@ -339,16 +356,24 @@ describe("native Codex skill delivery", () => {
       const users = Array.isArray(input)
         ? input.filter((item) => isJsonObject(item) && item.role === "user")
         : [];
-      const historical = users.find((item) =>
-        JSON.stringify(item).includes("NATIVE_HISTORY_START"),
+      const historical = users.filter((item) =>
+        isJsonObject(item) && Array.isArray(item.content) && item.content.some(
+          (part) => isJsonObject(part) && typeof part.text === "string" &&
+            part.text.startsWith(CODEX_HISTORY_FRAGMENT_PREFIX),
+        ),
       );
       const current = users.find((item) => JSON.stringify(item).includes(params.prompt));
-      expect(historical).toBeDefined();
+      expect(historical.length).toBeGreaterThan(1);
       expect(current).toBeDefined();
-      const content =
-        isJsonObject(historical) && Array.isArray(historical.content) ? historical.content : [];
+      const content = historical.flatMap((item) => isJsonObject(item) && Array.isArray(item.content) ? item.content : []);
+      for (const item of historical) {
+        const textParts = isJsonObject(item) && Array.isArray(item.content)
+          ? item.content.flatMap((part) => isJsonObject(part) && typeof part.text === "string" ? [part.text] : [])
+          : [];
+        expect(Buffer.byteLength(textParts.join(""), "utf8")).toBeLessThanOrEqual(CODEX_HISTORY_ITEM_TEXT_MAX_BYTES);
+      }
       const text = content
-        .flatMap((part) => (isJsonObject(part) && typeof part.text === "string" ? [part.text] : []))
+        .flatMap((part) => (isJsonObject(part) && typeof part.text === "string" ? [historicalFragmentText(part.text)] : []))
         .join("");
       expect(text.length).toBeGreaterThan(1 << 20);
       expect(text).toContain(
@@ -358,11 +383,15 @@ describe("native Codex skill delivery", () => {
       );
       expect(text).toContain('[user sender={"id":"native-speaker"}]');
       expect(text).not.toContain("truncated");
-      expect(users.indexOf(historical!)).toBeLessThan(users.indexOf(current!));
+      expect(users.indexOf(historical[historical.length - 1]!)).toBeLessThan(users.indexOf(current!));
       const imageIndex = content.findIndex(
         (part) => isJsonObject(part) && part.type === "input_image",
       );
       expect(imageIndex).toBeGreaterThan(0);
+      expect(content[imageIndex]).toEqual({
+        type: "input_image",
+        image_url: `data:${image.mimeType};base64,${image.data}`,
+      });
       expect(JSON.stringify(content.slice(0, imageIndex))).toContain("NATIVE_IMAGE_CAPTION");
       expect(JSON.stringify(content.slice(imageIndex + 1))).toContain(
         "NATIVE_ASSISTANT_AFTER_IMAGE",
