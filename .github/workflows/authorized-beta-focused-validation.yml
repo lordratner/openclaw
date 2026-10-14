@@ -1,95 +1,223 @@
-name: Authorized Beta Focused Validation
-
+name: Final history review follow-up proof
 on:
   workflow_dispatch:
-
+    inputs:
+      candidate_sha:
+        required: true
+        type: string
 permissions:
-  actions: read
-  attestations: write
   contents: read
-  id-token: write
-
-concurrency:
-  group: authorized-beta-focused-validation
-  cancel-in-progress: false
-
+  actions: read
 env:
-  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
-  NODE_VERSION: "24.21.0"
-
+  CI: 'true'
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: 'true'
+  CANDIDATE_SHA: ${{ inputs.candidate_sha }}
+  NODE_OPTIONS: --max-old-space-size=8192
+  MAIN_SHA: 92a6a23f14e93e388cf012dbf8caa5be5e374fec
+  BASE_SHA: 55a3be43fe8ab39300d8ea7b5aa408d29f941f90
 jobs:
-  validate:
-    runs-on: ubuntu-latest
-    timeout-minutes: 30
+  delta:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
     steps:
-      - name: Validate protected tooling identity
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          repository: lordratner/openclaw
+          ref: ${{ inputs.candidate_sha }}
+          fetch-depth: 16
+          persist-credentials: false
+      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c
+        with:
+          github-token: ${{ github.token }}
+          repository: lordratner/openclaw
+          run-id: 38599164164
+          name: context-budget-repaired-38599164164-1
+          path: ${{ runner.temp }}/prior-tests
+      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c
+        with:
+          github-token: ${{ github.token }}
+          repository: lordratner/openclaw
+          run-id: 38599164164
+          name: context-budget-repaired-gates-38599164164-1
+          path: ${{ runner.temp }}/prior-gates
+      - name: Admit exact one-test-layout delta and unchanged production/retained tests
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          set -euo pipefail
-          if [[ ! "${GITHUB_REF}" =~ ^refs/tags/release-publish/([a-f0-9]{12})-[1-9][0-9]*$ ]]; then
-            echo "Authorized beta focused validation requires a protected release-publish tag." >&2
-            exit 1
-          fi
-          if [[ "${GITHUB_SHA:0:12}" != "${BASH_REMATCH[1]}" ]]; then
-            echo "Protected release-publish tag does not match the workflow SHA." >&2
-            exit 1
-          fi
-          tag="${GITHUB_REF#refs/tags/}"
-          remote_sha="$(
-            gh api "repos/${GITHUB_REPOSITORY}/git/ref/tags/${tag}" \
-              --jq '.object | select(.type == "commit") | .sha'
-          )"
-          [[ "${remote_sha}" == "${GITHUB_SHA}" ]] || {
-            echo "Protected release-publish tag moved after dispatch." >&2
-            exit 1
-          }
-
-      - name: Checkout trusted tooling
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          ref: ${{ github.sha }}
-          fetch-depth: 0
-          persist-credentials: false
-
-      - name: Checkout frozen candidate
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          ref: 3fbe94065c2b94f4c08acb6742a69938bf408d94
-          path: candidate
-          fetch-depth: 0
-          persist-credentials: false
-
-      - name: Setup Node environment
+          python3 - <<'PY'
+          import os,json,hashlib,subprocess,re
+          from pathlib import Path
+          prior='6c69c5d3e9f7a574cfc33ebf2af6bb653945c08e';production='5b2b566b10af9ed39f0bbb930251a7d2ee222cb5';files=['extensions/codex/src/app-server/context-engine-projection.test.ts', 'extensions/codex/src/app-server/run-attempt.history-seed.test.ts', 'extensions/codex/src/app-server/run-attempt.continuity-media.test.ts', 'extensions/codex/src/app-server/run-attempt.bounded-continuity.test.ts'];expectedDelta=['extensions/codex/src/app-server/context-engine-projection.test.ts', 'extensions/codex/src/app-server/run-attempt.history-seed.test.ts', 'extensions/codex/src/app-server/run-attempt.continuity-media.test.ts', 'extensions/codex/src/app-server/run-attempt.bounded-continuity.test.ts', 'extensions/codex/src/app-server/context-engine-projection.ts'];hashes={'extensions/codex/src/app-server/context-engine-projection.test.ts': 'fc96bb032e3191bbf522c04972ed08b0b7ee2da0de7908ea6ce22cbc79098e58', 'extensions/codex/src/app-server/run-attempt.history-seed.test.ts': '0e9061192d665e0929abfdab2b9ba96e84d0a985bef61d72b3ee7192c5c58288', 'extensions/codex/src/app-server/run-attempt.continuity-media.test.ts': 'b4a013907d22b7e1241aaaafc6f111c017a9a8ae7ae343303c815dea8103715b', 'extensions/codex/src/app-server/run-attempt.bounded-continuity.test.ts': 'd82ca926734149cbb1b9aa562d1b4523a22ce455ad56cf8f8af2fccda084f233', 'extensions/codex/src/app-server/context-engine-projection.ts': '1315dfc1d3b1db4a72f2dc0b3a6b780d2f8408c069adb65c496bde942cb25f7e'}
+          candidate=os.environ['CANDIDATE_SHA'];assert re.fullmatch('[0-9a-f]{40}',candidate)
+          def git(*args):return subprocess.check_output(['git',*args],text=True).strip()
+          assert git('rev-parse','HEAD')==candidate and not git('status','--porcelain')
+          subprocess.run(['git','fetch','--no-tags','--depth=1','origin',prior],check=True)
+          assert sorted(git('diff','--name-only',prior,candidate).splitlines())==sorted(expectedDelta)
+          for p,h in hashes.items():assert hashlib.sha256(Path(p).read_bytes()).hexdigest()==h,p
+          previousTests=Path(os.environ['RUNNER_TEMP'])/'prior-tests';previousGates=Path(os.environ['RUNNER_TEMP'])/'prior-gates'
+          source=json.loads((previousTests/'source.json').read_text());assert source['candidate']==production and source['role']=='repaired'
+          for p,sha in source['sourceSha256'].items():
+              content=Path(p).read_bytes()
+              if p=='extensions/codex/src/app-server/context-engine-projection.ts':
+                  oldLiteral='Selected history or restored attachments exceed their rendered allowance';newLiteral=oldLiteral+'. Start a new conversation with a smaller attachment.'
+                  text=content.decode();assert text.count(newLiteral)==1
+                  original=text.replace(newLiteral,oldLiteral).encode();assert hashlib.sha256(original).hexdigest()==sha
+                  assert original==subprocess.check_output(['git','show',production+':'+p])
+              else:assert hashlib.sha256(content).hexdigest()==sha,p
+          assert (previousGates/'head.txt').read_text().strip()==production
+          typeJob=json.loads(subprocess.check_output(['gh','api','repos/lordratner/openclaw/actions/jobs/115973655591'],text=True))
+          assert typeJob['run_id']==38599164164 and typeJob['name']=='repaired-gates'
+          requiredTypes={'Package-owned core production type gate','Package-owned extension production type gate'}
+          assert all(any(step['name']==name and step['conclusion']=='success' for step in typeJob['steps']) for name in requiredTypes)
+          report=json.loads((previousTests/'tests.json').read_text());retained=[];passed=0
+          for p,sha in source['testSha256'].items():
+              if p in files:continue
+              assert hashlib.sha256(Path(p).read_bytes()).hexdigest()==sha,p
+              suites=[s for s in report['testResults'] if s['name'].endswith('/'+p)]
+              assert len(suites)==1 and suites[0]['assertionResults']
+              assertions=suites[0]['assertionResults'];assert all(a['status']=='passed' for a in assertions)
+              retained.append({'path':p,'sha256':sha,'passed':len(assertions)});passed+=len(assertions)
+          receipt={'candidate':candidate,'priorSource':prior,'productionSource':production,'delta':expectedDelta,'changedSourceSha256':hashes,'retainedPassed':passed,'retainedFiles':retained,'semantics':'Explicit own Vitest mocks, typed request spy, cross-version canonical continuity contract and recovery-only overflow wording; carrier behavior unchanged','retainedTypedJob':115973655591,'retainedTypedSteps':sorted(requiredTypes),'priorOverall':'Failed test-only lint; only observed successful type steps and unchanged passing tests credited','packageProof':'Historical exact5b installed carrier proof retained with a named error-copy-only source exception; no finalsource binary identity claimed'}
+          assert receipt['retainedPassed']==157 and len(receipt['retainedFiles'])==7
+          proof=Path(os.environ['RUNNER_TEMP'])/'proof';proof.mkdir(exist_ok=True);(proof/'source.json').write_text(json.dumps(receipt,indent=2)+'\n')
+          (proof/'prior-type-job.json').write_text(json.dumps(typeJob,indent=2)+'\n')
+          (proof/'test-files.json').write_text(json.dumps(files)+'\n')
+          PY
+      - name: Frozen package-owned semantic environment
         uses: ./.github/actions/setup-node-env
         with:
-          cache-mode: restore
-          node-version: ${{ env.NODE_VERSION }}
-          install-bun: "false"
-
-      - name: Build focused evidence
-        env:
-          GH_TOKEN: ${{ github.token }}
+          node-version: 24.19.0
+          semantic-checks: 'true'
+          install-bun: 'false'
+          frozen-lockfile: 'true'
+          cache-mode: off
+      - name: Execute changed projection/builder suite once
+        run: |
+          python3 - <<'PY'
+          import os,json,subprocess,time
+          from pathlib import Path
+          proof=Path(os.environ['RUNNER_TEMP'])/'proof';files=json.loads((proof/'test-files.json').read_text())
+          command=['pnpm','test',*files,'--maxWorkers=1','--passWithNoTests=false','--reporter=verbose','--reporter=json','--outputFile='+str(proof/'tests.json')]
+          start=time.monotonic()
+          with (proof/'tests.log').open('w') as log:result=subprocess.run(command,stdout=log,stderr=subprocess.STDOUT)
+          elapsed=round(time.monotonic()-start,3);(proof/'execution.json').write_text(json.dumps({'command':command,'exit':result.returncode,'wallSeconds':elapsed},indent=2)+'\n')
+          report=json.loads((proof/'tests.json').read_text());assert result.returncode==0 and report['success'] is True
+          records=[a for s in report['testResults'] for a in s['assertionResults']];assert len(records)==67 and all(a['status']=='passed' for a in records)
+          assert sum(a['fullName'].startswith('buildCodexHistoryItems ') for a in records)==13
+          (proof/'validated.json').write_text(json.dumps({'freshPassed':67,'failed':0,'skipped':0,'wallSeconds':elapsed,'retainedPassed':157},indent=2)+'\n')
+          PY
+      - name: Fresh scoped format
+        if: '!cancelled()'
         run: |
           set -euo pipefail
-          mkdir -p "${RUNNER_TEMP}/authorized-beta-focused"
-          node --import tsx scripts/validate-authorized-beta-focused-evidence.mts create \
-            --candidate-root candidate \
-            --output "${RUNNER_TEMP}/authorized-beta-focused/evidence.json" \
-            --producer-run-id "${GITHUB_RUN_ID}" \
-            --producer-run-attempt "${GITHUB_RUN_ATTEMPT}" \
-            --producer-workflow-full-ref "${GITHUB_REF}" \
-            --producer-workflow-sha "${GITHUB_SHA}"
-
-      - name: Attest focused evidence
-        uses: actions/attest@1e69f48acb82d1966a394da916b4c1698aa569d6 # v4.2.2
+          pnpm format:check extensions/codex/src/app-server/context-engine-projection.test.ts extensions/codex/src/app-server/run-attempt.history-seed.test.ts extensions/codex/src/app-server/run-attempt.continuity-media.test.ts extensions/codex/src/app-server/run-attempt.bounded-continuity.test.ts extensions/codex/src/app-server/context-engine-projection.ts 2>&1 | tee "$RUNNER_TEMP/proof/format.log"
+      - name: Fresh assertion-safety at frozen fork
+        if: '!cancelled()'
+        run: |
+          set -euo pipefail
+          git fetch --no-tags --depth=1 origin 55a3be43fe8ab39300d8ea7b5aa408d29f941f90
+          pnpm check:assertion-safety --base 55a3be43fe8ab39300d8ea7b5aa408d29f941f90 2>&1 | tee "$RUNNER_TEMP/proof/assertion-safety.log"
+      - name: Fresh scoped lint
+        if: '!cancelled()'
+        run: |
+          set -euo pipefail
+          node scripts/run-oxlint.mjs --tsconfig extensions/tsconfig.json extensions/codex/src/app-server/context-engine-projection.test.ts extensions/codex/src/app-server/run-attempt.history-seed.test.ts extensions/codex/src/app-server/run-attempt.continuity-media.test.ts extensions/codex/src/app-server/run-attempt.bounded-continuity.test.ts extensions/codex/src/app-server/context-engine-projection.ts 2>&1 | tee "$RUNNER_TEMP/proof/lint.log"
+      - name: Capture clean source readback
+        if: always()
+        run: |
+          git rev-parse HEAD > "$RUNNER_TEMP/proof/head.txt"
+          git diff --binary > "$RUNNER_TEMP/proof/generated.patch"
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        if: always()
         with:
-          subject-path: ${{ runner.temp }}/authorized-beta-focused/evidence.json
-
-      - name: Upload focused evidence
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
-        with:
-          name: authorized-beta-focused-v1-${{ github.run_id }}-${{ github.run_attempt }}
-          path: ${{ runner.temp }}/authorized-beta-focused/evidence.json
+          name: history-test-types-delta-${{ github.run_id }}
+          path: ${{ runner.temp }}/proof
           if-no-files-found: error
-          retention-days: 30
+          retention-days: 14
+
+  merged-test-types:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          repository: openclaw/openclaw
+          ref: ${{ env.MAIN_SHA }}
+          fetch-depth: 1
+          persist-credentials: false
+      - name: Construct exact immutable merged test tree without reference writes
+        run: |
+          set -euo pipefail
+          mkdir -p "$RUNNER_TEMP/merged-test-types"
+          git fetch --no-tags --depth=1 https://github.com/lordratner/openclaw.git "$CANDIDATE_SHA"
+          git fetch --no-tags --depth=1 https://github.com/openclaw/openclaw.git "$BASE_SHA"
+          python3 - <<'PYCODE'
+          import os,json,hashlib,subprocess
+          from pathlib import Path
+          P=Path(os.environ['RUNNER_TEMP'])/'merged-test-types';main=os.environ['MAIN_SHA'];candidate=os.environ['CANDIDATE_SHA'];base=os.environ['BASE_SHA']
+          def git(*args):return subprocess.check_output(['git',*args],text=True).strip()
+          assert git('rev-parse','HEAD')==main and not git('status','--porcelain')
+          refs=git('for-each-ref','--format=%(refname) %(objectname)')
+          r=subprocess.run(['git','merge-tree','--write-tree','--merge-base='+base,main,candidate],text=True,capture_output=True)
+          (P/'merge-engine.log').write_text(r.stdout+r.stderr);assert r.returncode==0,'No conflict override allowed'
+          tree=r.stdout.splitlines()[0];assert git('cat-file','-t',tree)=='tree'
+          subprocess.run(['git','read-tree','--reset','-u',tree],check=True)
+          assert git('write-tree')==tree and git('rev-parse','HEAD')==main and git('for-each-ref','--format=%(refname) %(objectname)')==refs and not git('diff','--name-only')
+          projection=Path('extensions/codex/src/app-server/context-engine-projection.test.ts');seed=Path('extensions/codex/src/app-server/run-attempt.history-seed.test.ts')
+          assert projection.read_text().count('const historyTest = await import("vitest");')==4
+          assert projection.read_text().count('historyTest.vi.fn(')==4
+          assert 'vi.spyOn(harness.client, "request").mockImplementation' in seed.read_text()
+          assert 'options as Parameters' not in seed.read_text()
+          (P/'source.json').write_text(json.dumps({'candidate':candidate,'main':main,'base':base,'mergedTree':tree,'headStillMain':True,'refsUnchanged':True,'conflictOverrides':False,'testSha256':{str(p):hashlib.sha256(p.read_bytes()).hexdigest() for p in (projection,seed)}},indent=2)+'\n')
+          PYCODE
+      - name: Frozen merged package-owned semantic environment
+        uses: ./.github/actions/setup-node-env
+        with:
+          node-version: 24.19.0
+          semantic-checks: 'true'
+          install-bun: 'false'
+          frozen-lockfile: 'true'
+          cache-mode: off
+      - name: Fresh merged extension test-type owner
+        run: |
+          set -euo pipefail
+          /usr/bin/time -p pnpm tsgo:extensions:test 2>&1 | tee "$RUNNER_TEMP/merged-test-types/extension-test-types.log"
+      - name: Execute repaired canonical continuity on current merged core
+        run: |
+          python3 - <<'PYCODE'
+          import os,json,time,subprocess
+          from pathlib import Path
+          P=Path(os.environ['RUNNER_TEMP'])/'merged-test-types';file='extensions/codex/src/app-server/run-attempt.bounded-continuity.test.ts'
+          cmd=['pnpm','test',file,'--maxWorkers=1','--passWithNoTests=false','--reporter=verbose','--reporter=json','--outputFile='+str(P/'tests.json')]
+          start=time.monotonic()
+          with (P/'tests.log').open('w') as out:r=subprocess.run(cmd,stdout=out,stderr=subprocess.STDOUT)
+          seconds=round(time.monotonic()-start,3);report=json.loads((P/'tests.json').read_text());records=[a for s in report['testResults'] for a in s['assertionResults']]
+          assert r.returncode==0 and report['success'] is True and len(records)==3 and all(a['status']=='passed' for a in records)
+          assert any('(with historical user)' in a['fullName'] for a in records) and any('(assistant only)' in a['fullName'] for a in records)
+          (P/'validated.json').write_text(json.dumps({'candidate':os.environ['CANDIDATE_SHA'],'main':os.environ['MAIN_SHA'],'passed':3,'failed':0,'skipped':0,'wallSeconds':seconds,'command':cmd},indent=2)+'\n')
+          PYCODE
+      - name: Fresh merged two-test format and lint
+        if: '!cancelled()'
+        run: |
+          set -euo pipefail
+          paths=(extensions/codex/src/app-server/context-engine-projection.test.ts extensions/codex/src/app-server/run-attempt.history-seed.test.ts extensions/codex/src/app-server/run-attempt.continuity-media.test.ts extensions/codex/src/app-server/run-attempt.bounded-continuity.test.ts extensions/codex/src/app-server/context-engine-projection.ts)
+          pnpm format:check "${paths[@]}" 2>&1 | tee "$RUNNER_TEMP/merged-test-types/format.log"
+          node scripts/run-oxlint.mjs --tsconfig extensions/tsconfig.json "${paths[@]}" 2>&1 | tee "$RUNNER_TEMP/merged-test-types/lint.log"
+      - name: Confirm unchanged merged tracked tree
+        if: always()
+        run: |
+          python3 - <<'PYCODE'
+          import os,json,subprocess
+          from pathlib import Path
+          P=Path(os.environ['RUNNER_TEMP'])/'merged-test-types';r=json.loads((P/'source.json').read_text())
+          def git(*args):return subprocess.check_output(['git',*args],text=True).strip()
+          assert git('rev-parse','HEAD')==r['main'] and git('write-tree')==r['mergedTree'] and not git('diff','--name-only')
+          (P/'final-status.txt').write_text(git('status','--short')+'\n')
+          PYCODE
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        if: always()
+        with:
+          name: history-test-types-merged-${{ github.run_id }}
+          path: ${{ runner.temp }}/merged-test-types
+          if-no-files-found: error
+          retention-days: 14
