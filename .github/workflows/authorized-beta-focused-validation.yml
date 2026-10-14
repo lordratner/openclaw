@@ -1,95 +1,185 @@
-name: Authorized Beta Focused Validation
-
+# QA-only isolated tree qualification; never added to an upstream product branch.
+name: History carrier frozen-main lifecycle merge proof
 on:
   workflow_dispatch:
-
+    inputs:
+      candidate_sha:
+        description: Exact reviewed standalone media-repaired carrier
+        default: 5b2b566b10af9ed39f0bbb930251a7d2ee222cb5
+        required: true
+        type: string
+      main_sha:
+        description: Frozen main with current native warm cleanup owner
+        default: 3306fd27bce7e2842c03812a0cd2c29088942e47
+        required: true
+        type: string
 permissions:
-  actions: read
-  attestations: write
   contents: read
-  id-token: write
-
-concurrency:
-  group: authorized-beta-focused-validation
-  cancel-in-progress: false
-
 env:
-  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
-  NODE_VERSION: "24.21.0"
-
+  CI: 'true'
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: 'true'
+  NODE_OPTIONS: --max-old-space-size=8192
+  CANDIDATE_SHA: ${{ inputs.candidate_sha }}
+  MAIN_SHA: ${{ inputs.main_sha }}
+  BASE_SHA: 55a3be43fe8ab39300d8ea7b5aa408d29f941f90
 jobs:
-  validate:
-    runs-on: ubuntu-latest
-    timeout-minutes: 30
+  merged-lifecycle:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 40
     steps:
-      - name: Validate protected tooling identity
-        env:
-          GH_TOKEN: ${{ github.token }}
+      - name: Admit exact reviewed parents
+        run: |
+          test "$CANDIDATE_SHA" = 5b2b566b10af9ed39f0bbb930251a7d2ee222cb5
+          test "$MAIN_SHA" = 3306fd27bce7e2842c03812a0cd2c29088942e47
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          repository: openclaw/openclaw
+          ref: ${{ inputs.main_sha }}
+          fetch-depth: 1
+          persist-credentials: false
+      - name: Produce isolated merged tree, without commits or reference writes
         run: |
           set -euo pipefail
-          if [[ ! "${GITHUB_REF}" =~ ^refs/tags/release-publish/([a-f0-9]{12})-[1-9][0-9]*$ ]]; then
-            echo "Authorized beta focused validation requires a protected release-publish tag." >&2
-            exit 1
-          fi
-          if [[ "${GITHUB_SHA:0:12}" != "${BASH_REMATCH[1]}" ]]; then
-            echo "Protected release-publish tag does not match the workflow SHA." >&2
-            exit 1
-          fi
-          tag="${GITHUB_REF#refs/tags/}"
-          remote_sha="$(
-            gh api "repos/${GITHUB_REPOSITORY}/git/ref/tags/${tag}" \
-              --jq '.object | select(.type == "commit") | .sha'
-          )"
-          [[ "${remote_sha}" == "${GITHUB_SHA}" ]] || {
-            echo "Protected release-publish tag moved after dispatch." >&2
-            exit 1
-          }
-
-      - name: Checkout trusted tooling
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          ref: ${{ github.sha }}
-          fetch-depth: 0
-          persist-credentials: false
-
-      - name: Checkout frozen candidate
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          ref: 3fbe94065c2b94f4c08acb6742a69938bf408d94
-          path: candidate
-          fetch-depth: 0
-          persist-credentials: false
-
-      - name: Setup Node environment
+          mkdir -p "$RUNNER_TEMP/merged-lifecycle-proof"
+          git fetch --no-tags --depth=1 https://github.com/lordratner/openclaw.git "$CANDIDATE_SHA"
+          git fetch --no-tags --depth=1 https://github.com/openclaw/openclaw.git "$BASE_SHA"
+          python3 - <<'PY'
+          import os,json,subprocess,hashlib
+          from pathlib import Path
+          proof=Path(os.environ['RUNNER_TEMP'])/'merged-lifecycle-proof'
+          main=os.environ['MAIN_SHA'];candidate=os.environ['CANDIDATE_SHA'];base=os.environ['BASE_SHA']
+          def git(*args):return subprocess.check_output(['git',*args],text=True).strip()
+          assert git('rev-parse','HEAD')==main
+          assert not git('status','--porcelain')
+          for commit in (main,candidate,base):assert git('rev-parse',commit+'^{commit}')==commit
+          refs_before=git('for-each-ref','--format=%(refname) %(objectname)')
+          # Known immutable fork point is explicit; no shallow-history ancestry guess.
+          merge=subprocess.run(['git','merge-tree','--write-tree','--merge-base='+base,main,candidate],capture_output=True,text=True)
+          (proof/'merge-engine.log').write_text(merge.stdout+merge.stderr)
+          if merge.returncode:
+              (proof/'conflict-result.json').write_text(json.dumps({'parents':[main,candidate],'base':base,'mergeExit':merge.returncode,'action':'Fail closed; no conflict preference or resolution attempted'},indent=2)+'\n')
+              raise SystemExit('Named merge conflict: see retained merge-engine.log')
+          tree=merge.stdout.splitlines()[0];assert len(tree)==40 and git('cat-file','-t',tree)=='tree'
+          subprocess.run(['git','read-tree','--reset','-u',tree],check=True)
+          assert git('write-tree')==tree
+          assert git('rev-parse','HEAD')==main
+          assert git('for-each-ref','--format=%(refname) %(objectname)')==refs_before
+          assert not git('diff','--name-only'), 'Unexpected unstaged merge modifications'
+          warm='extensions/codex/src/app-server/thread-lifecycle.warm-cleanup.native.test.ts'
+          warm_main=subprocess.check_output(['git','show',main+':'+warm])
+          assert Path(warm).read_bytes()==warm_main, 'Native current-main proof must not be replaced by candidate fixtures'
+          lifecycle='extensions/codex/src/app-server/thread-lifecycle-run.ts'
+          assert 'return withCodexThreadLifecycleBinding(input, prepare, async (error) =>' in Path(lifecycle).read_text(), 'Current awaited lease cleanup owner missing'
+          assert 'await injectReusedHistory(warmReuse.binding, requestContext)' in Path(lifecycle).read_text(), 'Candidate warm carrier omitted'
+          assert 'await injectReusedHistory(resumed, requestContext)' in Path(lifecycle).read_text(), 'Candidate cold carrier omitted'
+          paths=git('diff','--cached','--name-only').splitlines()
+          with (proof/'merged-main-delta.patch').open('wb') as out:subprocess.run(['git','diff','--cached','--binary'],check=True,stdout=out)
+          receipt={'candidate':candidate,'main':main,'explicitFrozenForkPoint':base,'parents':[main,candidate],
+              'mergedTree':tree,'headStillMain':True,'referencesUnchanged':True,'conflictOverrides':False,
+              'changedFromMain':paths,'sourceSha256':{p:hashlib.sha256(Path(p).read_bytes()).hexdigest() for p in paths if Path(p).is_file()},
+              'currentMainNativeWarmTestSha256':hashlib.sha256(warm_main).hexdigest(),
+              'proofKind':'Isolated merged working tree, not a published merge or local/remote main synchronization'}
+          (proof/'source.json').write_text(json.dumps(receipt,indent=2)+'\n')
+          PY
+      - name: Frozen merged package-owned environment
         uses: ./.github/actions/setup-node-env
         with:
-          cache-mode: restore
-          node-version: ${{ env.NODE_VERSION }}
-          install-bun: "false"
-
-      - name: Build focused evidence
-        env:
-          GH_TOKEN: ${{ github.token }}
+          node-version: 24.19.0
+          install-bun: 'false'
+          semantic-checks: 'true'
+          frozen-lockfile: 'true'
+          cache-mode: off
+      - name: Execute native warm cleanup and carrier lifecycle siblings once
+        run: |
+          python3 - <<'PY'
+          import os,json,subprocess,time
+          from pathlib import Path
+          proof=Path(os.environ['RUNNER_TEMP'])/'merged-lifecycle-proof'
+          files=['extensions/codex/src/app-server/thread-lifecycle.warm-cleanup.native.test.ts',
+                 'extensions/codex/src/app-server/thread-lifecycle.handoff-cancellation.test.ts',
+                 'extensions/codex/src/app-server/thread-lifecycle.binding.test.ts',
+                 'extensions/codex/src/app-server/run-attempt.history-seed.test.ts',
+                 'extensions/codex/src/app-server/run-attempt.continuity-media.test.ts']
+          command=['pnpm','test',*files,'--maxWorkers=1','--passWithNoTests=false','--reporter=verbose','--reporter=json','--outputFile='+str(proof/'tests.json')]
+          start=time.monotonic()
+          with (proof/'tests.log').open('w') as out:r=subprocess.run(command,stdout=out,stderr=subprocess.STDOUT)
+          (proof/'execution.json').write_text(json.dumps({'command':command,'files':files,'exit':r.returncode,'wallSeconds':round(time.monotonic()-start,3)},indent=2)+'\n')
+          PY
+      - name: Validate real native witnesses and complete executed suites
+        run: |
+          python3 - <<'PY'
+          import os,json,re
+          from pathlib import Path
+          proof=Path(os.environ['RUNNER_TEMP'])/'merged-lifecycle-proof';execution=json.loads((proof/'execution.json').read_text());report=json.loads((proof/'tests.json').read_text())
+          assert execution['exit']==0 and report['success'] is True
+          assert report['numFailedTests']==0 and report['numPendingTests']==0
+          assertions={}
+          for suite in report['testResults']:
+              names=[p for p in execution['files'] if suite['name']==p or suite['name'].endswith('/'+p)]
+              assert len(names)==1 and suite['assertionResults']
+              for assertion in suite['assertionResults']:
+                  assert assertion['status']=='passed',(assertion['fullName'],assertion['status'])
+                  key=(names[0],assertion['fullName']);assert key not in assertions,'Duplicate execution';assertions[key]=assertion
+          assert all(any(file==p for file,_ in assertions) for p in execution['files'])
+          prefix='extensions/codex/src/app-server/'
+          assert sum(file==prefix+'run-attempt.history-seed.test.ts' for file,_ in assertions)==14
+          assert sum(file==prefix+'run-attempt.continuity-media.test.ts' for file,_ in assertions)==5
+          scenarios=['publication failure','protected rotation','protected publication failure']
+          for scenario in scenarios:
+              name='native Codex warm cleanup '+scenario+' permits continuation without disturbing sibling ownership'
+              assert (prefix+'thread-lifecycle.warm-cleanup.native.test.ts',name) in assertions
+          witnesses=[]
+          for line in (proof/'tests.log').read_text().splitlines():
+              match=re.search(r'CODEX_NATIVE_WARM_PROOF (\{.*\})',line)
+              if match:witnesses.append(json.loads(match.group(1)))
+          assert sorted(w['scenario'] for w in witnesses)==sorted(scenarios)
+          for witness in witnesses:
+              completed=[x for x in witness['trace'] if x['event']=='proof-complete']
+              assert len(completed)==1 and completed[0]['siblingIntact'] is True
+              assert completed[0]['providerRequests']>0
+          result={'candidate':os.environ['CANDIDATE_SHA'],'main':os.environ['MAIN_SHA'],
+              'mergedTree':json.loads((proof/'source.json').read_text())['mergedTree'],
+              'passed':len(assertions),'failed':0,'skipped':0,'wallSeconds':execution['wallSeconds'],
+              'nativeWarmScenarios':scenarios,'nativeWarmTraceCount':len(witnesses),'validated':True}
+          (proof/'native-warm-witnesses.json').write_text(json.dumps(witnesses,indent=2)+'\n')
+          (proof/'validated.json').write_text(json.dumps(result,indent=2)+'\n')
+          PY
+      - name: Fresh merged core production type gate
+        if: '!cancelled()'
         run: |
           set -euo pipefail
-          mkdir -p "${RUNNER_TEMP}/authorized-beta-focused"
-          node --import tsx scripts/validate-authorized-beta-focused-evidence.mts create \
-            --candidate-root candidate \
-            --output "${RUNNER_TEMP}/authorized-beta-focused/evidence.json" \
-            --producer-run-id "${GITHUB_RUN_ID}" \
-            --producer-run-attempt "${GITHUB_RUN_ATTEMPT}" \
-            --producer-workflow-full-ref "${GITHUB_REF}" \
-            --producer-workflow-sha "${GITHUB_SHA}"
-
-      - name: Attest focused evidence
-        uses: actions/attest@1e69f48acb82d1966a394da916b4c1698aa569d6 # v4.2.2
+          /usr/bin/time -p pnpm tsgo:core 2>&1 | tee "$RUNNER_TEMP/merged-lifecycle-proof/core-type.log"
+      - name: Fresh merged extension production type gate
+        if: '!cancelled()'
+        run: |
+          set -euo pipefail
+          /usr/bin/time -p pnpm tsgo:extensions 2>&1 | tee "$RUNNER_TEMP/merged-lifecycle-proof/extension-type.log"
+      - name: Fresh merged lifecycle format and lint
+        if: '!cancelled()'
+        run: |
+          set -euo pipefail
+          paths=(extensions/codex/src/app-server/thread-lifecycle-run.ts extensions/codex/src/app-server/run-attempt-context.ts)
+          /usr/bin/time -p pnpm format:check "${paths[@]}" 2>&1 | tee "$RUNNER_TEMP/merged-lifecycle-proof/lifecycle-format.log"
+          /usr/bin/time -p node scripts/run-oxlint.mjs --tsconfig extensions/tsconfig.json "${paths[@]}" 2>&1 | tee "$RUNNER_TEMP/merged-lifecycle-proof/lifecycle-lint.log"
+      - name: Confirm merged tree remains exact and retain terminal status
+        if: always()
+        run: |
+          python3 - <<'PY'
+          import os,json,subprocess
+          from pathlib import Path
+          proof=Path(os.environ['RUNNER_TEMP'])/'merged-lifecycle-proof';receipt=proof/'source.json'
+          if receipt.exists():
+              expected=json.loads(receipt.read_text())
+              def git(*args):return subprocess.check_output(['git',*args],text=True).strip()
+              assert git('rev-parse','HEAD')==expected['main']
+              assert git('write-tree')==expected['mergedTree']
+              assert not git('diff','--name-only'),'Proof changed tracked source'
+              (proof/'final-status.txt').write_text(git('status','--short')+'\n')
+          PY
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        if: always()
         with:
-          subject-path: ${{ runner.temp }}/authorized-beta-focused/evidence.json
-
-      - name: Upload focused evidence
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
-        with:
-          name: authorized-beta-focused-v1-${{ github.run_id }}-${{ github.run_attempt }}
-          path: ${{ runner.temp }}/authorized-beta-focused/evidence.json
+          name: history-merged-lifecycle-${{ github.run_id }}
+          path: ${{ runner.temp }}/merged-lifecycle-proof
           if-no-files-found: error
-          retention-days: 30
+          retention-days: 14
