@@ -220,12 +220,19 @@ export async function prepareCodexAttemptContext(
         : undefined,
       watchedSessionsContext,
     });
-  const promptState = {
+  const promptState: {
+    promptText: string;
+    promptContextRange: CodexProjectedContextRange | undefined;
+    developerInstructions: string;
+    contextEngineProjection: CodexContextEngineThreadBootstrapProjection | undefined;
+    historyBootstrapItems: JsonValue[] | undefined;
+    noEngineContinuityProjectionApplied: boolean;
+  } = {
     promptText: params.prompt,
-    promptContextRange: undefined as CodexProjectedContextRange | undefined,
+    promptContextRange: undefined,
     developerInstructions: baseDeveloperInstructions,
-    contextEngineProjection: undefined as CodexContextEngineThreadBootstrapProjection | undefined,
-    historyBootstrapItems: undefined as JsonValue[] | undefined,
+    contextEngineProjection: undefined,
+    historyBootstrapItems: undefined,
     // Set by the no-engine continuity appliers; gates calibration recording so a
     // dense direct or active-engine prompt can never persist a density sample
     // that later shrinks continuity history it did not measure.
