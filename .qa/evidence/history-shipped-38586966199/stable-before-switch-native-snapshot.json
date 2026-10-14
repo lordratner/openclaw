@@ -1,0 +1,13 @@
+{
+  "label": "stable-before-switch",
+  "threadId": "01a13af7-fee6-7900-b42c-b53416a0bf16",
+  "source": "Acknowledged public thread/start rollout path",
+  "files": [
+    {
+      "path": "sessions/2026/10/14/rollout-2026-10-14T15-11-33-01a13af7-fee6-7900-b42c-b53416a0bf16.jsonl",
+      "rawSha256": "304796e0dab5b8e95148bee54dc247a7924b5b7c3703813f96a72e979d1b1be9",
+      "semanticSha256": "063f66c94f755579139d6a07da0ef02e2d32a00be0e77c29a4d7a8301cacdaf7",
+      "bytes": 3460487
+    }
+  ]
+}

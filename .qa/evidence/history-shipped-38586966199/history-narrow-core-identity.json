@@ -1,0 +1,7 @@
+{
+  "candidate": "79bfb74cbe1f68f98dbfbe1bd0654e1144820718",
+  "base": "55a3be43fe8ab39300d8ea7b5aa408d29f941f90",
+  "comparedCoreBlobs": 26135,
+  "differentCorePaths": [],
+  "method": "Archive byte identities versus frozen upstream git blobs, not application execution"
+}

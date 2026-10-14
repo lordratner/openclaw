@@ -1,0 +1,31 @@
+{
+  "label": "stable-before-switch",
+  "fileIdentity": "same isolated agent database",
+  "transcripts": [
+    {
+      "sessionId": "b6c4dd38-0379-48a0-b7bf-c51a54bbf15e",
+      "seq": 0,
+      "semanticSha256": "51f53e70cbe729babcc763e5a78c4c3e051bc1fab9a8213ea3a8f0ffb1994742",
+      "containsSavedLargeHistory": false
+    },
+    {
+      "sessionId": "b6c4dd38-0379-48a0-b7bf-c51a54bbf15e",
+      "seq": 1,
+      "semanticSha256": "53e586d69e1b12c312c0e2c992d1b93e16e5cff900c3a4ae32619f984fbf1973",
+      "containsSavedLargeHistory": false
+    },
+    {
+      "sessionId": "b6c4dd38-0379-48a0-b7bf-c51a54bbf15e",
+      "seq": 2,
+      "semanticSha256": "596d857eb4f15754b2fe6e5c6cab30934de78da284551258bd9fd087f3b085c1",
+      "containsSavedLargeHistory": true
+    }
+  ],
+  "windows": [
+    {
+      "session_id": "b6c4dd38-0379-48a0-b7bf-c51a54bbf15e",
+      "session_key": "agent:main:explicit:b6c4dd38-0379-48a0-b7bf-c51a54bbf15e"
+    }
+  ],
+  "integrity": "ok"
+}

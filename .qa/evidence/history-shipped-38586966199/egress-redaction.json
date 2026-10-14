@@ -1,0 +1,6 @@
+{
+  "modifiedFiles": [
+    "native-rpc.jsonl"
+  ],
+  "scope": "Only public dummy auth and synthetic loopback identifiers; proof witnesses unchanged"
+}

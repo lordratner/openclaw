@@ -1,0 +1,79 @@
+{
+  "label": "candidate-final",
+  "fileIdentity": "same isolated agent database",
+  "transcripts": [
+    {
+      "sessionId": "b6c4dd38-0379-48a0-b7bf-c51a54bbf15e",
+      "seq": 0,
+      "semanticSha256": "51f53e70cbe729babcc763e5a78c4c3e051bc1fab9a8213ea3a8f0ffb1994742",
+      "containsSavedLargeHistory": false
+    },
+    {
+      "sessionId": "b6c4dd38-0379-48a0-b7bf-c51a54bbf15e",
+      "seq": 1,
+      "semanticSha256": "53e586d69e1b12c312c0e2c992d1b93e16e5cff900c3a4ae32619f984fbf1973",
+      "containsSavedLargeHistory": false
+    },
+    {
+      "sessionId": "b6c4dd38-0379-48a0-b7bf-c51a54bbf15e",
+      "seq": 2,
+      "semanticSha256": "596d857eb4f15754b2fe6e5c6cab30934de78da284551258bd9fd087f3b085c1",
+      "containsSavedLargeHistory": true
+    },
+    {
+      "sessionId": "b6c4dd38-0379-48a0-b7bf-c51a54bbf15e",
+      "seq": 3,
+      "semanticSha256": "d2081d6643c1a34b2128db845739198ba20a5be4dabd01771bc0af6ccba90f5b",
+      "containsSavedLargeHistory": false
+    },
+    {
+      "sessionId": "b6c4dd38-0379-48a0-b7bf-c51a54bbf15e",
+      "seq": 4,
+      "semanticSha256": "e8d3f1482ff39b7f3a5608b109461ba5525cc3a77513436c22e70433e294cf15",
+      "containsSavedLargeHistory": false
+    },
+    {
+      "sessionId": "b6c4dd38-0379-48a0-b7bf-c51a54bbf15e",
+      "seq": 5,
+      "semanticSha256": "19cb0bb358b5b28962fd687b4da73a17312cc7bb490d1fbd439fc10cbd51da4d",
+      "containsSavedLargeHistory": false
+    },
+    {
+      "sessionId": "b6c4dd38-0379-48a0-b7bf-c51a54bbf15e",
+      "seq": 6,
+      "semanticSha256": "8755b8bb53f7ad4e0ebe8ed027435b543f94c679ffed3a1c06f2e94441fc1f39",
+      "containsSavedLargeHistory": false
+    },
+    {
+      "sessionId": "b6c4dd38-0379-48a0-b7bf-c51a54bbf15e",
+      "seq": 7,
+      "semanticSha256": "70ed4bd727d3c21bf9de80fc4450bfbcd0c3aeb284804178299bca073c80a1b8",
+      "containsSavedLargeHistory": false
+    },
+    {
+      "sessionId": "b6c4dd38-0379-48a0-b7bf-c51a54bbf15e",
+      "seq": 8,
+      "semanticSha256": "ace7ab4a9c52702fb5aa58af5c40fc3dc7eb681584171059ea44c0a907738d0f",
+      "containsSavedLargeHistory": false
+    },
+    {
+      "sessionId": "b6c4dd38-0379-48a0-b7bf-c51a54bbf15e",
+      "seq": 9,
+      "semanticSha256": "8309efc9f0aa72c68302ef20486274c1339f1bbb84d6174f37f2f47230327f9a",
+      "containsSavedLargeHistory": false
+    },
+    {
+      "sessionId": "b6c4dd38-0379-48a0-b7bf-c51a54bbf15e",
+      "seq": 10,
+      "semanticSha256": "9bce89bcfb24002d2e1db37ea336b68851e2e116052f9dbd054d44d827c8706d",
+      "containsSavedLargeHistory": false
+    }
+  ],
+  "windows": [
+    {
+      "session_id": "b6c4dd38-0379-48a0-b7bf-c51a54bbf15e",
+      "session_key": "agent:main:explicit:b6c4dd38-0379-48a0-b7bf-c51a54bbf15e"
+    }
+  ],
+  "integrity": "ok"
+}

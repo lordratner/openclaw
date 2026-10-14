@@ -1,0 +1,56 @@
+{
+  "agents": {
+    "entries": {
+      "main": {}
+    },
+    "defaults": {
+      "workspace": "/home/runner/work/_temp/history-shipped-full/workspace",
+      "model": {
+        "primary": "openai/history-proof-model"
+      },
+      "heartbeat": {
+        "every": "0m"
+      }
+    }
+  },
+  "models": {
+    "providers": {
+      "openai": {
+        "models": [
+          {
+            "id": "history-proof-model",
+            "name": "Synthetic history proof",
+            "api": "openai-responses",
+            "input": [
+              "text",
+              "image"
+            ],
+            "contextTokens": 600000,
+            "maxTokens": 2000,
+            "agentRuntime": {
+              "id": "codex"
+            }
+          }
+        ]
+      }
+    }
+  },
+  "contextEngine": "history-proof",
+  "contextEntry": {
+    "enabled": true
+  },
+  "codexAppServer": {
+    "command": "/opt/hostedtoolcache/node/24.19.0/x64/bin/node",
+    "args": [
+      "/home/runner/work/_temp/history-shipped-full/native-proxy.mjs",
+      "/home/runner/work/_temp/history-native/node_modules/@openai/codex/bin/codex.js",
+      "app-server"
+    ],
+    "homeScope": "user",
+    "sandbox": "read-only",
+    "approvalPolicy": "never"
+  },
+  "codexCatalog": {
+    "enabled": false
+  }
+}

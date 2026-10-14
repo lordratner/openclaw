@@ -1,0 +1,14 @@
+{
+  "candidate": "79bfb74cbe1f68f98dbfbe1bd0654e1144820718",
+  "packageRun": "38581309160",
+  "packageArtifact": "11905622017",
+  "packageSha256": "189ed1d8e6c88538aa67d1d439dfe792021de05686c87e4280e0b25da3fdd8f4",
+  "buildInfo": {
+    "version": "2026.10.2",
+    "commit": "79bfb74cbe1f68f98dbfbe1bd0654e1144820718",
+    "builtAt": "2026-10-14T14:32:56.770Z",
+    "buildId": "2026.10.2-79bfb74cbe1f-2026-10-14T14-32-56.770Z"
+  },
+  "bundledCodex": "2026.10.2",
+  "execution": "Single canonical package build retained; no rebuild in installed scenario"
+}

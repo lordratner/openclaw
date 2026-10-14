@@ -1,0 +1,50 @@
+{
+  "candidate": "79bfb74cbe1f68f98dbfbe1bd0654e1144820718",
+  "passed": true,
+  "entryPoint": "Installed public CLI -> actual Gateway -> transparent public RPC trace -> stock Codex0.160.0 -> synthetic loopback Responses",
+  "stableVersion": "OpenClaw 2026.10.3 (59cb447)",
+  "candidateVersion": "OpenClaw 2026.10.2 (79bfb74)",
+  "nativeVersion": "codex-cli 0.160.0",
+  "stableBuildInfo": {
+    "version": "2026.10.3",
+    "commit": "59cb44796b0f1f0daa0e37af8b1495abb45d9bc1",
+    "builtAt": "2026-10-13T07:33:17.552Z",
+    "buildId": "2026.10.3-release-59cb44796b0f-2026-10-13T07-33-17.552Z"
+  },
+  "candidateBuildInfo": {
+    "version": "2026.10.2",
+    "commit": "79bfb74cbe1f68f98dbfbe1bd0654e1144820718",
+    "builtAt": "2026-10-14T14:32:56.770Z",
+    "buildId": "2026.10.2-79bfb74cbe1f-2026-10-14T14-32-56.770Z"
+  },
+  "activeCodexSourceSha256": "f53bb48d0670f431f6c57f7d8528eee51e7b2d99d27693ad9a6518f071d409d2",
+  "upgradeKind": "Published2026.10.3 state reopened by exact patched2026.10.2 package sameprefix with Doctor; lower-semver package switch, NOT managed updater",
+  "selectedLargeHistorySha256": "ff3b921426b01cc7300ccc3ca5ffbac55def89b50c9637ee16bcd86e4de86107",
+  "reconstructedHistorySha256": "3d8f505d0e4f589b0341a8bf322a04d992138239a21217763267730acbf5e6d7",
+  "historyItems": 139,
+  "maxItemTextBytes": 8192,
+  "selectedValidPng": true,
+  "syntheticAttribution": true,
+  "realSavedUserMediaMigration": false,
+  "providerCalls": 5,
+  "seedInferenceCalls": 0,
+  "warmNativeThreadId": "01a13af8-ff3d-7bb0-bed3-8432f964a447",
+  "warmNativeProcessId": 3956,
+  "warmThreadReused": true,
+  "coldNativeThreadId": "01a13af8-ff3d-7bb0-bed3-8432f964a447",
+  "coldNativeProcessId": 4847,
+  "coldResumeNewProcessSameThread": true,
+  "legacyNativeThreadId": "01a13af7-fee6-7900-b42c-b53416a0bf16",
+  "legacyNativeRolloutsPreserved": 1,
+  "providerImageBytesAndDefaultDetailPreserved": true,
+  "ordinaryAssemblyFallbackRetained": true,
+  "stableTranscriptEntriesPreserved": 3,
+  "stableSessionIdentitiesPreserved": 1,
+  "authoredPoliciesPreserved": true,
+  "proofGaps": [
+    "No paid live-provider/model-quality evidence",
+    "Synthetic selected PNG, not saved real-user media migration",
+    "No higher-semver managed updater route",
+    "No crash-after-injection exactly-once claim; focused owner tests cover acknowledged uncertainty"
+  ]
+}
