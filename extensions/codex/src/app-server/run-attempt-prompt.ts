@@ -292,7 +292,8 @@ export async function prepareCodexAttemptPrompt(context: CodexAttemptContext) {
         currentUserMessage: admittedMessage,
         // A same-epoch bootstrap is already owned by native history; only a
         // selected projection crossing that boundary consumes this allowance.
-        preserveAssembledHistory: configuredContextBudget !== undefined && projectionDecision.project,
+        preserveAssembledHistory:
+          configuredContextBudget !== undefined && projectionDecision.project,
         preservedHistoryTokenBudget,
       });
       assertProjectionCurrent();

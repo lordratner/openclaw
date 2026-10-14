@@ -467,7 +467,8 @@ async function renderMessagesForCodexContext(
     const imagesFit = imageChars < remaining;
     const acceptedImageChars = options.preserveAssembledHistory || imagesFit ? imageChars : 0;
     const text = [
-      preservedBody ?? renderMessageBody(message, { ...options, mediaPrepared: files !== undefined }),
+      preservedBody ??
+        renderMessageBody(message, { ...options, mediaPrepared: files !== undefined }),
       files?.text
         ? options.preserveAssembledHistory
           ? files.text

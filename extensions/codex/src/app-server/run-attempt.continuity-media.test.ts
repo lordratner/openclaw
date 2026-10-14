@@ -24,10 +24,7 @@ import {
 } from "./run-attempt.context-engine.test-support.js";
 import { writeCodexAppServerBinding } from "./session-binding.test-helpers.js";
 import { attachSqliteSessionTarget } from "./sqlite-session.test-helpers.js";
-import {
-  CODEX_HISTORY_FRAGMENT_PREFIX,
-  CODEX_HISTORY_FRAGMENT_SUFFIX,
-} from "./user-input.js";
+import { CODEX_HISTORY_FRAGMENT_PREFIX, CODEX_HISTORY_FRAGMENT_SUFFIX } from "./user-input.js";
 
 setupRunAttemptTestHooks();
 
@@ -78,12 +75,14 @@ describe("Codex attachment continuity", () => {
         timestamp,
         idempotencyKey: `selected-document-${mode}:user`,
         __openclaw: {
-          media: [{
-            url: `media://inbound/${saved.id}`,
-            contentType: "text/plain",
-            fileName: `${mode}.txt`,
-            hydrationSuppressed: true,
-          }],
+          media: [
+            {
+              url: `media://inbound/${saved.id}`,
+              contentType: "text/plain",
+              fileName: `${mode}.txt`,
+              hydrationSuppressed: true,
+            },
+          ],
         },
       };
       await appendSessionTranscriptMessageByIdentity({
@@ -91,17 +90,17 @@ describe("Codex attachment continuity", () => {
         message: sourceMessage,
         now: timestamp,
       });
-      const assemble = vi.fn(async ({ messages }: Parameters<
-        ReturnType<typeof createContextEngine>["assemble"]
-      >[0]) => {
-        const selected = messages.filter(
-          (message) => asOptionalRecord(message)?.idempotencyKey === sourceMessage.idempotencyKey,
-        );
-        expect(selected).toEqual([sourceMessage]);
-        // The tiny saved source row fits; its real media restoration is what
-        // must consume the resolved assembly allowance before native effects.
-        return { messages: selected, estimatedTokens: 42 };
-      });
+      const assemble = vi.fn(
+        async ({ messages }: Parameters<ReturnType<typeof createContextEngine>["assemble"]>[0]) => {
+          const selected = messages.filter(
+            (message) => asOptionalRecord(message)?.idempotencyKey === sourceMessage.idempotencyKey,
+          );
+          expect(selected).toEqual([sourceMessage]);
+          // The tiny saved source row fits; its real media restoration is what
+          // must consume the resolved assembly allowance before native effects.
+          return { messages: selected, estimatedTokens: 42 };
+        },
+      );
       params.contextEngine = createContextEngine({ assemble });
       const abort = new AbortController();
       params.abortSignal = abort.signal;
@@ -126,33 +125,42 @@ describe("Codex attachment continuity", () => {
           if (outcome.kind === "rejected") {
             expect(String(outcome.error)).toMatch(/budget|allowance|exceed|restor|attachment/i);
           }
-          expect(harness.requests.filter(({ method }) =>
-            ["thread/start", "thread/inject_items", "turn/start"].includes(method),
-          )).toEqual([]);
+          expect(
+            harness.requests.filter(({ method }) =>
+              ["thread/start", "thread/inject_items", "turn/start"].includes(method),
+            ),
+          ).toEqual([]);
         } else {
           await run.waitForTurnAccepted();
           acceptedOriginal = true;
-          const seed = harness.requests.find(({ method, params: request }) =>
-            method === "thread/inject_items" && JSON.stringify(request).includes("SAVED_DOCUMENT_COMPLETE_PREFIX"),
+          const seed = harness.requests.find(
+            ({ method, params: request }) =>
+              method === "thread/inject_items" &&
+              JSON.stringify(request).includes("SAVED_DOCUMENT_COMPLETE_PREFIX"),
           );
           expect(seed).toBeDefined();
           const items = asOptionalRecord(seed?.params)?.items;
           expect(Array.isArray(items)).toBe(true);
-          const restored = (Array.isArray(items) ? items : []).flatMap((item) => {
-            const content = asOptionalRecord(item)?.content;
-            return Array.isArray(content) ? content : [];
-          }).flatMap((part) => {
-            const text = asOptionalRecord(part)?.text;
-            if (typeof text !== "string") {
-              return [];
-            }
-            const withoutPrefix = text.startsWith(CODEX_HISTORY_FRAGMENT_PREFIX)
-              ? text.slice(CODEX_HISTORY_FRAGMENT_PREFIX.length)
-              : text;
-            return [withoutPrefix.endsWith(CODEX_HISTORY_FRAGMENT_SUFFIX)
-              ? withoutPrefix.slice(0, -CODEX_HISTORY_FRAGMENT_SUFFIX.length)
-              : withoutPrefix];
-          }).join("");
+          const restored = (Array.isArray(items) ? items : [])
+            .flatMap((item) => {
+              const content = asOptionalRecord(item)?.content;
+              return Array.isArray(content) ? content : [];
+            })
+            .flatMap((part) => {
+              const text = asOptionalRecord(part)?.text;
+              if (typeof text !== "string") {
+                return [];
+              }
+              const withoutPrefix = text.startsWith(CODEX_HISTORY_FRAGMENT_PREFIX)
+                ? text.slice(CODEX_HISTORY_FRAGMENT_PREFIX.length)
+                : text;
+              return [
+                withoutPrefix.endsWith(CODEX_HISTORY_FRAGMENT_SUFFIX)
+                  ? withoutPrefix.slice(0, -CODEX_HISTORY_FRAGMENT_SUFFIX.length)
+                  : withoutPrefix,
+              ];
+            })
+            .join("");
           expect(restored).toContain(document);
           expect(restored).toContain('<file name="fitting.txt" mime="text/plain">');
           expect(restored).not.toContain(params.prompt);
