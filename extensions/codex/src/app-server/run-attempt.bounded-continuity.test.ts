@@ -78,7 +78,8 @@ describe("Codex bounded assistant continuity", () => {
       for (let index = 0; index < 4; index++) {
         appendToolPair(manager, index);
       }
-      const explanation = "Migrate the blue database first, verify the checksum, then switch reads.";
+      const explanation =
+        "Migrate the blue database first, verify the checksum, then switch reads.";
       const mirroredAnswer = {
         ...assistantMessage(explanation, 20),
         __openclaw: { mirrorIdentity: "codex-app-server:prior-answer" },
@@ -89,9 +90,9 @@ describe("Codex bounded assistant continuity", () => {
       const originalUsers = sourceMessages.filter((message) => message.role === "user");
       const history = await readHistory(params);
       expect(history?.length).toBeGreaterThan(1);
-      expect(history?.every((message) => ["user", "assistant", "toolResult"].includes(message.role))).toBe(
-        true,
-      );
+      expect(
+        history?.every((message) => ["user", "assistant", "toolResult"].includes(message.role)),
+      ).toBe(true);
       const limits = resolveAgentHarnessHistoryLimits(params.contextTokenBudget);
       if (typeof limits.maxBytes !== "number") {
         throw new Error("Expected a finite public model-context byte allowance");
@@ -107,9 +108,9 @@ describe("Codex bounded assistant continuity", () => {
         }
       }
       if (mode === "assistant only") {
-        expect(history?.every((message) => ["assistant", "toolResult"].includes(message.role))).toBe(
-          true,
-        );
+        expect(
+          history?.every((message) => ["assistant", "toolResult"].includes(message.role)),
+        ).toBe(true);
         expect(JSON.stringify(history)).not.toContain("Explain the synthetic migration plan.");
       }
       expect(JSON.stringify(manager.buildSessionContext().messages)).toBe(sourceBefore);
