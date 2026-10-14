@@ -1,4 +1,4 @@
-name: Budget shipped Gateway and stable-state proof
+name: Budget installed Gateway stable-state and recovery proof
 on:
   workflow_dispatch:
     inputs:
@@ -41,24 +41,46 @@ jobs:
           frozen-lockfile: 'true'
           cache-mode: restore
           build-all-cache-scope: full
-      - name: Build exact candidate installable runtime
+      - name: Canonically build and pack exact candidate with patched Codex
+        env:
+          GIT_COMMIT: ${{ inputs.candidate_sha }}
         run: |
+          set -euo pipefail
           test "$(git rev-parse HEAD)" = "$CANDIDATE_SHA"
-          pnpm build:package
-      - name: Run actual shipped CLI and Gateway pilot
+          mkdir -p "$RUNNER_TEMP/budget-package" "$RUNNER_TEMP/budget-shipped-full-evidence"
+          node scripts/package-openclaw-for-docker.mjs --bundle-plugin codex --allow-unreleased-changelog --output-dir "$RUNNER_TEMP/budget-package" --output-name openclaw-2026.10.2.tgz --pack-json "$RUNNER_TEMP/budget-package/pack.json"
+          sha256sum "$RUNNER_TEMP/budget-package/openclaw-2026.10.2.tgz" > "$RUNNER_TEMP/budget-shipped-full-evidence/package.sha256"
+          cp "$RUNNER_TEMP/budget-package/pack.json" "$RUNNER_TEMP/budget-shipped-full-evidence/pack.json"
+      - name: Install published stable in task-owned prefix
+        run: |
+          set -euo pipefail
+          mkdir -p "$RUNNER_TEMP/budget-installed"
+          npm install --global --prefix "$RUNNER_TEMP/budget-installed" openclaw@2026.10.3 --no-fund --no-audit
+      - name: Exercise installed Gateway, stable-state compatibility and durable recovery
         env:
           PROOF_TOOL_DIR: ${{ github.workspace }}/.proof-tools/.qa
-        run: node .proof-tools/.qa/budget-shipped-pilot.mjs
-      - name: Capture exact source and proof tool hashes
+          INSTALLED_PREFIX: ${{ runner.temp }}/budget-installed
+          INSTALLED_ENTRY: ${{ runner.temp }}/budget-installed/lib/node_modules/openclaw/openclaw.mjs
+          CANDIDATE_TARBALL: ${{ runner.temp }}/budget-package/openclaw-2026.10.2.tgz
+        run: node .proof-tools/.qa/budget-shipped-full.mjs
+      - name: Capture exact source and proof tool identities
         if: always()
         run: |
-          mkdir -p "$RUNNER_TEMP/budget-shipped-evidence"
-          git rev-parse HEAD > "$RUNNER_TEMP/budget-shipped-evidence/source-head.txt"
-          sha256sum .proof-tools/.qa/*.mjs > "$RUNNER_TEMP/budget-shipped-evidence/proof-tools.sha256"
+          mkdir -p "$RUNNER_TEMP/budget-shipped-full-evidence"
+          git rev-parse HEAD > "$RUNNER_TEMP/budget-shipped-full-evidence/source-head.txt"
+          sha256sum .proof-tools/.qa/*.mjs > "$RUNNER_TEMP/budget-shipped-full-evidence/proof-tools.sha256"
       - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
         if: always()
         with:
-          name: budget-shipped-${{ github.run_id }}
-          path: ${{ runner.temp }}/budget-shipped-evidence
+          name: budget-shipped-full-${{ github.run_id }}
+          path: ${{ runner.temp }}/budget-shipped-full-evidence
           if-no-files-found: error
           retention-days: 14
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        if: always()
+        with:
+          name: budget-installed-candidate-${{ github.run_id }}
+          path: ${{ runner.temp }}/budget-package
+          if-no-files-found: warn
+          retention-days: 7
+          compression-level: 0
