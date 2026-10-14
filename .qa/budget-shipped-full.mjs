@@ -64,7 +64,9 @@ await fs.writeFile(path.join(pluginDir,'openclaw.plugin.json'),JSON.stringify({i
 const state = path.join(root,'state'); await fs.mkdir(state,{recursive:true});
 const configPath = path.join(state,'openclaw.json');
 const config = {gateway:{mode:'local',bind:'loopback',port:gatewayPort,auth:{mode:'none'},controlUi:{enabled:false}},
-  agents:{defaults:{workspace,model:{primary:'openai/'+model},heartbeat:{every:'0m'}}},
+  // Both shipped stable and candidate accept the explicit inherited default.
+  // Avoid comparing an unmaterialized fresh roster with Doctor's saved roster.
+  agents:{entries:{main:{}},defaults:{workspace,model:{primary:'openai/'+model},heartbeat:{every:'0m'}}},
   models:{providers:{openai:{models:[{id:model,name:'Synthetic budget proof',api:'openai-responses',contextTokens:400000,maxTokens:2000,agentRuntime:{id:'codex'}}]}}},
   plugins:{allow:['codex','budget-proof'],load:{paths:[pluginDir]},slots:{contextEngine:'budget-proof'},
     entries:{codex:{enabled:true,config:{appServer:{command:process.execPath,args:[codexLauncher,'app-server'],
@@ -161,6 +163,7 @@ try {
   afterInstall.plugins.entries.codex.config=config.plugins.entries.codex.config;
   await fs.writeFile(configPath,JSON.stringify(afterInstall,null,2));
   const stableSettings=userSettings(afterInstall);
+  await fs.writeFile(path.join(evidence,'authored-policy-initial.json'),JSON.stringify(stableSettings,null,2));
   const stableVersion=(await command(['--version'],'stable-version')).trim();
   assert.equal(/\b(\d{4}\.\d+\.\d+)\b/.exec(stableVersion)?.[1],'2026.10.3');
   const installedRoot=path.dirname(installedEntry);
@@ -171,6 +174,9 @@ try {
   await startGateway('stable');await turn('stable-legacy-turn');
   await waitFor(rows=>rows.some(x=>x.phase==='stable'&&x.event==='commit-attempt'),'stable durable commit attempt');
   await stopGateway('stable');const stable=await snapshot('stable-before-switch');
+  const persistedStableSettings=userSettings(JSON.parse(await fs.readFile(configPath,'utf8')));
+  assert.deepEqual(persistedStableSettings,stableSettings,'Stable turn changed authored policy');
+  await fs.writeFile(path.join(evidence,'authored-policy-stable.json'),JSON.stringify(persistedStableSettings,null,2));
   const legacy=stable.rows.find(x=>JSON.parse(x.payload_json).state==='ready');
   assert(legacy,'Stable produced no real ready outbox row');assert.equal(JSON.parse(legacy.payload_json).runtimeSettings,undefined);
   assert(stable.transcripts.length>0&&stable.windows.some(x=>x.session_id===legacy.session_id));
@@ -189,7 +195,9 @@ try {
   const activeSourceSha256=sha(await fs.readFile(activeSource));
   await fs.writeFile(path.join(evidence,'installed-identities.json'),JSON.stringify({stableBuildInfo,candidateBuildInfo,
     codex:{id:active.id,status:active.status,origin:active.origin,version:active.version,activeSource,activeSourceSha256}},null,2));
-  assert.deepEqual(userSettings(JSON.parse(await fs.readFile(configPath,'utf8'))),stableSettings,'Authored policy changed across state cutover');
+  const candidateSettings=userSettings(JSON.parse(await fs.readFile(configPath,'utf8')));
+  await fs.writeFile(path.join(evidence,'authored-policy-candidate.json'),JSON.stringify(candidateSettings,null,2));
+  assert.deepEqual(candidateSettings,stableSettings,'Authored policy changed across state cutover');
   await fs.unlink(path.join(root,'hold-commits'));
   await startGateway('candidate-after-stable');await turn('candidate-new-turn');
   let rows=await waitFor(rows=>phaseWitness(rows,'candidate-after-stable',legacy.advancement_key),'new candidate commit-correlated maintenance');
