@@ -1,4 +1,4 @@
-name: Lossless current-host budget qualification
+name: Lossless exact-source receipt qualification
 on:
   workflow_dispatch:
     inputs:
@@ -10,118 +10,74 @@ on:
         type: string
 permissions:
   contents: read
-concurrency:
-  group: lossless-budget-${{ github.run_id }}
-  cancel-in-progress: false
-env:
-  CI: 'true'
-  NODE_OPTIONS: --max-old-space-size=8192
-  CANDIDATE_SHA: ${{ inputs.candidate_sha }}
-  BASE_SHA: ${{ inputs.base_sha }}
+  actions: read
 jobs:
-  paired-proof:
+  qualify-retained-executions:
     runs-on: ubuntu-24.04
-    timeout-minutes: 30
+    timeout-minutes: 5
     strategy:
       fail-fast: false
       matrix:
         role: [stock, repaired]
     env:
       ROLE: ${{ matrix.role }}
+      CANDIDATE_SHA: ${{ inputs.candidate_sha }}
+      BASE_SHA: ${{ inputs.base_sha }}
+      GH_TOKEN: ${{ github.token }}
     steps:
-      - name: Admit exact pins
-        run: |
-          python3 - <<'PY'
-          import os,re
-          assert os.environ['BASE_SHA']=='13a9b6af3197e4fd787eac3969e97929ab39ccce'
-          assert re.fullmatch('[0-9a-f]{40}',os.environ['CANDIDATE_SHA'])
-          assert os.environ['CANDIDATE_SHA']!=os.environ['BASE_SHA']
-          PY
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
           repository: lordratner/lossless-claw
           ref: ${{ inputs.candidate_sha }}
           fetch-depth: 1
           persist-credentials: false
-      - name: Pin identical tests; restore only engine on stock
+      - name: Restore only engine on stock and download pinned executions
         run: |
+          set -euo pipefail
           mkdir -p "$RUNNER_TEMP/proof"
+          test "$BASE_SHA" = 13a9b6af3197e4fd787eac3969e97929ab39ccce
+          test "$(git rev-parse HEAD)" = "$CANDIDATE_SHA"
+          test -z "$(git status --porcelain)"
           git fetch --no-tags --depth=1 origin "$BASE_SHA"
-          python3 - <<'PY'
-          import os,json,hashlib,subprocess
-          from pathlib import Path
-          def git(*args):return subprocess.check_output(['git',*args],text=True).strip()
-          assert git('rev-parse','HEAD')==os.environ['CANDIDATE_SHA']
-          assert not git('status','--porcelain')
-          test='test/engine-maintenance-budget.test.ts'; before=hashlib.sha256(Path(test).read_bytes()).hexdigest()
-          if os.environ['ROLE']=='stock':subprocess.run(['git','restore','--source='+os.environ['BASE_SHA'],'--worktree','--','src/engine.ts'],check=True)
-          assert hashlib.sha256(Path(test).read_bytes()).hexdigest()==before
-          changed=git('diff','--name-only').splitlines()
-          assert changed==(['src/engine.ts'] if os.environ['ROLE']=='stock' else [])
-          proof=Path(os.environ['RUNNER_TEMP'])/'proof'
-          (proof/'source.json').write_text(json.dumps({'candidate':os.environ['CANDIDATE_SHA'],'base':os.environ['BASE_SHA'],'role':os.environ['ROLE'],'testSha256':before,'engineSha256':hashlib.sha256(Path('src/engine.ts').read_bytes()).hexdigest(),'restoredPaths':changed},indent=2)+'\n')
-          (proof/'source.patch').write_text(git('diff','--binary')+'\n')
-          PY
-      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
-        with:
-          node-version: 24.19.0
-          cache: npm
-      - name: Frozen package dependencies
-        run: npm ci
-      - name: Execute once; preserve exit and elapsed time
+          if [ "$ROLE" = stock ]; then git restore --source="$BASE_SHA" --worktree -- src/engine.ts; fi
+          gh run download 38491283381 --repo lordratner/openclaw --name "lossless-budget-$ROLE-38491283381" --dir "$RUNNER_TEMP/proof/retained"
+      - name: Qualify original executions without repeating tests or builds
         run: |
           python3 - <<'PY'
-          import json,os,time,subprocess
+          import json,os,hashlib,subprocess
           from pathlib import Path
-          p=Path(os.environ['RUNNER_TEMP'])/'proof'
-          c=['npm','test','--','--maxWorkers=2','--reporter=verbose','--reporter=json','--outputFile='+str(p/'tests.json')]
-          if os.environ['ROLE']=='stock':c+=['engine-maintenance-budget.test.ts']
-          start=time.monotonic()
-          with (p/'tests.log').open('w') as log:r=subprocess.run(c,stdout=log,stderr=subprocess.STDOUT)
-          (p/'execution.json').write_text(json.dumps({'command':c,'exit':r.returncode,'wallSeconds':round(time.monotonic()-start,3)},indent=2)+'\n')
-          PY
-      - name: Verify exact stock failures and unchanged controls
-        run: |
-          python3 - <<'PY'
-          import os,json,hashlib
-          from pathlib import Path
-          p=Path(os.environ['RUNNER_TEMP'])/'proof'; r=json.loads((p/'tests.json').read_text()); e=json.loads((p/'execution.json').read_text()); s=json.loads((p/'source.json').read_text())
-          assert hashlib.sha256(Path('test/engine-maintenance-budget.test.ts').read_bytes()).hexdigest()==s['testSha256']
-          budget=[a for t in r['testResults'] if t['name'].endswith('/test/engine-maintenance-budget.test.ts') for a in t['assertionResults']]
-          assert len(budget)==17 and all(a['status'] in ('passed','failed') for a in budget),[(a['fullName'],a['status']) for a in budget]
-          expected=['settings without runtimeContext budget','settings supersede old fallback debt','context supersedes old fallback debt','configured cap still applies','smaller settings replace a large budget','settings precede conflicting legacy context',"recreated engine uses current settings (64000), not an earlier turn's allowance", "recreated engine uses current settings (500000), not an earlier turn's allowance",'current settings override an old queued request in the same engine','immediate publication preserves the smaller current allowance (500000/64000)','revalidates published debt using the current allowance even during backoff']
+          p=Path(os.environ['RUNNER_TEMP'])/'proof'; prior=p/'retained'; s=json.loads((prior/'source.json').read_text()); r=json.loads((prior/'tests.json').read_text()); e=json.loads((prior/'execution.json').read_text())
+          assert s['candidate']==os.environ['CANDIDATE_SHA'] and s['base']==os.environ['BASE_SHA'] and s['role']==os.environ['ROLE']
+          assert s['testSha256']==hashlib.sha256(Path('test/engine-maintenance-budget.test.ts').read_bytes()).hexdigest()
+          assert s['engineSha256']==hashlib.sha256(Path('src/engine.ts').read_bytes()).hexdigest()
           stock=os.environ['ROLE']=='stock'
-          for name in expected:
-              matches=[a for a in budget if a['fullName'].endswith(name)]
-              assert len(matches)==1,(name,matches)
-              assert matches[0]['status']==('failed' if stock else 'passed'),matches
+          assert s['restoredPaths']==(['src/engine.ts'] if stock else [])
+          assert stock or (prior/'final.patch').stat().st_size==0
+          budget=[a for t in r['testResults'] if t['name'].endswith('/test/engine-maintenance-budget.test.ts') for a in t['assertionResults']]
+          assert len(budget)==17
+          mapping=[{'planned': 'settings without runtimeContext budget', 'actual': "host-owned maintenance budget 'settings without runtimeContext budget'", 'stockStatus': 'failed'}, {'planned': 'settings supersede old fallback debt', 'actual': "host-owned maintenance budget 'settings supersede old fallback debt'", 'stockStatus': 'failed'}, {'planned': 'context supersedes old fallback debt', 'actual': "host-owned maintenance budget 'context supersedes old fallback debt'", 'stockStatus': 'failed'}, {'planned': 'configured cap still applies', 'actual': "host-owned maintenance budget 'configured cap still applies'", 'stockStatus': 'failed'}, {'planned': 'smaller settings replace a large budget', 'actual': "host-owned maintenance budget 'smaller settings replace a large budg…'", 'stockStatus': 'failed'}, {'planned': 'settings precede conflicting legacy context', 'actual': "host-owned maintenance budget 'settings precede conflicting legacy c…'", 'stockStatus': 'failed'}, {'planned': 'invalid settings fall back to current context', 'actual': "host-owned maintenance budget 'invalid settings fall back to current…'", 'stockStatus': 'passed'}, {'planned': 'missing budget retains conservative default', 'actual': "host-owned maintenance budget 'missing budget retains conservative d…'", 'stockStatus': 'passed'}, {'planned': 'missing budget cannot enlarge small recorded debt', 'actual': "host-owned maintenance budget 'missing budget cannot enlarge small r…'", 'stockStatus': 'passed'}, {'planned': 'invalid settings cannot enlarge small recorded debt', 'actual': "host-owned maintenance budget 'invalid settings cannot enlarge small…'", 'stockStatus': 'passed'}, {'planned': "recreated engine uses current settings (64000), not an earlier turn's allowance", 'actual': "host-owned maintenance budget recreated engine uses current settings (64000), not an earlier turn's allowance", 'stockStatus': 'failed'}, {'planned': "recreated engine uses current settings (500000), not an earlier turn's allowance", 'actual': "host-owned maintenance budget recreated engine uses current settings (500000), not an earlier turn's allowance", 'stockStatus': 'failed'}, {'planned': "recreated engine uses current settings (undefined), not an earlier turn's allowance", 'actual': "host-owned maintenance budget recreated engine uses current settings (undefined), not an earlier turn's allowance", 'stockStatus': 'passed'}, {'planned': 'current settings override an old queued request in the same engine', 'actual': 'host-owned maintenance budget current settings override an old queued request in the same engine', 'stockStatus': 'failed'}, {'planned': 'immediate publication preserves the smaller current allowance (64000/500000)', 'actual': 'host-owned maintenance budget immediate publication preserves the smaller current allowance (64000/500000)', 'stockStatus': 'passed'}, {'planned': 'immediate publication preserves the smaller current allowance (500000/64000)', 'actual': 'host-owned maintenance budget immediate publication preserves the smaller current allowance (500000/64000)', 'stockStatus': 'failed'}, {'planned': 'revalidates published debt using the current allowance even during backoff', 'actual': 'host-owned maintenance budget revalidates published debt using the current allowance even during backoff', 'stockStatus': 'failed'}]
+          expected={x['actual']:x['stockStatus'] if stock else 'passed' for x in mapping}
+          assert len(expected)==17
+          assert {a['fullName']:a['status'] for a in budget}==expected,(budget,expected)
           failed=[a['fullName'] for t in r['testResults'] for a in t['assertionResults'] if a['status']=='failed']
-          assert len(failed)==(len(expected) if stock else 0),failed
-          assert e['exit']==(1 if stock else 0),e
-          assert r['success'] is (not stock)
+          assert set(failed)==({n for n,status in expected.items() if status=='failed'} if stock else set())
+          assert len(failed)==(11 if stock else 0)
+          assert e['exit']==(1 if stock else 0) and r['success'] is (not stock)
           assert r['numFailedTests']==len(failed)
-          assert r['numPassedTests']>0
-          v={'role':os.environ['ROLE'],'verified':True,'total':r['numTotalTests'],'passed':r['numPassedTests'],'failed':len(failed),'budgetCasesExecuted':len(budget),'wallSeconds':e['wallSeconds'],'expectedStockFailures':expected}
-          (p/'validated.json').write_text(json.dumps(v,indent=2)+'\n');print(json.dumps(v,indent=2))
+          run=json.loads(subprocess.check_output(['gh','api','repos/lordratner/openclaw/actions/runs/38491283381'],text=True))
+          assert run['status']=='completed' and run['head_sha']=='db0ce6ab99cac5e744e74e15558ae37336a969b3'
+          jobs=json.loads(subprocess.check_output(['gh','api','repos/lordratner/openclaw/actions/runs/38491283381/jobs?per_page=100'],text=True))
+          job=[j for j in jobs['jobs'] if j['name']=='paired-proof ('+os.environ['ROLE']+')'];assert len(job)==1
+          steps={s['name']:s['conclusion'] for s in job[0]['steps']}
+          required=['Pin identical tests; restore only engine on stock','Frozen package dependencies','Execute once; preserve exit and elapsed time','Final tracked-source receipt']
+          if not stock:required+=['Package-owned typecheck','Package-owned canonical build']
+          assert all(steps.get(n)=='success' for n in required),steps
+          receipt={'candidate':os.environ['CANDIDATE_SHA'],'role':os.environ['ROLE'],'verified':True,'retainedRun':38491283381,'successfulExecutionSteps':required,'tests':r['numTotalTests'],'passed':r['numPassedTests'],'failed':len(failed),'budgetCases':17,'wallSeconds':e['wallSeconds'],'reviewedTitleMapping':mapping,'qualification':'original executions inspected; only exact-name validator corrected; no tests repeated'}
+          (p/'validated.json').write_text(json.dumps(receipt,indent=2)+'\n');print(json.dumps(receipt,indent=2))
           PY
-      - name: Package-owned typecheck
-        if: ${{ !cancelled() && matrix.role == 'repaired' }}
-        run: |
-          set -o pipefail
-          /usr/bin/time -p npm run typecheck 2>&1 | tee "$RUNNER_TEMP/proof/types.log"
-      - name: Package-owned canonical build
-        if: ${{ !cancelled() && matrix.role == 'repaired' }}
-        run: |
-          set -o pipefail
-          /usr/bin/time -p npm run build 2>&1 | tee "$RUNNER_TEMP/proof/build.log"
-      - name: Final tracked-source receipt
-        if: always()
-        run: |
-          git status --short > "$RUNNER_TEMP/proof/final-status.txt"
-          git diff --binary > "$RUNNER_TEMP/proof/final.patch"
       - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
         if: always()
         with:
-          name: lossless-budget-${{ matrix.role }}-${{ github.run_id }}
+          name: lossless-qualified-${{ matrix.role }}-${{ github.run_id }}
           path: ${{ runner.temp }}/proof
           retention-days: 14
