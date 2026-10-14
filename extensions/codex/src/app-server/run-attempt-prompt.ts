@@ -1,3 +1,4 @@
+import { IMAGE_BLOCK_TOKENS } from "openclaw/plugin-sdk/agent-core";
 import {
   assembleHarnessContextEngine,
   CODEX_APP_SERVER_CONTEXT_ENGINE_HOST,
@@ -21,6 +22,7 @@ import {
   CodexContextAttachmentError,
   isCodexDurableCustomMessage,
   projectContextEngineAssemblyForCodex,
+  resolveProjectionPromptBudgetTokens,
   type CodexProjectedImageGroup,
   type CodexProjectedContextRange,
 } from "./context-engine-projection.js";
@@ -42,6 +44,7 @@ import {
   buildTurnCollaborationMode,
 } from "./turn-params.js";
 import { readMirrorIdentity } from "./upstream-prompt-provenance.js";
+import { buildCodexHistoryItems } from "./user-input.js";
 
 export async function prepareCodexAttemptPrompt(context: CodexAttemptContext) {
   const {
@@ -81,6 +84,14 @@ export async function prepareCodexAttemptPrompt(context: CodexAttemptContext) {
     sandbox,
   } = connection;
   const { toolBridge } = attemptTools;
+  // An authored exact-model cap is operator policy, not native capacity discovery.
+  // Supervised native sessions keep their existing independent ownership.
+  const configuredContextBudget =
+    activeContextEngine &&
+    !usesSupervisionConnection &&
+    params.authoredContextTokenCap
+      ? Math.min(params.authoredContextTokenCap, effectiveContextTokenBudget ?? Infinity)
+      : undefined;
   const availableToolNames = () =>
     flattenCodexDynamicToolFunctions(toolBridge.availableSpecs)
       .map((tool) => tool.name)
@@ -195,7 +206,32 @@ export async function prepareCodexAttemptPrompt(context: CodexAttemptContext) {
         sessionId: runtimeParams.sessionId,
         sessionKey: contextSessionKey,
         messages: historyState.messages,
-        tokenBudget: effectiveContextTokenBudget,
+        tokenBudget: configuredContextBudget ?? effectiveContextTokenBudget,
+        ...(configuredContextBudget
+          ? {
+              promptBudget: {
+                contextTokens: configuredContextBudget,
+                reserveTokens:
+                  configuredContextBudget -
+                  resolveProjectionPromptBudgetTokens({
+                    contextTokenBudget: configuredContextBudget,
+                  }) +
+                  (params.images?.length ?? 0) * IMAGE_BLOCK_TOKENS,
+                systemPrompt: joinPresentSections(
+                  baseDeveloperInstructions,
+                  refreshableInstructions,
+                  buildTurnCollaborationMode(params).settings.developer_instructions ?? undefined,
+                  JSON.stringify(toolBridge.specs),
+                ),
+                prompt: joinPresentSections(
+                  params.prompt,
+                  params.currentInboundContext?.text,
+                  buildOpenClawPromptContext(true),
+                  inputAttachmentNote,
+                ),
+              },
+            }
+          : {}),
         availableTools: new Set(availableToolNames()),
         citationsMode: params.config?.memory?.citations,
         sandboxed: sandbox?.enabled === true,
@@ -234,6 +270,7 @@ export async function prepareCodexAttemptPrompt(context: CodexAttemptContext) {
         systemPromptAddition: assembled.systemPromptAddition,
         maxRenderedContextChars: codexContextProjectionMaxChars,
         toolPayloadMode:
+          configuredContextBudget ||
           contextEngineProjection ||
           params.continuation ||
           params.pluginRuntimeRefreshMessages ||
@@ -243,6 +280,7 @@ export async function prepareCodexAttemptPrompt(context: CodexAttemptContext) {
         ...(projectionDecision.project ? { prepareFileContext } : {}),
         currentUserTurnIdempotencyKey,
         currentUserMessage: admittedMessage,
+        preserveAssembledHistory: configuredContextBudget !== undefined,
       });
       assertProjectionCurrent();
       contextImageGroups = projectionDecision.project ? (projection.imageGroups ?? []) : [];
@@ -265,10 +303,26 @@ export async function prepareCodexAttemptPrompt(context: CodexAttemptContext) {
       });
       // Projection metadata and rendered prompt must advance together or retries can skip context.
       promptState.contextEngineProjection = contextEngineProjection;
-      promptState.promptText = projectionDecision.project ? projection.promptText : params.prompt;
-      promptState.promptContextRange = projectionDecision.project
-        ? projection.promptContextRange
-        : undefined;
+      const seedHistory = Boolean(configuredContextBudget && projectionDecision.project);
+      promptState.historyBootstrapItems =
+        seedHistory && projection.promptContextRange
+          ? buildCodexHistoryItems(
+              `${projection.promptText.slice(0, projection.promptContextRange.end)}\n</conversation_context>`,
+              projection.imageGroups,
+            )
+          : seedHistory
+            ? []
+            : undefined;
+      promptState.promptText = projectionDecision.project
+        ? seedHistory
+          ? projection.currentRequestText
+          : projection.promptText
+        : params.prompt;
+      if (seedHistory) {
+        contextImageGroups = [];
+      }
+      promptState.promptContextRange =
+        projectionDecision.project && !seedHistory ? projection.promptContextRange : undefined;
       promptState.developerInstructions = joinPresentSections(
         baseDeveloperInstructions,
         projection.developerInstructionAddition,
@@ -276,6 +330,7 @@ export async function prepareCodexAttemptPrompt(context: CodexAttemptContext) {
     } catch (assembleErr) {
       if (
         assembleErr instanceof CodexContextAttachmentError ||
+        configuredContextBudget !== undefined ||
         params.continuation ||
         params.pluginRuntimeRefreshMessages
       ) {

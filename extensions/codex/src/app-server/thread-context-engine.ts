@@ -22,6 +22,9 @@ export function buildContextEngineBinding(
   if (!contextEngine || !engineId) {
     return undefined;
   }
+  const configuredContextBudget = params.authoredContextTokenCap
+    ? Math.min(params.authoredContextTokenCap, params.contextTokenBudget ?? Infinity)
+    : undefined;
   return {
     schemaVersion: 1,
     engineId,
@@ -32,9 +35,16 @@ export function buildContextEngineBinding(
       ownsCompaction: contextEngine.info.ownsCompaction === true,
       turnMaintenanceMode: contextEngine.info.turnMaintenanceMode,
       citationsMode: params.config?.memory?.citations,
-      contextTokenBudget: params.contextTokenBudget,
+      contextTokenBudget: configuredContextBudget ?? params.contextTokenBudget,
+      ...(configuredContextBudget
+        ? {
+            historyCarrier: "thread/inject_items",
+            modelProvider: params.provider,
+            model: params.modelId,
+          }
+        : {}),
       projectionMaxChars: resolveCodexContextEngineProjectionMaxChars({
-        contextTokenBudget: params.contextTokenBudget,
+        contextTokenBudget: configuredContextBudget ?? params.contextTokenBudget,
       }),
     }),
     projection: projection

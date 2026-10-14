@@ -533,6 +533,41 @@ export async function startFreshCodexThread(
   } catch (error) {
     return await rejectUncommittedThread(error);
   }
+  const historyBootstrapItems = params.historyBootstrapItems;
+  if (historyBootstrapItems !== undefined) {
+    try {
+      assertCurrent();
+      const expectedProvider = requestModelProvider ?? startModelProvider;
+      if (
+        !response.model ||
+        response.model !== startParams.model ||
+        (expectedProvider && response.modelProvider !== expectedProvider)
+      ) {
+        throw new Error(
+          "Codex selected a different model than the assembled context policy; retry with that model's configured budget.",
+        );
+      }
+      // This thread is still provisional and idle. A lost acknowledgment may
+      // have installed the seed: discard it rather than injecting twice. A crash
+      // here leaves no binding, so recovery also starts a fresh physical thread.
+      if (historyBootstrapItems.length) {
+        await lifecycleTiming.measure("thread-start-seed-history", () =>
+          params.client.request(
+            "thread/inject_items",
+            { threadId: response.thread.id, items: historyBootstrapItems },
+            {
+              signal: params.signal,
+              assertCurrent,
+              withCurrent: params.authority?.withCurrent,
+            },
+          ),
+        );
+      }
+      assertCurrent();
+    } catch (error) {
+      return await rejectUncommittedThread(error);
+    }
+  }
   const rolloutPath = resolveCodexThreadRolloutPath(response.thread);
   const modelProvider = await resolveCodexAppServerModelProvider({
     homeScope: params.appServer.start.homeScope,
