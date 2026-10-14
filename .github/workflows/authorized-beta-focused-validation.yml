@@ -1,95 +1,122 @@
-name: Authorized Beta Focused Validation
-
+name: History installed Gateway retained-package proof
 on:
   workflow_dispatch:
-
+    inputs:
+      candidate_sha:
+        description: Exact reviewed history-only source
+        default: 5b2b566b10af9ed39f0bbb930251a7d2ee222cb5
+        required: true
+        type: string
+      package_run:
+        description: Canonical package build run
+        required: true
+        type: string
+      package_artifact:
+        description: Immutable installed package artifact ID
+        required: true
+        type: string
+      package_sha256:
+        description: Reviewed tarball SHA256
+        required: true
+        type: string
 permissions:
-  actions: read
-  attestations: write
   contents: read
-  id-token: write
-
-concurrency:
-  group: authorized-beta-focused-validation
-  cancel-in-progress: false
-
+  actions: read
 env:
-  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
-  NODE_VERSION: "24.21.0"
-
+  CI: 'true'
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: 'true'
+  CANDIDATE_SHA: ${{ inputs.candidate_sha }}
+  PACKAGE_RUN: ${{ inputs.package_run }}
+  PACKAGE_ARTIFACT: ${{ inputs.package_artifact }}
+  PACKAGE_SHA256: ${{ inputs.package_sha256 }}
 jobs:
-  validate:
-    runs-on: ubuntu-latest
+  shipped:
+    runs-on: ubuntu-24.04
     timeout-minutes: 30
     steps:
-      - name: Validate protected tooling identity
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: |
-          set -euo pipefail
-          if [[ ! "${GITHUB_REF}" =~ ^refs/tags/release-publish/([a-f0-9]{12})-[1-9][0-9]*$ ]]; then
-            echo "Authorized beta focused validation requires a protected release-publish tag." >&2
-            exit 1
-          fi
-          if [[ "${GITHUB_SHA:0:12}" != "${BASH_REMATCH[1]}" ]]; then
-            echo "Protected release-publish tag does not match the workflow SHA." >&2
-            exit 1
-          fi
-          tag="${GITHUB_REF#refs/tags/}"
-          remote_sha="$(
-            gh api "repos/${GITHUB_REPOSITORY}/git/ref/tags/${tag}" \
-              --jq '.object | select(.type == "commit") | .sha'
-          )"
-          [[ "${remote_sha}" == "${GITHUB_SHA}" ]] || {
-            echo "Protected release-publish tag moved after dispatch." >&2
-            exit 1
-          }
-
-      - name: Checkout trusted tooling
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
+          repository: lordratner/openclaw
           ref: ${{ github.sha }}
-          fetch-depth: 0
+          path: .proof-tools
           persist-credentials: false
-
-      - name: Checkout frozen candidate
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+          sparse-checkout: .qa
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020
         with:
-          ref: 3fbe94065c2b94f4c08acb6742a69938bf408d94
-          path: candidate
-          fetch-depth: 0
-          persist-credentials: false
-
-      - name: Setup Node environment
-        uses: ./.github/actions/setup-node-env
+          node-version: 24.19.0
+      - name: Admit exact reviewed package manifest
+        run: |
+          python3 - <<'PY'
+          import os,json,re
+          from pathlib import Path
+          manifest=json.loads(Path('.proof-tools/.qa/history-shipped-inputs.json').read_text())
+          for key,variable in [('candidate','CANDIDATE_SHA'),('packageRun','PACKAGE_RUN'),('packageArtifact','PACKAGE_ARTIFACT'),('packageSha256','PACKAGE_SHA256')]:
+              assert str(manifest[key])==os.environ[variable],f'Unexpected {key}'
+          assert re.fullmatch('[0-9a-f]{40}',manifest['candidate'])
+          assert re.fullmatch('[0-9a-f]{64}',manifest['packageSha256'])
+          assert int(manifest['packageRun'])>0 and int(manifest['packageArtifact'])>0
+          assert manifest['packageName']=='openclaw-2026.10.2.tgz'
+          PY
+      - name: Download immutable exact candidate package
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c
         with:
-          cache-mode: restore
-          node-version: ${{ env.NODE_VERSION }}
-          install-bun: "false"
-
-      - name: Build focused evidence
-        env:
-          GH_TOKEN: ${{ github.token }}
+          github-token: ${{ github.token }}
+          repository: lordratner/openclaw
+          run-id: ${{ inputs.package_run }}
+          artifact-ids: ${{ inputs.package_artifact }}
+          path: ${{ runner.temp }}/history-package
+      - name: Verify tarball identity and bundled candidate Codex
+        run: |
+          python3 - <<'PY'
+          import os,json,hashlib,tarfile
+          from pathlib import Path
+          root=Path(os.environ['RUNNER_TEMP']);package=root/'history-package'/'openclaw-2026.10.2.tgz'
+          assert hashlib.sha256(package.read_bytes()).hexdigest()==os.environ['PACKAGE_SHA256']
+          with tarfile.open(package) as archive:
+              build=json.load(archive.extractfile('package/dist/build-info.json'))
+              assert build['commit']==os.environ['CANDIDATE_SHA'] and build['version']=='2026.10.2'
+              plugin=json.load(archive.extractfile('package/dist/extensions/codex/package.json'))
+              assert plugin['version']=='2026.10.2' and plugin['openclaw']['build']['bundledDist'] is True
+          evidence=root/'history-shipped-full-evidence';evidence.mkdir(exist_ok=True)
+          (evidence/'retained-package.json').write_text(json.dumps({'candidate':os.environ['CANDIDATE_SHA'],'packageRun':os.environ['PACKAGE_RUN'],'packageArtifact':os.environ['PACKAGE_ARTIFACT'],'packageSha256':os.environ['PACKAGE_SHA256'],'buildInfo':build,'bundledCodex':plugin['version'],'execution':'Single canonical package build retained; no rebuild in installed scenario'},indent=2)+'\n')
+          PY
+      - name: Install matching stock native helper and published stable in isolated prefixes
         run: |
           set -euo pipefail
-          mkdir -p "${RUNNER_TEMP}/authorized-beta-focused"
-          node --import tsx scripts/validate-authorized-beta-focused-evidence.mts create \
-            --candidate-root candidate \
-            --output "${RUNNER_TEMP}/authorized-beta-focused/evidence.json" \
-            --producer-run-id "${GITHUB_RUN_ID}" \
-            --producer-run-attempt "${GITHUB_RUN_ATTEMPT}" \
-            --producer-workflow-full-ref "${GITHUB_REF}" \
-            --producer-workflow-sha "${GITHUB_SHA}"
-
-      - name: Attest focused evidence
-        uses: actions/attest@1e69f48acb82d1966a394da916b4c1698aa569d6 # v4.2.2
+          npm install --prefix "$RUNNER_TEMP/history-native" @openai/codex@0.160.0 --no-fund --no-audit
+          npm install --global --prefix "$RUNNER_TEMP/history-installed" openclaw@2026.10.3 --no-fund --no-audit
+      - name: Exercise shipped CLI, Gateway and stock native history delivery
+        env:
+          PROOF_TOOL_DIR: ${{ github.workspace }}/.proof-tools/.qa
+          INSTALLED_PREFIX: ${{ runner.temp }}/history-installed
+          INSTALLED_ENTRY: ${{ runner.temp }}/history-installed/lib/node_modules/openclaw/openclaw.mjs
+          CANDIDATE_TARBALL: ${{ runner.temp }}/history-package/openclaw-2026.10.2.tgz
+          PROOF_NATIVE_LAUNCHER: ${{ runner.temp }}/history-native/node_modules/@openai/codex/bin/codex.js
+        run: node .proof-tools/.qa/history-shipped-full.mjs
+      - name: Capture immutable tool identities
+        if: always()
+        run: |
+          mkdir -p "$RUNNER_TEMP/history-shipped-full-evidence"
+          sha256sum .proof-tools/.qa/history-*.mjs > "$RUNNER_TEMP/history-shipped-full-evidence/proof-tools.sha256"
+          cp .proof-tools/.qa/history-shipped-inputs.json "$RUNNER_TEMP/history-shipped-full-evidence/reviewed-inputs.json"
+      - name: Redact synthetic endpoint identifiers at artifact egress
+        if: always()
+        run: |
+          python3 - <<'PY'
+          import os,json
+          from pathlib import Path
+          root=Path(os.environ['RUNNER_TEMP'])/'history-shipped-full-evidence';modified=[]
+          for file in root.iterdir():
+              if file.suffix not in ('.log','.json','.jsonl'):continue
+              text=file.read_text()
+              cleaned=text.replace('127.0.0.1','[synthetic-loopback]').replace('::1','[synthetic-loopback]').replace('public-synthetic-history-proof-not-a-credential','[public-dummy-auth]')
+              if cleaned!=text:file.write_text(cleaned);modified.append(file.name)
+          (root/'egress-redaction.json').write_text(json.dumps({'modifiedFiles':modified,'scope':'Only public dummy auth and synthetic loopback identifiers; proof witnesses unchanged'},indent=2)+'\n')
+          PY
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        if: always()
         with:
-          subject-path: ${{ runner.temp }}/authorized-beta-focused/evidence.json
-
-      - name: Upload focused evidence
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
-        with:
-          name: authorized-beta-focused-v1-${{ github.run_id }}-${{ github.run_attempt }}
-          path: ${{ runner.temp }}/authorized-beta-focused/evidence.json
+          name: history-shipped-full-${{ github.run_id }}
+          path: ${{ runner.temp }}/history-shipped-full-evidence
           if-no-files-found: error
-          retention-days: 30
+          retention-days: 14
