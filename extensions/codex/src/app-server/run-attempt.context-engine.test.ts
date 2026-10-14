@@ -946,3 +946,102 @@ describe("runCodexAppServerAttempt context-engine lifecycle", () => {
     expectRequestInputTextContains(harness, params.prompt);
   });
 });
+
+describe("Codex configured context budget", () => {
+  it.each([false, true])(
+    "reserves current input and native overhead before assembly (images: %s)",
+    async (withImages) => {
+      const contextEngine = createContextEngine();
+      const harness = createStartedThreadHarness();
+      const sessionFile = path.join(tempDir, "context-budget.jsonl");
+      const sessionManager = openFileBackedSessionManagerForTest(sessionFile, {
+        sessionId: "session-1",
+      });
+      sessionManager.appendMessage(userMessage("PRIOR_BUDGET_CONTEXT", 10));
+      const params = createParams(sessionFile, path.join(tempDir, "workspace"));
+      params.contextEngine = contextEngine;
+      params.authoredContextTokenCap = 600_000;
+      params.contextTokenBudget = 500_000;
+      params.prompt = `CURRENT_REQUEST ${"current ".repeat(1_000)}`;
+      params.currentInboundContext = { text: "CURRENT_INBOUND_REFERENCE" };
+      if (withImages) {
+        params.images = [
+          {
+            type: "image",
+            mimeType: "image/png",
+            data: "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+ip1sAAAAASUVORK5CYII=",
+          },
+        ];
+      }
+
+      const run = runCodexAppServerAttempt(params);
+      await run.waitForTurnAccepted();
+      await harness.completeTurn();
+      await run;
+
+      const assembly = vi.mocked(contextEngine.assemble).mock.calls[0]?.[0];
+      expect(assembly?.tokenBudget).toBeGreaterThan(0);
+      expect(assembly?.tokenBudget).toBeLessThan(480_000);
+      expect(assembly?.runtimeSettings?.limits.promptTokenBudget).toBe(assembly?.tokenBudget);
+      if (!contextEngine.bootstrap) {
+        throw new Error("expected bootstrap hook");
+      }
+      const bootstrap = vi.mocked(contextEngine.bootstrap).mock.calls[0]?.[0];
+      expect(bootstrap?.runtimeSettings?.limits.promptTokenBudget).toBe(500_000);
+      expect(getRequestInputText(harness)).toContain(params.prompt);
+      expect(getRequestInputText(harness)).toContain("CURRENT_INBOUND_REFERENCE");
+      expect(harness.requests.some(({ method }) => method === "thread/inject_items")).toBe(false);
+    },
+  );
+
+  it("keeps the caller allowance unchanged without an authored exact-model cap", async () => {
+    const contextEngine = createContextEngine();
+    const harness = createStartedThreadHarness();
+    const params = createParams(
+      path.join(tempDir, "unconfigured-budget.jsonl"),
+      path.join(tempDir, "workspace"),
+    );
+    params.contextEngine = contextEngine;
+    params.contextTokenBudget = 500_000;
+
+    const run = runCodexAppServerAttempt(params);
+    await run.waitForTurnAccepted();
+    await harness.completeTurn();
+    await run;
+
+    const assembly = vi.mocked(contextEngine.assemble).mock.calls[0]?.[0];
+    expect(assembly?.tokenBudget).toBe(500_000);
+    expect(assembly?.runtimeSettings?.limits.promptTokenBudget).toBe(500_000);
+    expect(harness.requests.some(({ method }) => method === "thread/inject_items")).toBe(false);
+  });
+
+  it("retains ordinary baseline prompt fallback when configured assembly fails", async () => {
+    const contextEngine = createContextEngine({
+      assemble: vi.fn(async () => {
+        throw new Error("Synthetic assembly failure");
+      }),
+    });
+    const warn = vi.spyOn(embeddedAgentLog, "warn").mockImplementation(() => undefined);
+    const harness = createStartedThreadHarness();
+    const params = createParams(
+      path.join(tempDir, "configured-fallback.jsonl"),
+      path.join(tempDir, "workspace"),
+    );
+    params.contextEngine = contextEngine;
+    params.authoredContextTokenCap = 600_000;
+    params.contextTokenBudget = 500_000;
+    params.prompt = "CONFIGURED_BASELINE_REQUEST";
+
+    const run = runCodexAppServerAttempt(params);
+    await run.waitForTurnAccepted();
+    await harness.completeTurn();
+    await run;
+
+    expect(getRequestInputText(harness)).toContain(params.prompt);
+    expect(warn).toHaveBeenCalledWith(
+      "context engine assemble failed; using Codex baseline prompt",
+      expect.any(Object),
+    );
+    expect(harness.requests.some(({ method }) => method === "thread/inject_items")).toBe(false);
+  });
+});

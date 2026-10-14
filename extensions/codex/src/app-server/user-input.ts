@@ -2,24 +2,7 @@ import type { EmbeddedRunAttemptParamsV2 as EmbeddedRunAttemptParams } from "ope
 import { sanitizeInlineImageDataUrl } from "openclaw/plugin-sdk/inline-image-data-url-runtime";
 import type { CodexProjectedImageGroup } from "./context-engine-projection.js";
 import { invalidInlineImageText } from "./image-payload-sanitizer.js";
-import type { CodexUserInput, JsonValue } from "./protocol.js";
-
-/** Quoted history is one user message, never fabricated developer/tool authority. */
-export function buildCodexHistoryItems(
-  text: string,
-  imageGroups?: CodexProjectedImageGroup[],
-): JsonValue[] {
-  const content = buildCodexUserInput(text, undefined, imageGroups).map((input): JsonValue => {
-    if (input.type === "text") {
-      return { type: "input_text", text: input.text };
-    }
-    if (input.type === "image") {
-      return { type: "input_image", image_url: input.url };
-    }
-    throw new Error("Unexpected Codex historical input type");
-  });
-  return [{ type: "message", role: "user", content }];
-}
+import type { CodexUserInput } from "./protocol.js";
 
 /** Builds ordered Codex user input for both new turns and same-turn steering. */
 export function buildCodexUserInput(

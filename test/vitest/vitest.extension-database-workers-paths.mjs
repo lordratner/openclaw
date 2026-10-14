@@ -265,7 +265,6 @@ export const databaseWorkerExtensionTestFiles = [
   "extensions/codex/src/app-server/run-attempt.configured-mcp.test.ts",
   "extensions/codex/src/app-server/run-attempt.context-engine.test.ts",
   "extensions/codex/src/app-server/run-attempt.context-engine-overflow.test.ts",
-  "extensions/codex/src/app-server/run-attempt.history-seed.test.ts",
   "extensions/codex/src/app-server/run-attempt.continuity-media.test.ts",
   "extensions/codex/src/app-server/run-attempt.durable-context.test.ts",
   "extensions/codex/src/app-server/run-attempt.dynamic-tools.test.ts",

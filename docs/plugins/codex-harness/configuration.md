@@ -156,16 +156,6 @@ owns compaction. The native app-server harness supports context engines
 that need pre-prompt assembly; generic CLI backends, including `codex-cli`,
 do not provide that host capability.
 
-For explicitly budgeted context-engine projections, history selected by assembly
-is not silently shortened again to fit a single native user input. Bootstrap
-history is seeded into a fresh host-owned native thread before the current
-request starts. Configured per-turn projections also start a fresh thread for
-each assembly, so native history cannot retain messages outside the selected
-assembly; thread-bootstrap projections reuse their ready thread until rotation.
-The current request remains normal user input. A failed or uncertain seed is not
-marked ready or blindly replayed into the same thread. Transport limits still
-apply and produce an error instead of a partial history.
-
 Fresh Codex threads, including ordinary **Fork conversation** sessions, receive
 recent saved history within a bounded continuity window. Conversation text and
 summaries that fit this window are preserved without a separate per-message

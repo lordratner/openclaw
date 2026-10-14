@@ -23,7 +23,6 @@ import {
 } from "./context-engine-projection.js";
 import { joinPresentSections } from "./developer-instruction-sections.js";
 import { isSystemAgentOnlyCodexDynamicToolAllowlist } from "./dynamic-tool-profile.js";
-import type { JsonValue } from "./protocol.js";
 import type { CodexAttemptRuntime } from "./run-attempt-runtime.js";
 import type { CodexAttemptTools } from "./run-attempt-tool-setup.js";
 import type { CodexContextEngineThreadBootstrapProjection } from "./thread-context-engine.js";
@@ -220,19 +219,11 @@ export async function prepareCodexAttemptContext(
         : undefined,
       watchedSessionsContext,
     });
-  const promptState: {
-    promptText: string;
-    promptContextRange: CodexProjectedContextRange | undefined;
-    developerInstructions: string;
-    contextEngineProjection: CodexContextEngineThreadBootstrapProjection | undefined;
-    historyBootstrapItems: JsonValue[] | undefined;
-    noEngineContinuityProjectionApplied: boolean;
-  } = {
+  const promptState = {
     promptText: params.prompt,
-    promptContextRange: undefined,
+    promptContextRange: undefined as CodexProjectedContextRange | undefined,
     developerInstructions: baseDeveloperInstructions,
-    contextEngineProjection: undefined,
-    historyBootstrapItems: undefined,
+    contextEngineProjection: undefined as CodexContextEngineThreadBootstrapProjection | undefined,
     // Set by the no-engine continuity appliers; gates calibration recording so a
     // dense direct or active-engine prompt can never persist a density sample
     // that later shrinks continuity history it did not measure.

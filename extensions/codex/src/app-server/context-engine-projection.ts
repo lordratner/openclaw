@@ -10,7 +10,6 @@ import { sliceUtf16Safe, truncateUtf16Safe } from "openclaw/plugin-sdk/text-util
 type CodexContextProjection = {
   developerInstructionAddition?: string;
   promptText: string;
-  currentRequestText: string;
   promptContextRange?: CodexProjectedContextRange;
   imageGroups?: CodexProjectedImageGroup[];
 };
@@ -106,24 +105,18 @@ export async function projectContextEngineAssemblyForCodex(params: {
   prepareFileContext?: PrepareContextFile;
   currentUserTurnIdempotencyKey?: string;
   currentUserMessage?: AgentMessage;
-  /** The context engine already bounded these messages against the prompt budget. */
-  preserveAssembledHistory?: boolean;
 }): Promise<CodexContextProjection> {
   const prompt = params.prompt.trim();
-  const maxRenderedContextChars = params.preserveAssembledHistory
-    ? Number.MAX_SAFE_INTEGER
-    : normalizeRenderedContextMaxChars(params.maxRenderedContextChars);
+  const maxRenderedContextChars = normalizeRenderedContextMaxChars(params.maxRenderedContextChars);
   const context = await renderMessagesForCodexContext(
     params.assembledMessages.filter(
       (message) => message.role !== "custom" || isCodexDurableCustomMessage(message),
     ),
     {
-      maxTextPartChars: params.preserveAssembledHistory
-        ? Number.MAX_SAFE_INTEGER
-        : Math.min(
-            MAX_TEXT_PART_CHARS,
-            Math.max(DEFAULT_TEXT_PART_CHARS, Math.floor(maxRenderedContextChars / 4)),
-          ),
+      maxTextPartChars: Math.min(
+        MAX_TEXT_PART_CHARS,
+        Math.max(DEFAULT_TEXT_PART_CHARS, Math.floor(maxRenderedContextChars / 4)),
+      ),
       toolPayloadMode: params.toolPayloadMode ?? "elide",
       maxRenderedContextChars,
       prepareFileContext: params.prepareFileContext,
@@ -156,7 +149,6 @@ export async function projectContextEngineAssemblyForCodex(params: {
       ? { developerInstructionAddition: params.systemPromptAddition.trim() }
       : {}),
     promptText,
-    currentRequestText: currentRequest,
     ...(promptContextRange ? { promptContextRange } : {}),
     ...(context.imageGroups.length && promptPrefix
       ? {

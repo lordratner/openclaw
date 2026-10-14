@@ -8,7 +8,7 @@ import type { CodexInferenceProxy } from "./inference-proxy.js";
 import type { CodexInferenceProviderRoutes } from "./inference-routing.js";
 import type { CodexNativeModelInputTools } from "./native-model-input-tools.js";
 import type { CodexPluginThreadConfig } from "./plugin-thread-config.js";
-import type { CodexDynamicToolSpec, CodexServiceTier, JsonObject, JsonValue } from "./protocol.js";
+import type { CodexDynamicToolSpec, CodexServiceTier, JsonObject } from "./protocol.js";
 import type {
   CodexBindingAuthority,
   CodexAppServerBindingStore,
@@ -97,8 +97,6 @@ export type CodexStartOrResumeThreadParams = Omit<
   appServerRuntimeFingerprint?: string;
   pluginThreadConfig?: CodexPluginThreadConfigProvider;
   contextEngineProjection?: CodexContextEngineThreadBootstrapProjection;
-  /** Replace on a fresh idle thread before ready; [] explicitly selects no old history. */
-  historyBootstrapItems?: JsonValue[];
   signal?: AbortSignal;
   timing?: CodexThreadLifecycleTimingOptions;
 };
