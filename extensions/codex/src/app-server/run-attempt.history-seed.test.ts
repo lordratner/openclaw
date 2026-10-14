@@ -581,7 +581,7 @@ describe("Codex configured assembled-history delivery", () => {
     if (!dispatch) {
       throw new Error("Expected the registered native request dispatcher");
     }
-    harness.request.mockImplementation(async (method, request, options) => {
+    vi.spyOn(harness.client, "request").mockImplementation(async (method, request, options) => {
       const result = await dispatch(method, request, options);
       // Registered injection has its own subscription owner and bypasses the
       // responder hook. Accept its real dispatch first, then lose only the

@@ -750,7 +750,8 @@ describe("buildCodexHistoryItems", () => {
   it.each([undefined, 0, -1, Number.NaN, Infinity, Number.MAX_SAFE_INTEGER])(
     "requires a finite preserved-history allowance before preparing media: %s",
     async (preservedHistoryTokenBudget) => {
-      const prepareFileContext = vi.fn(async () => ({ images: [] }));
+      const historyTest = await import("vitest");
+      const prepareFileContext = historyTest.vi.fn(async () => ({ images: [] }));
       await expect(
         projectContextEngineAssemblyForCodex({
           assembledMessages: [textMessage("user", "selected")],
@@ -778,7 +779,8 @@ describe("buildCodexHistoryItems", () => {
   });
 
   it("rejects oversized selected text instead of clipping it before media preparation", async () => {
-    const prepareFileContext = vi.fn(async () => ({ images: [] }));
+    const historyTest = await import("vitest");
+    const prepareFileContext = historyTest.vi.fn(async () => ({ images: [] }));
     await expect(
       projectContextEngineAssemblyForCodex({
         assembledMessages: [textMessage("user", "x".repeat(400))],
@@ -792,10 +794,13 @@ describe("buildCodexHistoryItems", () => {
   });
 
   it("passes remaining finite media headroom and rejects a capped restored expansion", async () => {
-    const prepareFileContext = vi.fn(async (_message: AgentMessage, maxChars: number) => ({
-      text: "r".repeat(maxChars),
-      images: [],
-    }));
+    const historyTest = await import("vitest");
+    const prepareFileContext = historyTest.vi.fn(
+      async (_message: AgentMessage, maxChars: number) => ({
+        text: "r".repeat(maxChars),
+        images: [],
+      }),
+    );
     await expect(
       projectContextEngineAssemblyForCodex({
         assembledMessages: [textMessage("user", "selected")],
@@ -811,12 +816,13 @@ describe("buildCodexHistoryItems", () => {
   });
 
   it("charges the aggregate restored text, image estimate and labels without dropping either", async () => {
+    const historyTest = await import("vitest");
     const first = textMessage("user", "first");
     const second = textMessage("user", "second");
     const image = { type: "image" as const, mimeType: "image/png", data: "iVBORw0KGgo=" };
     const firstText = "first restored";
     const secondText = "second restored";
-    const prepared = vi.fn(async (message: AgentMessage) => ({
+    const prepared = historyTest.vi.fn(async (message: AgentMessage) => ({
       text: message === first ? firstText : secondText,
       images: message === first ? [image] : [],
     }));

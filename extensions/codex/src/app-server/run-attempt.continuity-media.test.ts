@@ -124,6 +124,7 @@ describe("Codex attachment continuity", () => {
           expect(outcome.kind).toBe("rejected");
           if (outcome.kind === "rejected") {
             expect(String(outcome.error)).toMatch(/budget|allowance|exceed|restor|attachment/i);
+            expect(String(outcome.error)).toMatch(/new conversation.*smaller attachment/i);
           }
           expect(
             harness.requests.filter(({ method }) =>

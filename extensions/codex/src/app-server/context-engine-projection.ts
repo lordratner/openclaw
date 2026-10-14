@@ -45,7 +45,7 @@ const DEFAULT_TEXT_PART_CHARS = 6_000;
 const MAX_TEXT_PART_CHARS = 128_000;
 const APPROX_RENDERED_CHARS_PER_TOKEN = 4;
 const PRESERVED_HISTORY_OVERFLOW_MESSAGE =
-  "Selected history or restored attachments exceed their rendered allowance";
+  "Selected history or restored attachments exceed their rendered allowance. Start a new conversation with a smaller attachment.";
 // Codex app-server validates the summed v2 turn/start text input against
 // codex-rs/protocol/src/user_input.rs::MAX_USER_INPUT_TEXT_CHARS.
 export const CODEX_TURN_START_TEXT_INPUT_MAX_CHARS = 1 << 20;
