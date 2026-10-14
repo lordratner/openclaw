@@ -747,7 +747,7 @@ describe("resolveCodexContinuityProjectionMaxChars", () => {
 });
 
 describe("buildCodexHistoryItems", () => {
-  it.each([undefined, 0, -1, NaN, Infinity, Number.MAX_SAFE_INTEGER])(
+  it.each([undefined, 0, -1, Number.NaN, Infinity, Number.MAX_SAFE_INTEGER])(
     "requires a finite preserved-history allowance before preparing media: %s",
     async (preservedHistoryTokenBudget) => {
       const prepareFileContext = vi.fn(async () => ({ images: [] }));
