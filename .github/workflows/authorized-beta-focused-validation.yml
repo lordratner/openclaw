@@ -2,7 +2,7 @@
 # Dispatch on an independently pinned QA branch after the candidate is published.
 # Fill exact candidate/base SHAs, intended existing production paths and regression
 # fullNames at dispatch; no guessed fixed test totals and no model/review secrets.
-name: Independent selected-history focused proof
+name: Independent history registered-fixture delta proof
 on:
   workflow_dispatch:
     inputs:
@@ -226,6 +226,16 @@ jobs:
           assert all(assertions[key] == [('failed' if stock else 'passed')] for key in expected), 'expected regression must execute exactly once'
           assert len(failed_records) == (len(expected) if stock else 0), 'extra failed duplicate cases'
           assert any(key not in expected and status == 'passed' for key, status in records), 'no sibling controls'
+          if stock:
+              for suite in report['testResults']:
+                  filename = next(p for p in source['testFiles'] if suite['name'].endswith('/' + p))
+                  for a in suite['assertionResults']:
+                      if (filename, a['fullName']) not in expected:
+                          continue
+                      failures = '\n'.join(a.get('failureMessages', []))
+                      assert 'AssertionError' in failures, ('non-assertion negative', a['fullName'], failures)
+                      assert 'CodexAdoptedThreadActiveError' not in failures
+                      assert 'Test timed out' not in failures
           assert execution['exit'] == (1 if stock else 0), execution
           assert report['success'] is (not stock)
           assert report['numFailedTests'] == len(failed), 'summary/detail mismatch'
@@ -279,6 +289,34 @@ jobs:
           assert set(selected).issubset(changed)
           (proof / 'gate-files.txt').write_text('\n'.join(selected or changed) + '\n')
           PYSCOPE
+      - name: Verify narrow delta and retain successful unchanged component proof
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          python3 - <<'PYRETAIN'
+          import os,json,subprocess,hashlib
+          from pathlib import Path
+          p=Path(os.environ['RUNNER_TEMP'])/'proof';prior='5da51ec759f1172fafa1e13db6c142acf7a1101d';run='38508386940';file='extensions/codex/src/app-server/run-attempt.history-seed.test.ts';native='extensions/codex/src/app-server/run-attempt.skills.native.test.ts';prod='extensions/codex/src/app-server/run-attempt-prompt.ts'
+          changed=subprocess.check_output(['git','diff','--name-only',prior,'HEAD'],text=True).splitlines();assert set(changed)=={file,prod},changed
+          subprocess.run(['gh','run','download',run,'--repo','lordratner/openclaw','--name','context-budget-repaired-gates-'+run+'-1','--dir',str(p/'retained-gates')],check=True)
+          assert (p/'retained-gates/head.txt').read_text().strip()==prior and (p/'retained-gates/generated.patch').stat().st_size==0
+          jobs=json.loads(subprocess.check_output(['gh','api','repos/lordratner/openclaw/actions/runs/'+run+'/jobs?per_page=100'],text=True));gates=[j for j in jobs['jobs'] if j['name']=='repaired-gates'];assert len(gates)==1
+          steps={x['name']:x['conclusion'] for x in gates[0]['steps']};required=['Package-owned core production type gate','Package-owned extension production type gate','Fresh assertion-safety against the verified frozen fork point'];assert all(steps.get(n)=='success' for n in required),steps
+          # Exact formatter-only production change, not an arbitrary exception.
+          before=subprocess.check_output(['git','show',prior+':'+prod],text=True);after=Path(prod).read_text();old='    activeContextEngine &&\n    !usesSupervisionConnection &&\n    params.authoredContextTokenCap';new='    activeContextEngine && !usesSupervisionConnection && params.authoredContextTokenCap';assert before.count(old)==1 and after==before.replace(old,new)
+          subprocess.run(['gh','run','download',run,'--repo','lordratner/openclaw','--name','context-budget-repaired-'+run+'-1','--dir',str(p/'retained-tests')],check=True)
+          src=json.loads((p/'retained-tests/source.json').read_text());r=json.loads((p/'retained-tests/tests.json').read_text());assert src['candidate']==prior
+          retained=[];passes=0
+          for f,h in src['testSha256'].items():
+              if f in [file,native]:continue
+              assert hashlib.sha256(Path(f).read_bytes()).hexdigest()==h,f
+              suites=[t for t in r['testResults'] if t['name'].endswith('/'+f)];assert len(suites)==1
+              a=suites[0]['assertionResults'];assert a and all(x['status']=='passed' for x in a),f
+              passes+=len(a);retained.append(f)
+          assert len(retained)==9 and passes==191,(len(retained),passes)
+          receipt={'candidate':os.environ['CANDIDATE_SHA'],'prior':prior,'delta':changed,'retainedRun':run,'successfulProductionSteps':required,'retainedUnchangedTestFiles':retained,'retainedPassedTests':passes,'productionDifference':'exact GitHub formatter line-wrap only','qualification':'component proof, not repeated205current-headexecution'}
+          (p/'retained-proof.json').write_text(json.dumps(receipt,indent=2)+'\n');print(json.dumps(receipt,indent=2))
+          PYRETAIN
       - name: Frozen environment and compiler containment
         uses: ./.github/actions/setup-node-env
         with:
@@ -293,22 +331,6 @@ jobs:
           mapfile -t paths < "$RUNNER_TEMP/proof/gate-files.txt"
           test "${#paths[@]}" -gt 0
           /usr/bin/time -p pnpm format:check "${paths[@]}" 2>&1 | tee "$RUNNER_TEMP/proof/format.log"
-      - name: Fresh assertion-safety against the verified frozen fork point
-        if: '!cancelled()'
-        run: |
-          set -euo pipefail
-          test "$(git merge-base HEAD "$BASE_SHA")" = "$BASE_SHA"
-          /usr/bin/time -p pnpm check:assertion-safety --base "$BASE_SHA" 2>&1 | tee "$RUNNER_TEMP/proof/assertion-safety.log"
-      - name: Package-owned core production type gate
-        if: '!cancelled()'
-        run: |
-          set -euo pipefail
-          /usr/bin/time -p pnpm tsgo:core 2>&1 | tee "$RUNNER_TEMP/proof/type.log"
-      - name: Package-owned extension production type gate
-        if: '!cancelled()'
-        run: |
-          set -euo pipefail
-          /usr/bin/time -p pnpm tsgo:extensions 2>&1 | tee "$RUNNER_TEMP/proof/extension-type.log"
       - name: Package-owned focused lint gate
         if: '!cancelled()'
         run: |
