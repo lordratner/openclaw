@@ -948,10 +948,22 @@ describe("runCodexAppServerAttempt context-engine lifecycle", () => {
 });
 
 describe("Codex configured context budget", () => {
+  function createBudgetProbeEngine() {
+    const assemble = vi.fn<ContextEngine["assemble"]>(async ({ messages, prompt }) => ({
+      messages: [...messages, userMessage(prompt ?? "", 10)],
+      estimatedTokens: 42,
+      systemPromptAddition: "context-engine system",
+    }));
+    const bootstrap = vi.fn<NonNullable<ContextEngine["bootstrap"]>>(async () => ({
+      bootstrapped: true,
+    }));
+    return { contextEngine: createContextEngine({ assemble, bootstrap }), assemble, bootstrap };
+  }
+
   it.each([false, true])(
     "reserves current input and native overhead before assembly (images: %s)",
     async (withImages) => {
-      const contextEngine = createContextEngine();
+      const { contextEngine, assemble, bootstrap } = createBudgetProbeEngine();
       const harness = createStartedThreadHarness();
       const sessionFile = path.join(tempDir, "context-budget.jsonl");
       const sessionManager = openFileBackedSessionManagerForTest(sessionFile, {
@@ -962,7 +974,7 @@ describe("Codex configured context budget", () => {
       params.contextEngine = contextEngine;
       params.authoredContextTokenCap = 600_000;
       params.contextTokenBudget = 500_000;
-      params.prompt = `CURRENT_REQUEST ${"current ".repeat(1_000)}`;
+      params.prompt = `CURRENT_REQUEST ${"current ".repeat(1_000).trimEnd()}`;
       params.currentInboundContext = { text: "CURRENT_INBOUND_REFERENCE" };
       if (withImages) {
         params.images = [
@@ -979,15 +991,15 @@ describe("Codex configured context budget", () => {
       await harness.completeTurn();
       await run;
 
-      const assembly = vi.mocked(contextEngine.assemble).mock.calls[0]?.[0];
+      const assembly = assemble.mock.calls[0]?.[0];
       expect(assembly?.tokenBudget).toBeGreaterThan(0);
       expect(assembly?.tokenBudget).toBeLessThan(480_000);
       expect(assembly?.runtimeSettings?.limits.promptTokenBudget).toBe(assembly?.tokenBudget);
       if (!contextEngine.bootstrap) {
         throw new Error("expected bootstrap hook");
       }
-      const bootstrap = vi.mocked(contextEngine.bootstrap).mock.calls[0]?.[0];
-      expect(bootstrap?.runtimeSettings?.limits.promptTokenBudget).toBe(500_000);
+      const bootstrapCall = bootstrap.mock.calls[0]?.[0];
+      expect(bootstrapCall?.runtimeSettings?.limits.promptTokenBudget).toBe(500_000);
       expect(getRequestInputText(harness)).toContain(params.prompt);
       expect(getRequestInputText(harness)).toContain("CURRENT_INBOUND_REFERENCE");
       expect(harness.requests.some(({ method }) => method === "thread/inject_items")).toBe(false);
@@ -995,7 +1007,7 @@ describe("Codex configured context budget", () => {
   );
 
   it("keeps the caller allowance unchanged without an authored exact-model cap", async () => {
-    const contextEngine = createContextEngine();
+    const { contextEngine, assemble } = createBudgetProbeEngine();
     const harness = createStartedThreadHarness();
     const params = createParams(
       path.join(tempDir, "unconfigured-budget.jsonl"),
@@ -1009,7 +1021,7 @@ describe("Codex configured context budget", () => {
     await harness.completeTurn();
     await run;
 
-    const assembly = vi.mocked(contextEngine.assemble).mock.calls[0]?.[0];
+    const assembly = assemble.mock.calls[0]?.[0];
     expect(assembly?.tokenBudget).toBe(500_000);
     expect(assembly?.runtimeSettings?.limits.promptTokenBudget).toBe(500_000);
     expect(harness.requests.some(({ method }) => method === "thread/inject_items")).toBe(false);
