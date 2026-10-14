@@ -7,6 +7,7 @@ import {
 import { describe, expect, it, vi } from "vitest";
 import {
   buildCodexContinuityCalibration,
+  CodexContextAttachmentError,
   fitCodexProjectedContextForTurnStart,
   projectContextEngineAssemblyForCodex,
   resolveCodexContextEngineProjectionMaxChars,
@@ -746,6 +747,103 @@ describe("resolveCodexContinuityProjectionMaxChars", () => {
 });
 
 describe("buildCodexHistoryItems", () => {
+  it.each([undefined, 0, -1, NaN, Infinity, Number.MAX_SAFE_INTEGER])(
+    "requires a finite preserved-history allowance before preparing media: %s",
+    async (preservedHistoryTokenBudget) => {
+      const prepareFileContext = vi.fn(async () => ({ images: [] }));
+      await expect(
+        projectContextEngineAssemblyForCodex({
+          assembledMessages: [textMessage("user", "selected")],
+          prompt: "current",
+          preserveAssembledHistory: true,
+          preservedHistoryTokenBudget,
+          prepareFileContext,
+        }),
+      ).rejects.toBeInstanceOf(CodexContextAttachmentError);
+      expect(prepareFileContext).not.toHaveBeenCalled();
+    },
+  );
+
+  it("preserves complete selected text beyond the legacy projection ceiling within its allowance", async () => {
+    const text = "SELECTED_BEGIN" + "x".repeat(1_100_000) + "SELECTED_END";
+    const result = await projectContextEngineAssemblyForCodex({
+      assembledMessages: [textMessage("assistant", text)],
+      prompt: "current",
+      maxRenderedContextChars: 24_000,
+      preserveAssembledHistory: true,
+      preservedHistoryTokenBudget: 300_000,
+    });
+    expect(result.promptText).toContain(text);
+    expect(result.promptText).not.toContain("truncated");
+  });
+
+  it("rejects oversized selected text instead of clipping it before media preparation", async () => {
+    const prepareFileContext = vi.fn(async () => ({ images: [] }));
+    await expect(
+      projectContextEngineAssemblyForCodex({
+        assembledMessages: [textMessage("user", "x".repeat(400))],
+        prompt: "current",
+        preserveAssembledHistory: true,
+        preservedHistoryTokenBudget: 100,
+        prepareFileContext,
+      }),
+    ).rejects.toThrow("rendered allowance");
+    expect(prepareFileContext).not.toHaveBeenCalled();
+  });
+
+  it("passes remaining finite media headroom and rejects a capped restored expansion", async () => {
+    const prepareFileContext = vi.fn(async (_message: AgentMessage, maxChars: number) => ({
+      text: "r".repeat(maxChars),
+      images: [],
+    }));
+    await expect(
+      projectContextEngineAssemblyForCodex({
+        assembledMessages: [textMessage("user", "selected")],
+        prompt: "current",
+        preserveAssembledHistory: true,
+        preservedHistoryTokenBudget: 100,
+        prepareFileContext,
+      }),
+    ).rejects.toThrow("rendered allowance");
+    expect(prepareFileContext).toHaveBeenCalledOnce();
+    // 400 units minus the complete [user] label/body and file separator, plus sentinel.
+    expect(prepareFileContext.mock.calls[0]?.[1]).toBe(384);
+  });
+
+  it("charges the aggregate restored text, image estimate and labels without dropping either", async () => {
+    const first = textMessage("user", "first");
+    const second = textMessage("user", "second");
+    const image = { type: "image" as const, mimeType: "image/png", data: "iVBORw0KGgo=" };
+    const firstText = "first restored";
+    const secondText = "second restored";
+    const prepared = vi.fn(async (message: AgentMessage) => ({
+      text: message === first ? firstText : secondText,
+      images: message === first ? [image] : [],
+    }));
+    const selected = `[user]\nfirst\n\n${firstText}\n\n[user]\nsecond\n\n${secondText}`;
+    const chars = selected.length + IMAGE_BLOCK_TOKENS * 4;
+    const options = {
+      assembledMessages: [first, second],
+      prompt: "current",
+      preserveAssembledHistory: true,
+      prepareFileContext: prepared,
+    };
+    const result = await projectContextEngineAssemblyForCodex({
+      ...options,
+      preservedHistoryTokenBudget: chars / 4,
+    });
+    expect(result.promptText).toContain(selected);
+    expect(result.imageGroups?.map((group) => group.images)).toEqual([[image]]);
+    expect(result.promptText).not.toContain("truncated");
+    expect(result.promptText).not.toContain("omitted");
+    await expect(
+      projectContextEngineAssemblyForCodex({
+        ...options,
+        preservedHistoryTokenBudget: (chars - 1) / 4,
+      }),
+    ).rejects.toThrow("rendered allowance");
+  });
+
   it("partitions dense Unicode quoted history without dropping bytes or splitting pairs", () => {
     const text = `${"漢字🙂é".repeat(4_000)}\n[user sender={"id":"kept"}]\nEND`;
     const items = buildCodexHistoryItems(text);

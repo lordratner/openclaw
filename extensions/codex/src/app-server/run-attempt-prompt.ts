@@ -3,6 +3,7 @@ import {
   assembleHarnessContextEngine,
   CODEX_APP_SERVER_CONTEXT_ENGINE_HOST,
   embeddedAgentLog,
+  estimateRenderedLlmBoundaryTokenPressure,
   formatErrorMessage,
   resolveAgentHarnessBeforePromptBuildResult,
 } from "openclaw/plugin-sdk/agent-harness-runtime";
@@ -198,39 +199,49 @@ export async function prepareCodexAttemptPrompt(context: CodexAttemptContext) {
     if (!activeContextEngine) {
       return;
     }
+    // The native adapter owns this allowance for both selection and later media
+    // restoration. Supply the resolved existing SDK inputs directly so a restored
+    // document cannot acquire a different/unbounded window after assembly.
+    const promptBudget = configuredContextBudget
+      ? {
+          contextTokens: configuredContextBudget,
+          reserveTokens:
+            resolveCodexHistoryItemReserveTokens(configuredContextBudget) +
+            configuredContextBudget -
+            resolveProjectionPromptBudgetTokens({ contextTokenBudget: configuredContextBudget }) +
+            (params.images?.length ?? 0) * IMAGE_BLOCK_TOKENS,
+          systemPrompt: joinPresentSections(
+            baseDeveloperInstructions,
+            refreshableInstructions,
+            buildTurnCollaborationMode(params).settings.developer_instructions ?? undefined,
+            JSON.stringify(toolBridge.specs),
+          ),
+          prompt: joinPresentSections(
+            params.prompt,
+            params.currentInboundContext?.text,
+            buildOpenClawPromptContext(true),
+            inputAttachmentNote,
+          ),
+        }
+      : undefined;
+    const preservedHistoryTokenBudget = promptBudget
+      ? Math.max(
+          1,
+          Math.max(
+            1,
+            Math.floor(promptBudget.contextTokens) -
+              Math.max(0, Math.floor(promptBudget.reserveTokens)),
+          ) - estimateRenderedLlmBoundaryTokenPressure(promptBudget),
+        )
+      : undefined;
     try {
       const assembled = await assembleHarnessContextEngine({
         contextEngine: activeContextEngine,
         sessionId: runtimeParams.sessionId,
         sessionKey: contextSessionKey,
         messages: historyState.messages,
-        tokenBudget: configuredContextBudget ?? effectiveContextTokenBudget,
-        ...(configuredContextBudget
-          ? {
-              promptBudget: {
-                contextTokens: configuredContextBudget,
-                reserveTokens:
-                  resolveCodexHistoryItemReserveTokens(configuredContextBudget) +
-                  configuredContextBudget -
-                  resolveProjectionPromptBudgetTokens({
-                    contextTokenBudget: configuredContextBudget,
-                  }) +
-                  (params.images?.length ?? 0) * IMAGE_BLOCK_TOKENS,
-                systemPrompt: joinPresentSections(
-                  baseDeveloperInstructions,
-                  refreshableInstructions,
-                  buildTurnCollaborationMode(params).settings.developer_instructions ?? undefined,
-                  JSON.stringify(toolBridge.specs),
-                ),
-                prompt: joinPresentSections(
-                  params.prompt,
-                  params.currentInboundContext?.text,
-                  buildOpenClawPromptContext(true),
-                  inputAttachmentNote,
-                ),
-              },
-            }
-          : {}),
+        tokenBudget: preservedHistoryTokenBudget ?? effectiveContextTokenBudget,
+        ...(promptBudget ? { maxOutputTokens: promptBudget.reserveTokens } : {}),
         availableTools: new Set(availableToolNames()),
         citationsMode: params.config?.memory?.citations,
         sandboxed: sandbox?.enabled === true,
@@ -279,7 +290,10 @@ export async function prepareCodexAttemptPrompt(context: CodexAttemptContext) {
         ...(projectionDecision.project ? { prepareFileContext } : {}),
         currentUserTurnIdempotencyKey,
         currentUserMessage: admittedMessage,
-        preserveAssembledHistory: configuredContextBudget !== undefined,
+        // A same-epoch bootstrap is already owned by native history; only a
+        // selected projection crossing that boundary consumes this allowance.
+        preserveAssembledHistory: configuredContextBudget !== undefined && projectionDecision.project,
+        preservedHistoryTokenBudget,
       });
       assertProjectionCurrent();
       contextImageGroups = projectionDecision.project ? (projection.imageGroups ?? []) : [];

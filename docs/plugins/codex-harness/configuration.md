@@ -163,6 +163,13 @@ existing idle native thread, including after resume, rather than replacing its
 history. Thread-bootstrap projections reuse their ready thread until rotation.
 The current request remains normal user input, separate from quoted history.
 
+Selected saved attachments are restored under the same remaining history
+allowance used for assembly. Complete restored text, file wrappers, sender
+labels, separators, and image estimates consume that allowance together. An
+expansion that exceeds it stops before native history or inference is dispatched,
+instead of silently clipping the selected quote. Existing file-extraction limits
+and visible extraction dispositions remain the host media owner's policy.
+
 Ordinary assembly failures retain the existing prompt fallback. Saved attachment
 failures, continuations, and runtime refreshes retain their stricter handling.
 A failed fresh-thread seed is not marked ready. An uncertain append to a reused
