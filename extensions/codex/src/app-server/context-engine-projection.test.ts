@@ -52,7 +52,7 @@ function summaryMessages(type: "compaction" | "branch_summary", summary: string)
 
 describe("projectContextEngineAssemblyForCodex", () => {
   it("partitions dense Unicode quoted history without dropping bytes or splitting pairs", () => {
-    const text = `${"漢字🙂é".repeat(4_000)}\n[user sender={\"id\":\"kept\"}]\nEND`;
+    const text = `${"漢字🙂é".repeat(4_000)}\n[user sender={"id":"kept"}]\nEND`;
     const items = buildCodexHistoryItems(text);
     expect(items.length).toBeGreaterThan(1);
     const chunks = items.flatMap((item) => {

@@ -535,9 +535,20 @@ describe("Codex configured assembled-history delivery", () => {
     await firstHarness.completeTurn("completed", "thread-cold-history");
     await first;
     await firstHarness.client.closeAndWait();
-    const resumedHarness = createStartedThreadHarness(undefined, {
-      persistedThreads: [threadStartResult("thread-cold-history", { cwd: params.workspaceDir })],
-    });
+    const resumedHarness = createStartedThreadHarness(
+      async (method, request) => {
+        if (method === "thread/resume" && isJsonObject(request)) {
+          if (typeof request.threadId !== "string") {
+            throw new Error("Expected the preserved native thread id in the resume request");
+          }
+          return threadStartResult(request.threadId);
+        }
+        return undefined;
+      },
+      {
+        persistedThreads: [threadStartResult("thread-cold-history", { cwd: params.workspaceDir })],
+      },
+    );
     const resumed = runCodexAppServerAttempt({ ...params, runId: "cold-history-resume" });
     await resumed.waitForTurnAccepted();
     expect(resumedHarness.requests.some(({ method }) => method === "thread/start")).toBe(false);
@@ -559,10 +570,22 @@ describe("Codex configured assembled-history delivery", () => {
     const { params } = seedParams("per_turn");
     let starts = 0;
     let loseAcknowledgment = false;
-    const respond = async (method: string, request: unknown) => {
+    const respond = async (method: string) => {
       if (method === "thread/start") {
         return threadStartResult(`thread-warm-retry-${++starts}`);
       }
+      return undefined;
+    };
+    const harness = createStartedThreadHarness(respond, { persistedThreads: [] });
+    const dispatch = harness.request.getMockImplementation();
+    if (!dispatch) {
+      throw new Error("Expected the registered native request dispatcher");
+    }
+    harness.request.mockImplementation(async (method, request, options) => {
+      const result = await dispatch(method, request, options);
+      // Registered injection has its own subscription owner and bypasses the
+      // responder hook. Accept its real dispatch first, then lose only the
+      // acknowledgment returned to this caller, not the native side effect.
       if (
         loseAcknowledgment &&
         method === "thread/inject_items" &&
@@ -570,9 +593,8 @@ describe("Codex configured assembled-history delivery", () => {
       ) {
         throw new Error("Synthetic lost reused-history acknowledgment");
       }
-      return undefined;
-    };
-    const harness = createStartedThreadHarness(respond, { persistedThreads: [] });
+      return result;
+    });
     const first = runCodexAppServerAttempt(params);
     await first.waitForTurnAccepted();
     await harness.completeTurn("completed", "thread-warm-retry-1");
