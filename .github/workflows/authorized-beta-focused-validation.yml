@@ -51,6 +51,10 @@ jobs:
           node scripts/package-openclaw-for-docker.mjs --bundle-plugin codex --allow-unreleased-changelog --output-dir "$RUNNER_TEMP/budget-package" --output-name openclaw-2026.10.2.tgz --pack-json "$RUNNER_TEMP/budget-package/pack.json"
           sha256sum "$RUNNER_TEMP/budget-package/openclaw-2026.10.2.tgz" > "$RUNNER_TEMP/budget-shipped-full-evidence/package.sha256"
           cp "$RUNNER_TEMP/budget-package/pack.json" "$RUNNER_TEMP/budget-shipped-full-evidence/pack.json"
+      - name: Corrected actual Gateway pilot prerequisite
+        env:
+          PROOF_TOOL_DIR: ${{ github.workspace }}/.proof-tools/.qa
+        run: node .proof-tools/.qa/budget-shipped-pilot.mjs
       - name: Install published stable in task-owned prefix
         run: |
           set -euo pipefail
@@ -69,11 +73,30 @@ jobs:
           mkdir -p "$RUNNER_TEMP/budget-shipped-full-evidence"
           git rev-parse HEAD > "$RUNNER_TEMP/budget-shipped-full-evidence/source-head.txt"
           sha256sum .proof-tools/.qa/*.mjs > "$RUNNER_TEMP/budget-shipped-full-evidence/proof-tools.sha256"
+      - name: Redact synthetic endpoint identifiers at artifact egress
+        if: always()
+        run: |
+          python3 - <<'PY'
+          import os,json
+          from pathlib import Path
+          files=[]
+          for name in ('budget-shipped-evidence','budget-shipped-full-evidence'):
+              directory=Path(os.environ['RUNNER_TEMP'])/name
+              for file in directory.glob('*'):
+                  if file.suffix not in ('.log','.json'): continue
+                  text=file.read_text()
+                  redacted=text.replace('127.0.0.1','[synthetic-loopback]').replace('::1','[synthetic-loopback]').replace('public-synthetic-budget-proof-not-a-credential','[public-dummy-auth]')
+                  if redacted!=text: file.write_text(redacted);files.append(name+'/'+file.name)
+          out=Path(os.environ['RUNNER_TEMP'])/'budget-shipped-full-evidence'/'egress-redaction.json'
+          out.write_text(json.dumps({'modifiedFiles':files,'scope':'Only synthetic loopback identifiers and public dummy auth value; no budget/session/commit assertions changed'},indent=2)+'\n')
+          PY
       - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
         if: always()
         with:
           name: budget-shipped-full-${{ github.run_id }}
-          path: ${{ runner.temp }}/budget-shipped-full-evidence
+          path: |
+            ${{ runner.temp }}/budget-shipped-full-evidence
+            ${{ runner.temp }}/budget-shipped-evidence
           if-no-files-found: error
           retention-days: 14
       - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a

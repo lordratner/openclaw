@@ -68,7 +68,10 @@ await fs.writeFile(configPath,JSON.stringify(config,null,2));
 // Explicit allowlist: never inherit GitHub tokens or operator credentials.
 const env = {PATH:process.env.PATH,LANG:'C.UTF-8',CI:'true',OPENCLAW_HOME:root,OPENCLAW_STATE_DIR:state,
   OPENCLAW_CONFIG_PATH:configPath,CODEX_HOME:codexHome,OPENCLAW_DISABLE_BONJOUR:'1',OPENCLAW_SKIP_CHANNELS:'1',
-  BUDGET_PROOF_ROOT:root,BUDGET_PROOF_PHASE:'candidate-pilot',TMPDIR:root};
+  BUDGET_PROOF_ROOT:root,BUDGET_PROOF_PHASE:'candidate-pilot',TMPDIR:root,
+  // Public dummy value, not a credential. Satisfies host route admission only;
+  // native user-home TOML still owns the unauthenticated loopback transport.
+  OPENAI_API_KEY:'public-synthetic-budget-proof-not-a-credential'};
 let gateway;
 const gatewayLog = [];
 async function command(args,label,timeout=120000) {
