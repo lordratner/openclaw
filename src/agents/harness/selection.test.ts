@@ -33,7 +33,6 @@ import {
 import { mintSecretSentinel } from "../../secrets/sentinel.js";
 import { createUserTurnTranscriptRecorder } from "../../sessions/user-turn-transcript.js";
 import type { UserTurnTranscriptRecorder } from "../../sessions/user-turn-transcript.types.js";
-import { createDeferredCore } from "../../shared/deferred.js";
 import { closeOpenClawAgentDatabasesAsync } from "../../state/openclaw-agent-db.js";
 import { closeStateDatabaseForTest } from "../../test-utils/database-cleanup.js";
 import {
@@ -1262,8 +1261,8 @@ describe("runAgentHarnessAttempt", () => {
   );
 
   it("keeps concurrent attempt assemblies separate", async () => {
-    const firstAssembled = createDeferredCore();
-    const secondAssembled = createDeferredCore();
+    const firstAssembled = Promise.withResolvers<void>();
+    const secondAssembled = Promise.withResolvers<void>();
     registerHarness({
       runAttempt: async (attempt) => {
         await assembleHarnessContextEngine({
