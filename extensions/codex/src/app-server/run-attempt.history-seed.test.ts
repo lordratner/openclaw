@@ -101,9 +101,7 @@ describe("Codex configured assembled-history delivery", () => {
     expect(getRequestInputText(harness)).not.toContain(ANCHOR);
     expect(
       harness.requests.findIndex(({ method }) => method === "thread/inject_items"),
-    ).toBeLessThan(
-      harness.requests.findIndex(({ method }) => method === "turn/start"),
-    );
+    ).toBeLessThan(harness.requests.findIndex(({ method }) => method === "turn/start"));
     const assembled = assemble.mock.calls[0]?.[0];
     expect(assembled?.tokenBudget).toBeGreaterThan(0);
     expect(assembled?.tokenBudget).toBeLessThan(580_000);
@@ -131,22 +129,26 @@ describe("Codex configured assembled-history delivery", () => {
         epoch: "seed-epoch-1",
       }),
     );
-    const harness = createStartedThreadHarness(async (method, request) => {
-      if (method === "thread/start") {
-        return threadStartResult("thread-migrated");
-      }
-      if (method === "thread/resume" && isJsonObject(request)) {
-        if (typeof request.threadId !== "string") {
-          throw new Error("Expected a native thread id in the resume request");
+    const harness = createStartedThreadHarness(
+      async (method, request) => {
+        if (method === "thread/start") {
+          return threadStartResult("thread-migrated");
         }
-        return threadStartResult(request.threadId);
-      }
-      return undefined;
-    });
+        if (method === "thread/resume" && isJsonObject(request)) {
+          if (typeof request.threadId !== "string") {
+            throw new Error("Expected a native thread id in the resume request");
+          }
+          return threadStartResult(request.threadId);
+        }
+        return undefined;
+      },
+      {
+        persistedThreads: [threadStartResult("thread-legacy", { cwd: params.workspaceDir })],
+      },
+    );
     const run = runCodexAppServerAttempt(params);
     await run.waitForTurnAccepted();
-    const acceptedTurn = harness.requests.filter(({ method }) => method === "turn/start").at(-1)
-      ?.params;
+    const acceptedTurn = harness.requests.findLast(({ method }) => method === "turn/start")?.params;
     if (!isJsonObject(acceptedTurn) || typeof acceptedTurn.threadId !== "string") {
       throw new Error("Expected a native thread id in the accepted turn request");
     }
@@ -163,21 +165,25 @@ describe("Codex configured assembled-history delivery", () => {
     delete params.contextTokenBudget;
     delete params.contextWindowInfo;
     let starts = 0;
-    const harness = createStartedThreadHarness(async (method, request) => {
-      if (method === "thread/start") {
-        return threadStartResult(`thread-cap-${++starts}`);
-      }
-      if (method === "thread/resume" && isJsonObject(request)) {
-        if (typeof request.threadId !== "string") {
-          throw new Error("Expected a native thread id in the resume request");
+    const harness = createStartedThreadHarness(
+      async (method, request) => {
+        if (method === "thread/start") {
+          return threadStartResult(`thread-cap-${++starts}`);
         }
-        return threadStartResult(request.threadId);
-      }
-      return undefined;
-    });
+        if (method === "thread/resume" && isJsonObject(request)) {
+          if (typeof request.threadId !== "string") {
+            throw new Error("Expected a native thread id in the resume request");
+          }
+          return threadStartResult(request.threadId);
+        }
+        return undefined;
+      },
+      { persistedThreads: [] },
+    );
     const completeAcceptedTurn = async () => {
-      const acceptedTurn = harness.requests.filter(({ method }) => method === "turn/start").at(-1)
-        ?.params;
+      const acceptedTurn = harness.requests.findLast(
+        ({ method }) => method === "turn/start",
+      )?.params;
       if (!isJsonObject(acceptedTurn) || typeof acceptedTurn.threadId !== "string") {
         throw new Error("Expected a native thread id in the accepted turn request");
       }

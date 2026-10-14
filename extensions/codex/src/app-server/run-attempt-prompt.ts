@@ -87,9 +87,7 @@ export async function prepareCodexAttemptPrompt(context: CodexAttemptContext) {
   // An authored exact-model cap is operator policy, not native capacity discovery.
   // Supervised native sessions keep their existing independent ownership.
   const configuredContextBudget =
-    activeContextEngine &&
-    !usesSupervisionConnection &&
-    params.authoredContextTokenCap
+    activeContextEngine && !usesSupervisionConnection && params.authoredContextTokenCap
       ? Math.min(params.authoredContextTokenCap, effectiveContextTokenBudget ?? Infinity)
       : undefined;
   const availableToolNames = () =>
