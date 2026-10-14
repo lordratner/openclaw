@@ -1,0 +1,163 @@
+{
+  "label": "candidate-final",
+  "fileIdentity": "same isolated agents/main/agent/openclaw-agent.sqlite",
+  "rows": [],
+  "transcripts": [
+    {
+      "sessionId": "b6c4dd38-0379-48a0-b7bf-c51a54bbf15e",
+      "seq": 0,
+      "semanticSha256": "bd8a49e31cf7e64fc30847ddfec9f8cf86b170ea52c5fd1bc4e63f2f54bbc00a"
+    },
+    {
+      "sessionId": "b6c4dd38-0379-48a0-b7bf-c51a54bbf15e",
+      "seq": 1,
+      "semanticSha256": "cbaa98c1d787058334f300207c7ada043b50976a4578a6ca8bba1e579cb1a02a"
+    },
+    {
+      "sessionId": "b6c4dd38-0379-48a0-b7bf-c51a54bbf15e",
+      "seq": 2,
+      "semanticSha256": "37a7bd4b3933e573200719c240b7ec57de17d2bfcb24eee09088b139e755ce23"
+    },
+    {
+      "sessionId": "b6c4dd38-0379-48a0-b7bf-c51a54bbf15e",
+      "seq": 3,
+      "semanticSha256": "10580a8c5a366c89a8d553dcf0bc06a4a850f1850e645073f66825dde390b764"
+    },
+    {
+      "sessionId": "b6c4dd38-0379-48a0-b7bf-c51a54bbf15e",
+      "seq": 4,
+      "semanticSha256": "fc5618e3736ea36dd1a8dc64b925727dd92b728dd7e99b1da6f1b99c1ebb2c50"
+    },
+    {
+      "sessionId": "b6c4dd38-0379-48a0-b7bf-c51a54bbf15e",
+      "seq": 5,
+      "semanticSha256": "abddacba2c0de792a2bf9f774ba177219afe3da3c21550532fc9295e5205a979"
+    },
+    {
+      "sessionId": "b6c4dd38-0379-48a0-b7bf-c51a54bbf15e",
+      "seq": 6,
+      "semanticSha256": "727b67a744fd3e9864a6357f92be6bf326b7182a5672fee1b93d3664ae54b569"
+    },
+    {
+      "sessionId": "b6c4dd38-0379-48a0-b7bf-c51a54bbf15e",
+      "seq": 7,
+      "semanticSha256": "af365c03b02a5644db5eeb5fc71eabe8a764e0cfd295f53ebd9c82883b4b3541"
+    },
+    {
+      "sessionId": "b6c4dd38-0379-48a0-b7bf-c51a54bbf15e",
+      "seq": 8,
+      "semanticSha256": "bc0975feea8ad87aa30c2d0488e90cfdab5bf1bddb78682f6f792fa5f78fb3fe"
+    }
+  ],
+  "windows": [
+    {
+      "session_id": "b6c4dd38-0379-48a0-b7bf-c51a54bbf15e",
+      "session_key": "agent:main:explicit:b6c4dd38-0379-48a0-b7bf-c51a54bbf15e"
+    }
+  ],
+  "tables": [
+    "acp_parent_stream_events",
+    "auth_profile_state",
+    "auth_profile_store",
+    "board_tabs",
+    "board_widgets",
+    "cache_entries",
+    "context_engine_turn_outbox",
+    "conversation_deliveries",
+    "conversations",
+    "heartbeat_outcomes",
+    "memory_embedding_cache",
+    "memory_entry_origins",
+    "memory_index_chunk_provenance",
+    "memory_index_chunk_recall_metadata",
+    "memory_index_chunks",
+    "memory_index_chunks_fts",
+    "memory_index_chunks_fts_config",
+    "memory_index_chunks_fts_content",
+    "memory_index_chunks_fts_data",
+    "memory_index_chunks_fts_docsize",
+    "memory_index_chunks_fts_idx",
+    "memory_index_meta",
+    "memory_index_paths_fts",
+    "memory_index_paths_fts_config",
+    "memory_index_paths_fts_content",
+    "memory_index_paths_fts_data",
+    "memory_index_paths_fts_docsize",
+    "memory_index_paths_fts_idx",
+    "memory_index_sources",
+    "memory_index_state",
+    "memory_session_tombstones",
+    "message_tool_run_outcomes",
+    "schema_meta",
+    "session_canonical_validation_pending",
+    "session_conversations",
+    "session_entry_snapshots",
+    "session_goal_operations",
+    "session_input_completions",
+    "session_key_contract",
+    "session_members",
+    "session_nodes",
+    "session_participants",
+    "session_pending_inputs",
+    "session_progress_cards",
+    "session_reactions",
+    "session_suggestions",
+    "session_transcript_active_events",
+    "session_transcript_archives",
+    "session_transcript_cold_archives",
+    "session_transcript_fts",
+    "session_transcript_fts_config",
+    "session_transcript_fts_content",
+    "session_transcript_fts_data",
+    "session_transcript_fts_docsize",
+    "session_transcript_fts_idx",
+    "session_transcript_fts_rows",
+    "session_transcript_index_state",
+    "session_windows",
+    "sqlite_sequence",
+    "sqlite_stat1",
+    "standing_intents",
+    "standing_intents_fts",
+    "standing_intents_fts_config",
+    "standing_intents_fts_data",
+    "standing_intents_fts_docsize",
+    "standing_intents_fts_idx",
+    "trajectory_runtime_events",
+    "transcript_event_identities",
+    "transcript_events",
+    "transcript_rewrite_watermarks"
+  ],
+  "outboxColumns": [
+    "advancement_key",
+    "engine_id",
+    "owner_plugin_id",
+    "session_id",
+    "payload_json",
+    "attempt_count",
+    "last_attempt_at",
+    "last_error",
+    "created_at",
+    "payload_state"
+  ],
+  "schema": [
+    {
+      "meta_key": "primary",
+      "role": "agent",
+      "schema_version": 26,
+      "agent_id": "main",
+      "app_version": "2026.10.2",
+      "created_at": 1791984403783,
+      "updated_at": 1791984466261
+    },
+    {
+      "meta_key": "historical-transcript-directives-v1",
+      "role": "agent",
+      "schema_version": 1,
+      "agent_id": "main",
+      "app_version": "{\"phase\":\"complete\"}",
+      "created_at": 1791984467109,
+      "updated_at": 1791984467187
+    }
+  ],
+  "integrity": "ok"
+}

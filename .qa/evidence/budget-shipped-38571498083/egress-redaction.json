@@ -1,0 +1,4 @@
+{
+  "modifiedFiles": [],
+  "scope": "Only synthetic loopback identifiers and public dummy auth value; no budget/session/commit assertions changed"
+}

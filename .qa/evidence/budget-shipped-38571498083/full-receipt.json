@@ -1,0 +1,38 @@
+{
+  "candidate": "cf4186f7d2154842b1686961b393d39e243799ef",
+  "entryPoint": "installed shipped CLI -> real Gateway -> stock Codex app-server -> credential-free synthetic Responses endpoint",
+  "stableVersion": "OpenClaw 2026.10.3 (59cb447)",
+  "candidateVersion": "OpenClaw 2026.10.2 (cf4186f)",
+  "nativeVersion": "codex-cli 0.160.0",
+  "nativeCommandContract": "Explicit external appServer command using official pinned 0.160.0 in task-owned proof prefix, matching the source dependency pin; not automatic installed-plugin binary discovery",
+  "stableBuildInfo": {
+    "version": "2026.10.3",
+    "commit": "59cb44796b0f1f0daa0e37af8b1495abb45d9bc1",
+    "builtAt": "2026-10-13T07:33:17.552Z",
+    "buildId": "2026.10.3-release-59cb44796b0f-2026-10-13T07-33-17.552Z"
+  },
+  "candidateBuildInfo": {
+    "version": "2026.10.2",
+    "commit": "cf4186f7d2154842b1686961b393d39e243799ef",
+    "builtAt": "2026-10-14T05:19:15.998Z",
+    "buildId": "2026.10.2-cf4186f7d215-2026-10-14T05-19-15.998Z"
+  },
+  "activeCodexSourceSha256": "2b82884bacc2ed5fecefd2c64c7a412723912916fb4ac9e77bcf8a41c634bde6",
+  "upgradeKind": "Published stable state reopened by exact patched-source installation; lower declared candidate version, NOT normal higher-semver managed updater",
+  "stableQueuedLegacy": "7a681d54-6776-4b30-8853-4e88d5c60215",
+  "legacySettingsAbsent": true,
+  "existingSettingsPreserved": true,
+  "stableTranscriptEntriesPreserved": 3,
+  "sessionIdentitiesPreserved": 1,
+  "assemblyAllowance": 347662,
+  "commitAllowance": 347662,
+  "maintenanceAllowance": 347662,
+  "queuedCandidateAllowance": 347661,
+  "recoveredCandidateAllowance": 347661,
+  "recoveryEffectStatus": "duplicate",
+  "restartNewTurnAllowance": 347660,
+  "restartMaintenanceAllowance": 347660,
+  "uniquePluginEffects": 4,
+  "remainingOutboxRows": 0,
+  "passed": true
+}

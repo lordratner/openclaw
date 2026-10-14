@@ -1,0 +1,51 @@
+{
+  "agents": {
+    "entries": {
+      "main": {}
+    },
+    "defaults": {
+      "workspace": "/home/runner/work/_temp/budget-shipped-full/workspace",
+      "model": {
+        "primary": "openai/budget-proof-model"
+      },
+      "heartbeat": {
+        "every": "0m"
+      }
+    }
+  },
+  "models": {
+    "providers": {
+      "openai": {
+        "models": [
+          {
+            "id": "budget-proof-model",
+            "name": "Synthetic budget proof",
+            "api": "openai-responses",
+            "contextTokens": 400000,
+            "maxTokens": 2000,
+            "agentRuntime": {
+              "id": "codex"
+            }
+          }
+        ]
+      }
+    }
+  },
+  "contextEngine": "budget-proof",
+  "contextEntry": {
+    "enabled": true
+  },
+  "codexAppServer": {
+    "command": "/opt/hostedtoolcache/node/24.19.0/x64/bin/node",
+    "args": [
+      "/home/runner/work/_temp/budget-native/node_modules/@openai/codex/bin/codex.js",
+      "app-server"
+    ],
+    "homeScope": "user",
+    "sandbox": "read-only",
+    "approvalPolicy": "never"
+  },
+  "codexCatalog": {
+    "enabled": false
+  }
+}

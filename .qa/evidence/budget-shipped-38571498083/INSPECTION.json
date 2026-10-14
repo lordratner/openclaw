@@ -1,0 +1,161 @@
+{
+  "reviewer": "budget_route_review",
+  "runId": 38571498083,
+  "url": "https://github.com/lordratner/openclaw/actions/runs/38571498083",
+  "qaHead": "f3b8f9954edeb3083325ad5390ec7de814d504b4",
+  "candidate": "cf4186f7d2154842b1686961b393d39e243799ef",
+  "conclusion": "success",
+  "independentArtifactQualification": true,
+  "jobSeconds": 338,
+  "sourceAndToolIdentities": {
+    "sourceHead": "cf4186f7d2154842b1686961b393d39e243799ef",
+    "proofToolHashes": [
+      "0b2c144be0b9c15e95106821fc2935aa927364aea5610096a4df28585c540349  .proof-tools/.qa/budget-shipped-full.mjs",
+      "2566555af48de0189f3cdfcb3ee0776acdecaa459aaf371eed6fcb8b8e26d728  .proof-tools/.qa/budget-shipped-pilot.mjs",
+      "0c4667765a8f4266368c759ea449b3f71af93e4715d506e9e97a4668d6a6d2ae  .proof-tools/.qa/budget-shipped-probe-plugin.mjs"
+    ],
+    "installedIdentities": {
+      "stableBuildInfo": {
+        "version": "2026.10.3",
+        "commit": "59cb44796b0f1f0daa0e37af8b1495abb45d9bc1",
+        "builtAt": "2026-10-13T07:33:17.552Z",
+        "buildId": "2026.10.3-release-59cb44796b0f-2026-10-13T07-33-17.552Z"
+      },
+      "candidateBuildInfo": {
+        "version": "2026.10.2",
+        "commit": "cf4186f7d2154842b1686961b393d39e243799ef",
+        "builtAt": "2026-10-14T05:19:15.998Z",
+        "buildId": "2026.10.2-cf4186f7d215-2026-10-14T05-19-15.998Z"
+      },
+      "codex": {
+        "id": "codex",
+        "status": "loaded",
+        "origin": "bundled",
+        "version": "2026.10.2",
+        "activeSource": "/home/runner/work/_temp/budget-installed/lib/node_modules/openclaw/dist/extensions/codex/index.js",
+        "activeSourceSha256": "2b82884bacc2ed5fecefd2c64c7a412723912916fb4ac9e77bcf8a41c634bde6"
+      }
+    },
+    "activeBundledCodexSourceIndependentlyMatchedExactTar": true,
+    "activeSourceSha256": "2b82884bacc2ed5fecefd2c64c7a412723912916fb4ac9e77bcf8a41c634bde6"
+  },
+  "newTurnWitnesses": [
+    {
+      "phase": "candidate-after-stable",
+      "assemblyIndex": 6,
+      "acceptedCommitIndex": 8,
+      "laterMaintenanceIndex": 9,
+      "allowance": 347662,
+      "settingsExactlyEqual": true,
+      "bootstrapNotCredited": true
+    },
+    {
+      "phase": "candidate-restart",
+      "assemblyIndex": 19,
+      "acceptedCommitIndex": 21,
+      "laterMaintenanceIndex": 22,
+      "allowance": 347660,
+      "settingsExactlyEqual": true,
+      "bootstrapNotCredited": true
+    }
+  ],
+  "stateCompatibility": {
+    "stableSchema": 24,
+    "candidateSchema": 26,
+    "legacyReadyRowProducedThroughActualStableTurn": true,
+    "legacyRuntimeSettingsAbsentBeforeAndOnRecovery": true,
+    "legacyRowAcknowledged": true,
+    "oldTranscriptPayloadHashesPreserved": 3,
+    "oldSessionIdentitiesPreserved": 1,
+    "allOfflineIntegrityChecks": "ok",
+    "threeAuthoredPolicyJSONObjectsExactlyEqual": true,
+    "noRosterNormalizationOrNonemptyEntryExemption": true,
+    "oldConversationReachedActualPostSwitchNativeInput": true
+  },
+  "restartRecovery": {
+    "queuedAllowance": 347661,
+    "replayedAllowance": 347661,
+    "savedPrimitiveSettingsExactlyEqual": true,
+    "effectStatus": "duplicate",
+    "uniqueCommittedAdvancementWitnesses": 4,
+    "runtimeAssertedUniqueSqliteEffects": 4,
+    "finalOutboxRows": 0
+  },
+  "providerRequests": 4,
+  "retainedProof": {
+    "packageRun": 38515883196,
+    "packageArtifact": 11872904440,
+    "packageSha256": "e1eeae94bc8b6635f1cfb712f7913754e90b26863498591ed7637ae03c8bce29",
+    "packageBuildInfo": {
+      "version": "2026.10.2",
+      "commit": "cf4186f7d2154842b1686961b393d39e243799ef",
+      "builtAt": "2026-10-14T05:19:15.998Z",
+      "buildId": "2026.10.2-cf4186f7d215-2026-10-14T05-19-15.998Z"
+    },
+    "pilotRun": 38515883196,
+    "pilotArtifact": 11873725881,
+    "pilotExecution": "Retained real passing execution, NOT rerun on this job",
+    "previousFullScenario": "Failed before callbacks; no credit"
+  },
+  "privacyEgress": {
+    "inspected": "Both uploaded evidence trees, policy objects, raw lifecycle, snapshot payloads and request inputs.",
+    "content": "Synthetic proof messages/model/session identifiers, public package bootstrap/tool instructions and ephemeral GitHub runner paths only. No operator workspace or credential bytes discovered.",
+    "patternChecks": "No token-like keys, GitHub credential forms/private-key blocks, selected operator-private markers, raw loopback addresses or public dummy auth sentinel matched in both artifact trees. This is bounded inspection, not a universal secret-scanner claim.",
+    "egressRedaction": {
+      "modifiedFiles": [],
+      "scope": "Only synthetic loopback identifiers and public dummy auth value; no budget/session/commit assertions changed"
+    },
+    "publicProofSubsetSuitable": true
+  },
+  "limitations": [
+    "Explicit official pinned0.160.0 external native command, not installed-plugin automatic binary discovery.",
+    "Publishedstable2026.10.3-state reopen by exactcandidate2026.10.2; not higher-semver managed updater, rollback or live provider-capacity proof.",
+    "Prior pilot retained from38515883196 and not rerun; earlier failed full runs remain failures.",
+    "Effect-table count was asserted by executing remote fullscenario; independent raw event keys corroborate4uniqueeffects and duplicate replay, no raw probe SQLite file uploaded.",
+    "Maintainer review/acceptance and unrelated history delivery/item-bound issues are separate."
+  ],
+  "artifactHashes": {
+    "artifact/budget-shipped-evidence/pilot-receipt.json": "aea8f059373b8d86f1642495e3b127f0a7ef0ba7e7bd581de5d943eaa7bd5667",
+    "artifact/budget-shipped-evidence/gateway.log": "ec7bae4b48ad5148c00dec59b97e21956046b36fc4b699f2d76490f057de7384",
+    "artifact/budget-shipped-evidence/lifecycle.jsonl": "31e6422f316297c93088c1aa7592338954e6d4cfdb39b7a153e331798c26bc07",
+    "artifact/budget-shipped-evidence/health.log": "29e53f6089c03829640bf8ffc40ac780d6d5ee9b27b9a2d696393d7db436567d",
+    "artifact/budget-shipped-evidence/agent.log": "5016ff082c6b26a8468c006bc63f0f0eedbf5bbd5314f5a5187148ed4a3d16f3",
+    "artifact/budget-shipped-evidence/provider-inputs.json": "644e84334bf4b8c8a6a5ce87d25c7b94360be05ae08192ef5275f7ccd227a9ec",
+    "artifact/budget-shipped-full-evidence/candidate-pending-recovery-snapshot.json": "b696926aef526cdff896c3e7551023b81b720c66c8935beef4ecd45403e26776",
+    "artifact/budget-shipped-full-evidence/stable-version.log": "a8ee461ea7416946e6b6f4bc3d9bc8834c8a3f595a1572c9fca43d999482b30a",
+    "artifact/budget-shipped-full-evidence/full-receipt.json": "8c8f1f36e111143a059e868f3c1bf36dedef30b9f795e62c5ef5eb00c3809c8f",
+    "artifact/budget-shipped-full-evidence/egress-redaction.json": "37d63d39c183ed78f1ab567e3b30abb8f6e1af051fbdd913820bb44d2f5f558d",
+    "artifact/budget-shipped-full-evidence/candidate-after-restart-turn.log": "1fc364f049f78e0eb6708725984e0d567dfe1a7ad4d5ae05f0cc2e22084cb00e",
+    "artifact/budget-shipped-full-evidence/candidate-after-stable-gateway.log": "7d5c2b75fbacc8d46ab89b72aff7e7ce8b78228e1a8dd20ffce9b36ad11ae4ae",
+    "artifact/budget-shipped-full-evidence/candidate-after-stable-snapshot.json": "c5d3ec5a018a25de3209e876a6a64d550838bf57e6a0011d20c65c489ad45f77",
+    "artifact/budget-shipped-full-evidence/candidate-held-ack-turn.log": "804bfa51edceb330786c854936f7ea4c9fc03aa4348e338cdaae17157eb9851e",
+    "artifact/budget-shipped-full-evidence/candidate-version.log": "1781b9d52506e5f0d61f3f73fc4e7628da3ad01afba4b8773e013ae9773ed007",
+    "artifact/budget-shipped-full-evidence/stable-before-switch-snapshot.json": "0374858858de172568ecdd768fe62d466104a141bb0d35e2ca74678814c9ebef",
+    "artifact/budget-shipped-full-evidence/candidate-codex-inspection.log": "04f2f32ff6cb9316d31abf6f1c87f9bfef814df80726b914a3392ca2dfdf2626",
+    "artifact/budget-shipped-full-evidence/stable-gateway.log": "e0efc7dd8ba44d2f6d2a81155bf71d7e8d1b7f7d8cab39af8b1e187727a1198f",
+    "artifact/budget-shipped-full-evidence/authored-policy-candidate.json": "35d103f87e5b4fb4ced81701496c537d545ccca2c45a17a91f306b8ad207879b",
+    "artifact/budget-shipped-full-evidence/stable-health.log": "2704601012b0b6de620ec40f9d331e671f3df0f8405653acf6db5b02a4760d51",
+    "artifact/budget-shipped-full-evidence/candidate-doctor.log": "94c879451ba89de48f06ab76dabe6d109a7154f4df070cb8975867a15174adca",
+    "artifact/budget-shipped-full-evidence/authored-policy-stable.json": "35d103f87e5b4fb4ced81701496c537d545ccca2c45a17a91f306b8ad207879b",
+    "artifact/budget-shipped-full-evidence/retained-proof.json": "204fa92c93b9e23d194845b548877fefa5292ae750148b61f745dbd21689b844",
+    "artifact/budget-shipped-full-evidence/candidate-held-ack-health.log": "dbfcb52ccdb4b2f2d0f881cdc0df6f93aa0c475bfa37c81db1421b8cf04a597d",
+    "artifact/budget-shipped-full-evidence/candidate-install.log": "2c6ebba7b45e4f40277805523fc92c71e5d00bb1112616af20a5b9c0e86f46e3",
+    "artifact/budget-shipped-full-evidence/lifecycle.jsonl": "978a77cc720087c273a8d6bd82c3683c99459284a109c90ee86531cdf8e435b6",
+    "artifact/budget-shipped-full-evidence/proof-tools.sha256": "0086ba193fe96fd992a92b530201a936a3478144e7366f6e4f5e298f395d620f",
+    "artifact/budget-shipped-full-evidence/installed-identities.json": "0dad0df7506d52811a6cf310e18f0461ee5469f1779210cb1a22fc9e33711ab4",
+    "artifact/budget-shipped-full-evidence/stable-codex-install.log": "f8f83dc733dde8d9dc0ca00e6fad4ea83854ed891cdb0ae3c3ab25f9b8b0f69d",
+    "artifact/budget-shipped-full-evidence/candidate-final-snapshot.json": "53a14a15a6204ee8b5db4439158b61821ad39e72517ed599b05e5082e9eac2ac",
+    "artifact/budget-shipped-full-evidence/candidate-restart-health.log": "b3945124037e81e2ce8668b80ff166b4ed8cfd6c0521166bae02380e00ff57de",
+    "artifact/budget-shipped-full-evidence/stable-legacy-turn.log": "6de0f57c18f1e937adee88e37e7aa412cba735a6a45c826054c2651aea2bd350",
+    "artifact/budget-shipped-full-evidence/native-version.log": "a9d4c7fc5a2aed7493e5d7104834d85f0aa2c425d50da3b117120c3b3e72e86e",
+    "artifact/budget-shipped-full-evidence/candidate-held-ack-gateway.log": "cb4e2b60f88105859f97f178688a3f6e57b3bdc48498a30f9d855f1121e9d689",
+    "artifact/budget-shipped-full-evidence/provider-inputs.json": "f5158d2ac46babb333e7b0e466f21307327a2fcbf0a960d3cb0c649bf0b37fb6",
+    "artifact/budget-shipped-full-evidence/candidate-new-turn.log": "8a1a7fe1b541ab47794c54684d1dd15cb9e4980872768633f224f9ad306a34dd",
+    "artifact/budget-shipped-full-evidence/final-cleanup-gateway.log": "5aa702f5aaa657b18403f0d7a9ba601ece97fa245d99510d9673976d6222730c",
+    "artifact/budget-shipped-full-evidence/candidate-restart-gateway.log": "5aa702f5aaa657b18403f0d7a9ba601ece97fa245d99510d9673976d6222730c",
+    "artifact/budget-shipped-full-evidence/authored-policy-initial.json": "35d103f87e5b4fb4ced81701496c537d545ccca2c45a17a91f306b8ad207879b",
+    "artifact/budget-shipped-full-evidence/source-head.txt": "54e6d5a5303d0e8c547ba686808b97d4840250e19ace730163d63b6cca708520",
+    "artifact/budget-shipped-full-evidence/candidate-after-stable-health.log": "f4a59abfdd2fa16f5a05e82fa83e1c7eec8b49b7185e8ff1f2f7a4019ce1d8bf"
+  },
+  "verification": "Artifact-only independent read/hash/JSON/order analysis and exact retained tar entry hash inspection. No local OpenClaw/Codex execution, tests/build/install, product changes or GitHub writes."
+}

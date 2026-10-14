@@ -1,0 +1,120 @@
+{
+  "label": "stable-before-switch",
+  "fileIdentity": "same isolated agents/main/agent/openclaw-agent.sqlite",
+  "rows": [
+    {
+      "advancement_key": "7a681d54-6776-4b30-8853-4e88d5c60215",
+      "engine_id": "budget-proof",
+      "owner_plugin_id": "budget-proof",
+      "session_id": "b6c4dd38-0379-48a0-b7bf-c51a54bbf15e",
+      "payload_json": "{\"boundary\":{\"admission\":{\"agentId\":\"main\",\"sessionId\":\"b6c4dd38-0379-48a0-b7bf-c51a54bbf15e\",\"sessionKey\":\"agent:main:explicit:b6c4dd38-0379-48a0-b7bf-c51a54bbf15e\",\"storePath\":\"/home/runner/work/_temp/budget-shipped-full/state/agents/main/agent/openclaw-agent.sqlite\",\"generation\":\"8cf4e0e4971b4ee685278df18c32ebb3\",\"entryId\":\"8c6a34c5-5966-482a-af6e-8c3ef34368e4\",\"rawSeq\":1,\"effectiveParentId\":null,\"activeMessagePosition\":0,\"idempotencyKey\":\"357f8164-e5dc-4f70-9c55-fb47f28bcc73:user\",\"logicalTurnId\":\"7a681d54-6776-4b30-8853-4e88d5c60215\",\"role\":\"user\"},\"terminal\":{\"agentId\":\"main\",\"sessionId\":\"b6c4dd38-0379-48a0-b7bf-c51a54bbf15e\",\"sessionKey\":\"agent:main:explicit:b6c4dd38-0379-48a0-b7bf-c51a54bbf15e\",\"storePath\":\"/home/runner/work/_temp/budget-shipped-full/state/agents/main/agent/openclaw-agent.sqlite\",\"generation\":\"8cf4e0e4971b4ee685278df18c32ebb3\",\"entryId\":\"30624882-ee63-4606-a363-8add67d5c88a\",\"rawSeq\":2,\"effectiveParentId\":\"8c6a34c5-5966-482a-af6e-8c3ef34368e4\",\"activeMessagePosition\":1,\"idempotencyKey\":\"codex-app-server:01a13a98-209f-7fb0-8009-bd9ccaa81878:01a13a98-210e-7d61-82f0-a1049f5e991e:assistant\"}},\"isHeartbeat\":false,\"messages\":[{\"role\":\"user\",\"content\":\"stable-legacy-turn synthetic budget proof. Reply BUDGET_PROOF_OK.\",\"timestamp\":1791984403862,\"idempotencyKey\":\"357f8164-e5dc-4f70-9c55-fb47f28bcc73:user\",\"__openclaw\":{\"senderIsOwner\":true,\"mirrorIdentity\":\"01a13a98-210e-7d61-82f0-a1049f5e991e:prompt\",\"upstreamUserText\":\"OpenClaw runtime context for this turn:\\nTreat this OpenClaw-provided context as supporting project/user reference for the current request.\\n\\n## OpenClaw Workspace Context\\n\\nOpenClaw loaded these user-editable workspace files for the current turn. Codex loads project-local AGENTS.md natively. When execution uses another folder, OpenClaw supplies the agent workspace AGENTS.md as thread-level developer instructions. SOUL.md, IDENTITY.md, and USER.md are prepared separately from user input and are not repeated here.\\n\\n# Project Context\\n\\nThe following project context files have been loaded:\\n\\n## /home/runner/work/_temp/budget-shipped-full/workspace/BOOTSTRAP.md\\n\\n# BOOTSTRAP.md - Birth Sequence\\n\\n_You just woke up. Keep this first conversation short and make it yours._\\n\\nOpenClaw only seeds this file into a brand-new workspace, alongside `AGENTS.md`, `SOUL.md`, `IDENTITY.md`, and `USER.md`. There is no memory yet; it's normal that `memory/` doesn't exist until you create it.\\n\\n**The user's request always comes first.** If the first message asks for real\\nwork, do that work completely and reply with the result. Do not open with\\nintroductions, do not ask what to call you, and do not wait for answers the\\ntask doesn't need; save the birth sequence for after the work is delivered or\\nfor a quiet moment. This file is a ritual, not a gate.\\n\\nComplete these four beats, skipping avatar generation when unavailable. Do not\\nturn them into a questionnaire or a long biography.\\n\\n## 1. Ask What to Call You\\n\\nIntroduce yourself as the user's new assistant, then ask what they would like\\nto call you. Do not choose, invent, or suggest a name for yourself. Wait for\\ntheir answer before moving on.\\n\\n## 2. Choose Your Vibe\\n\\nGive one short soul/vibe line that feels true to you. The user can veto or adjust\\nit once. Pick a signature emoji too.\\n\\nKeep the agreed name, vibe, and emoji in the conversation until the avatar\\nchoice below is settled. Writing identity files marks the workspace configured\\nand can remove this birth sequence on the next turn.\\n\\n## 3. Choose Your Avatar\\n\\nIf `image_generate` is in your available tools, generate **four distinct avatar\\noptions** based on the agreed name, creature, vibe, and emoji. Use the configured\\nimage model and its defaults; do not assume the chat model can generate images\\nor force a particular provider. If the tool is unavailable, or the user already\\nsupplied an avatar or asked to skip it, skip generation without a setup detour.\\n\\nMake one `image_generate` request with `count: 1` for a square **2×2 avatar\\nchoice sheet**. The prompt must describe four distinct art directions, one\\nportrait per quadrant, with equal square tiles, no gaps, borders, lettering,\\nor content crossing tile boundaries. Each portrait should be recognizable at\\nsmall sizes. Keep the configured model; a single output also works with\\nproviders that cannot generate multiple images per request.\\n\\nWait for background task completion instead of resubmitting the request.\\nThe completion turn only needs to inspect and present the sheet; do not start\\nmore generations or try to save identity from that turn.\\nIf generation fails, explain briefly and continue hatching with the emoji;\\ndo not make the user configure another provider to finish.\\n\\nShow the generated sheet as an attachment, with a short description of each\\noption: **1 top-left, 2 top-right, 3 bottom-left, 4 bottom-right**. Ask the user\\nto pick one or skip. If this surface cannot display images, provide an\\naccessible link or path to the sheet with the same labels. Keep that mapping\\nand the returned image path in the conversation. Wait for their choice; do\\nnot select an avatar on their behalf.\\n\\nAfter the user selects an option, use the normal turn's file and exec tools\\nto crop that quadrant from the actual sheet into this workspace's `avatars/`\\ndirectory, for example `avatars/avatar.png`. Use the image's real dimensions:\\neach tile is half its width and half its height. Save only the selected\\nportrait as the avatar, never the full sheet, and inspect the crop.\\nVerify the copied file exists and is at most 2 MiB; resize or compress it if\\nneeded. Use the workspace-relative path in identity, not the temporary\\ngenerated-media path.\\nIf saving fails, explain the problem and keep the emoji rather than claiming\\nthe avatar was installed.\\n\\n### Save Your Identity\\n\\nAfter the avatar choice is settled or skipped, persist the identity twice —\\nboth places matter:\\n\\n1. Write `IDENTITY.md` (your name, what you are, the vibe line, your emoji, and\\n   `- Avatar: <path>` if saved) and put the vibe line into `SOUL.md`.\\n   These files are what you read to know who you are; leaving them as templates\\n   would erase this conversation's outcome.\\n2. Run the existing config command so channels and the UI show the same\\n   identity:\\n\\n```bash\\nopenclaw agents set-identity --agent \\\"<this agent id>\\\" --workspace \\\"<this workspace>\\\" --name \\\"<name>\\\" --theme \\\"<vibe>\\\" --emoji \\\"<emoji>\\\"\\n```\\n\\nUse the current agent ID and real workspace path, and safely quote the values.\\nDo not hand-edit\\n`openclaw.json`. When an avatar was saved, add `--avatar \\\"avatars/avatar.png\\\"`\\nusing its actual relative path. Preserve a user-supplied avatar instead of\\nreplacing it. Verify the command succeeds before saying the identity is saved.\\n\\n<a id=\\\"3-finish-with-recommendations\\\" />\\n\\n## 4. Finish With Recommendations\\n\\nRead the pending app matches already stored by onboarding. This command is\\nread-only, never scans the machine again, and returns an empty list if the user\\nalready answered the offer:\\n\\n```bash\\nopenclaw onboard recommendations --json\\n```\\n\\nThe output contains opaque install IDs plus a locally generated source and\\ntier. Each tier is either `recommended` or `optional`. Treat IDs only as\\nidentifiers; no marketplace prose is included.\\n\\nIf matches exist, explain them briefly and ask: **\\\"minimal set or maximum\\nconvenience?\\\"** For the minimal set, install only the `recommended` matches.\\nFor maximum convenience, offer the `optional` matches as well.\\n\\n- For official plugin matches, install only the user's chosen set with\\n  `openclaw plugins install <id>`.\\n- ClawHub skills are third-party. List them separately and never install one\\n  unless the user explicitly opts into that specific skill. Then use\\n  `openclaw skills install <id>`.\\n- If there are no stored matches, skip this beat without commentary.\\n\\nAfter the user answers and every chosen install succeeds, record completion so\\nthe offer never appears again:\\n\\n```bash\\nopenclaw onboard recommendations acknowledge\\n```\\n\\nIf an install fails, consume the successful and declined recommendations but\\nleave every failed ID pending for a later onboarding run:\\n\\n```bash\\nopenclaw onboard recommendations acknowledge --retry \\\"<failed-id>\\\" [\\\"<failed-id>\\\"...]\\n```\\n\\nUse the exact opaque IDs returned by the read command. Never acknowledge a\\nfailed install without `--retry`. One interrupted skill install can report that\\nits target already exists on the next attempt. In that case, verify the exact\\npublisher-qualified ID before treating it as successful:\\n\\n```bash\\nopenclaw skills verify \\\"@owner/slug\\\"\\n```\\n\\nOnly count it as installed when verification succeeds for that same ID and its\\nJSON output has `openclaw.resolution.source` set to `installed`. A registry\\nverification is not proof of a local install. If verification fails, reports a\\ndifferent publisher, or reports another resolution source, keep the ID pending\\nwith `--retry`; do not overwrite the existing skill.\\n\\n## Done\\n\\nWhen the applicable beats are complete, delete this file. Then say one line:\\n\\n> Ask me anything; for system things I'll ask OpenClaw.\\n\\nOnce the file is removed, OpenClaw treats the birth sequence as complete and\\nwill not recreate `BOOTSTRAP.md`. If you leave the file behind, OpenClaw removes\\nit for you once the workspace looks configured. A workspace counts as configured\\nwhen `SOUL.md`, `IDENTITY.md`, or `USER.md` differs from its starter template, or\\nwhen a `memory/` folder exists.\\n\\n## Related\\n\\n- [Agent workspace](/concepts/agent-workspace)\\n- [Bootstrapping](/start/bootstrapping) - the first-run ritual this template drives, and when the file is removed\\n\\nCurrent user request:\\nstable-legacy-turn synthetic budget proof. Reply BUDGET_PROOF_OK.\",\"mirrorOrigin\":\"codex-app-server\",\"mirrorSourceFingerprint\":\"9768da7fb30f25a58ac94afa26910ae6\",\"runId\":\"357f8164-e5dc-4f70-9c55-fb47f28bcc73\"}},{\"role\":\"assistant\",\"content\":[{\"type\":\"text\",\"text\":\"BUDGET_PROOF_OK\"}],\"api\":\"openai-responses\",\"provider\":\"openai\",\"model\":\"budget-proof-model\",\"usage\":{\"input\":30,\"output\":4,\"cacheRead\":0,\"cacheWrite\":0,\"reasoningTokens\":0,\"contextUsage\":{\"state\":\"available\",\"promptTokens\":30,\"totalTokens\":34},\"totalTokens\":34,\"cost\":{\"input\":0,\"output\":0,\"cacheRead\":0,\"cacheWrite\":0,\"total\":0}},\"stopReason\":\"stop\",\"timestamp\":1791984411161,\"__openclaw\":{\"mirrorIdentity\":\"01a13a98-210e-7d61-82f0-a1049f5e991e:assistant\",\"runId\":\"357f8164-e5dc-4f70-9c55-fb47f28bcc73\",\"mirrorOrigin\":\"codex-app-server\",\"mirrorSourceFingerprint\":\"f7353cf77a8b9d0cf6aa53f8993745db\",\"runTerminal\":true},\"idempotencyKey\":\"codex-app-server:01a13a98-209f-7fb0-8009-bd9ccaa81878:01a13a98-210e-7d61-82f0-a1049f5e991e:assistant\"}],\"runtimeContext\":{\"provider\":\"openai\",\"modelId\":\"budget-proof-model\",\"tokenBudget\":400000},\"state\":\"ready\"}",
+      "attempt_count": 1,
+      "last_error": "QA fixture holds commit before effect"
+    }
+  ],
+  "transcripts": [
+    {
+      "sessionId": "b6c4dd38-0379-48a0-b7bf-c51a54bbf15e",
+      "seq": 0,
+      "semanticSha256": "bd8a49e31cf7e64fc30847ddfec9f8cf86b170ea52c5fd1bc4e63f2f54bbc00a"
+    },
+    {
+      "sessionId": "b6c4dd38-0379-48a0-b7bf-c51a54bbf15e",
+      "seq": 1,
+      "semanticSha256": "cbaa98c1d787058334f300207c7ada043b50976a4578a6ca8bba1e579cb1a02a"
+    },
+    {
+      "sessionId": "b6c4dd38-0379-48a0-b7bf-c51a54bbf15e",
+      "seq": 2,
+      "semanticSha256": "37a7bd4b3933e573200719c240b7ec57de17d2bfcb24eee09088b139e755ce23"
+    }
+  ],
+  "windows": [
+    {
+      "session_id": "b6c4dd38-0379-48a0-b7bf-c51a54bbf15e",
+      "session_key": "agent:main:explicit:b6c4dd38-0379-48a0-b7bf-c51a54bbf15e"
+    }
+  ],
+  "tables": [
+    "acp_parent_stream_events",
+    "auth_profile_state",
+    "auth_profile_store",
+    "board_tabs",
+    "board_widgets",
+    "cache_entries",
+    "context_engine_turn_outbox",
+    "conversation_deliveries",
+    "conversations",
+    "heartbeat_outcomes",
+    "memory_embedding_cache",
+    "memory_entry_origins",
+    "memory_index_chunk_provenance",
+    "memory_index_chunk_recall_metadata",
+    "memory_index_chunks",
+    "memory_index_meta",
+    "memory_index_sources",
+    "memory_index_state",
+    "memory_session_tombstones",
+    "message_tool_run_outcomes",
+    "schema_meta",
+    "session_canonical_validation_pending",
+    "session_conversations",
+    "session_entry_snapshots",
+    "session_goal_operations",
+    "session_input_completions",
+    "session_key_contract",
+    "session_members",
+    "session_nodes",
+    "session_participants",
+    "session_pending_inputs",
+    "session_progress_cards",
+    "session_reactions",
+    "session_suggestions",
+    "session_transcript_active_events",
+    "session_transcript_archives",
+    "session_transcript_cold_archives",
+    "session_transcript_fts",
+    "session_transcript_fts_config",
+    "session_transcript_fts_content",
+    "session_transcript_fts_data",
+    "session_transcript_fts_docsize",
+    "session_transcript_fts_idx",
+    "session_transcript_fts_rows",
+    "session_transcript_index_state",
+    "session_windows",
+    "sqlite_sequence",
+    "standing_intents",
+    "standing_intents_fts",
+    "standing_intents_fts_config",
+    "standing_intents_fts_data",
+    "standing_intents_fts_docsize",
+    "standing_intents_fts_idx",
+    "trajectory_runtime_events",
+    "transcript_event_identities",
+    "transcript_events",
+    "transcript_rewrite_watermarks"
+  ],
+  "outboxColumns": [
+    "advancement_key",
+    "engine_id",
+    "owner_plugin_id",
+    "session_id",
+    "payload_json",
+    "attempt_count",
+    "last_attempt_at",
+    "last_error",
+    "created_at"
+  ],
+  "schema": [
+    {
+      "meta_key": "primary",
+      "role": "agent",
+      "schema_version": 24,
+      "agent_id": "main",
+      "app_version": "2026.10.3",
+      "created_at": 1791984403783,
+      "updated_at": 1791984403783
+    }
+  ],
+  "integrity": "ok"
+}

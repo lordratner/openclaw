@@ -1,0 +1,22 @@
+{
+  "stableBuildInfo": {
+    "version": "2026.10.3",
+    "commit": "59cb44796b0f1f0daa0e37af8b1495abb45d9bc1",
+    "builtAt": "2026-10-13T07:33:17.552Z",
+    "buildId": "2026.10.3-release-59cb44796b0f-2026-10-13T07-33-17.552Z"
+  },
+  "candidateBuildInfo": {
+    "version": "2026.10.2",
+    "commit": "cf4186f7d2154842b1686961b393d39e243799ef",
+    "builtAt": "2026-10-14T05:19:15.998Z",
+    "buildId": "2026.10.2-cf4186f7d215-2026-10-14T05-19-15.998Z"
+  },
+  "codex": {
+    "id": "codex",
+    "status": "loaded",
+    "origin": "bundled",
+    "version": "2026.10.2",
+    "activeSource": "/home/runner/work/_temp/budget-installed/lib/node_modules/openclaw/dist/extensions/codex/index.js",
+    "activeSourceSha256": "2b82884bacc2ed5fecefd2c64c7a412723912916fb4ac9e77bcf8a41c634bde6"
+  }
+}

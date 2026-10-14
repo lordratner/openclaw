@@ -1,0 +1,15 @@
+{
+  "packageRun": 38515883196,
+  "packageArtifact": 11872904440,
+  "packageSha256": "e1eeae94bc8b6635f1cfb712f7913754e90b26863498591ed7637ae03c8bce29",
+  "packageBuildInfo": {
+    "version": "2026.10.2",
+    "commit": "cf4186f7d2154842b1686961b393d39e243799ef",
+    "builtAt": "2026-10-14T05:19:15.998Z",
+    "buildId": "2026.10.2-cf4186f7d215-2026-10-14T05-19-15.998Z"
+  },
+  "pilotRun": 38515883196,
+  "pilotArtifact": 11873725881,
+  "pilotExecution": "Retained real passing execution, NOT rerun on this job",
+  "previousFullScenario": "Failed before callbacks; no credit"
+}
