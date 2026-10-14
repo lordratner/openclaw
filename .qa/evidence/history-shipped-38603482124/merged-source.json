@@ -1,0 +1,53 @@
+{
+  "candidate": "5b2b566b10af9ed39f0bbb930251a7d2ee222cb5",
+  "main": "3306fd27bce7e2842c03812a0cd2c29088942e47",
+  "explicitFrozenForkPoint": "55a3be43fe8ab39300d8ea7b5aa408d29f941f90",
+  "parents": [
+    "3306fd27bce7e2842c03812a0cd2c29088942e47",
+    "5b2b566b10af9ed39f0bbb930251a7d2ee222cb5"
+  ],
+  "mergedTree": "2cf371e21353650b7ef43b7f2ae6e1901c642ef0",
+  "headStillMain": true,
+  "referencesUnchanged": true,
+  "conflictOverrides": false,
+  "changedFromMain": [
+    "config/assertion-safety-baseline.txt",
+    "docs/plugins/codex-harness/configuration.md",
+    "extensions/codex/src/app-server/attempt-startup.ts",
+    "extensions/codex/src/app-server/context-engine-projection.test.ts",
+    "extensions/codex/src/app-server/context-engine-projection.ts",
+    "extensions/codex/src/app-server/run-attempt-context.ts",
+    "extensions/codex/src/app-server/run-attempt-prompt.ts",
+    "extensions/codex/src/app-server/run-attempt-start.ts",
+    "extensions/codex/src/app-server/run-attempt.continuity-media.test.ts",
+    "extensions/codex/src/app-server/run-attempt.history-seed.test.ts",
+    "extensions/codex/src/app-server/run-attempt.skills.native.test.ts",
+    "extensions/codex/src/app-server/thread-context-engine.ts",
+    "extensions/codex/src/app-server/thread-lifecycle-io.ts",
+    "extensions/codex/src/app-server/thread-lifecycle-run.ts",
+    "extensions/codex/src/app-server/thread-lifecycle-types.ts",
+    "extensions/codex/src/app-server/user-input.ts",
+    "test/vitest/vitest.extension-database-workers-paths.mjs"
+  ],
+  "sourceSha256": {
+    "config/assertion-safety-baseline.txt": "2472b7c1d304140a3e8b8426cb10315bc5c6682dc0782410d324e8149bb5788d",
+    "docs/plugins/codex-harness/configuration.md": "63fc3b46aceeb1ec86b234f97e7639242c7abd2cbeefaffc33292fc6990c4402",
+    "extensions/codex/src/app-server/attempt-startup.ts": "47c7c6adb336aef968dc4c6dc17a4925ef221b5a5ee81d68727e81c15bedf1e1",
+    "extensions/codex/src/app-server/context-engine-projection.test.ts": "597adc83b8f836e3e08aa55e57dfdfbf57128698f9d91d117338fea45600ab91",
+    "extensions/codex/src/app-server/context-engine-projection.ts": "59cfaa2e27b9fbf8eaa9b7c7a6cba9c802fe1e44e835bc996350fbf220da34aa",
+    "extensions/codex/src/app-server/run-attempt-context.ts": "83bff0c4d421fc0198b3885ca01f6668b2d30a23302fec711726a725e8611e7d",
+    "extensions/codex/src/app-server/run-attempt-prompt.ts": "0ad1d5386262ab89ce5861ef6b627ae17b49d64ea49eff0fa2619a1ee8e5b1a0",
+    "extensions/codex/src/app-server/run-attempt-start.ts": "a2e19e432d26a307b4764eed90989f5667738e64b0ea9afff848847c2a152653",
+    "extensions/codex/src/app-server/run-attempt.continuity-media.test.ts": "6c3eb6dfa092d2624c7afc507c835ed72ae14e6dd39a3b3e74f1dbbafed7c647",
+    "extensions/codex/src/app-server/run-attempt.history-seed.test.ts": "24706d0f356b9974235f0440f8df1642847a63fd08d6c156ddba4df381428a26",
+    "extensions/codex/src/app-server/run-attempt.skills.native.test.ts": "0ab94ac6391b74cd641dda733dd944fea7c3ccb443c0ae32795770734abcdd22",
+    "extensions/codex/src/app-server/thread-context-engine.ts": "dc8fb279836cdc412a7cea08afbfa8b48ed03452928bda98f64e4f93bae926e4",
+    "extensions/codex/src/app-server/thread-lifecycle-io.ts": "ef36ddc236e368d0560fdbfba6fa6cc3d987ac0c0df34ef7b06b440e090988d2",
+    "extensions/codex/src/app-server/thread-lifecycle-run.ts": "40b6f743b1e54d87c2bb0b451c0ede6074f4999f595997c5cb5c4fbd36a8f639",
+    "extensions/codex/src/app-server/thread-lifecycle-types.ts": "5a8ba29fecfd2e4052b207b00a1242282cd9434c653d1e6f3c452dc8360d513b",
+    "extensions/codex/src/app-server/user-input.ts": "cc16d2c1f7d890b10c143973fa143c846c2875aa968482fd37d8e7ab71576269",
+    "test/vitest/vitest.extension-database-workers-paths.mjs": "25a023557328fcc4dea458264ffbdea472ca70e97dd1867c4b45037c5a2d2822"
+  },
+  "currentMainNativeWarmTestSha256": "fc485b3dd9e0e886b54385f5e7f589d462a685731270213dbc687460057521e6",
+  "proofKind": "Isolated merged working tree, not a published merge or local/remote main synchronization"
+}

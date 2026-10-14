@@ -1,0 +1,16 @@
+{
+  "command": [
+    "pnpm",
+    "test",
+    "extensions/codex/src/app-server/run-attempt.continuity-media.test.ts",
+    "extensions/codex/src/app-server/run-attempt.history-seed.test.ts",
+    "--maxWorkers=1",
+    "--passWithNoTests=false",
+    "--reporter=verbose",
+    "--reporter=json",
+    "--outputFile=/home/runner/work/_temp/proof/tests.json",
+    "--testNamePattern=charges\\ real\\ managed\\-document\\ restoration\\ to\\ the\\ selected\\ history\\ allowance|keeps\\ the\\ ordinary\\ assembly\\-error\\ fallback\\ with\\ a\\ configured\\ cap"
+  ],
+  "exit": 1,
+  "wallSeconds": 123.532
+}

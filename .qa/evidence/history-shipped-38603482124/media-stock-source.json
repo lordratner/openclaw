@@ -1,0 +1,32 @@
+{
+  "candidate": "5b2b566b10af9ed39f0bbb930251a7d2ee222cb5",
+  "base": "55a3be43fe8ab39300d8ea7b5aa408d29f941f90",
+  "stockSource": "33f658df1d9fd4304df0a6a33d90f2312ead64a6",
+  "role": "stock",
+  "restoredPaths": [
+    "extensions/codex/src/app-server/run-attempt-prompt.ts",
+    "extensions/codex/src/app-server/context-engine-projection.ts"
+  ],
+  "changedPaths": [
+    "extensions/codex/src/app-server/context-engine-projection.ts",
+    "extensions/codex/src/app-server/run-attempt-prompt.ts"
+  ],
+  "testFiles": [
+    "extensions/codex/src/app-server/run-attempt.continuity-media.test.ts",
+    "extensions/codex/src/app-server/run-attempt.history-seed.test.ts"
+  ],
+  "testSha256": {
+    "extensions/codex/src/app-server/run-attempt.continuity-media.test.ts": "6c3eb6dfa092d2624c7afc507c835ed72ae14e6dd39a3b3e74f1dbbafed7c647",
+    "extensions/codex/src/app-server/run-attempt.history-seed.test.ts": "24706d0f356b9974235f0440f8df1642847a63fd08d6c156ddba4df381428a26"
+  },
+  "sourceSha256": {
+    "extensions/codex/src/app-server/run-attempt-prompt.ts": "15f8d06540239a1d8f3cc171d92df1af29cdd2b5e72ac5ae3acf2e3b168a7653",
+    "extensions/codex/src/app-server/context-engine-projection.ts": "9f85dd9dec3ccf32e8b6b602f8bb8390e3e0b5086d8b90fc4346045a14db4242"
+  },
+  "expectedRegressions": [
+    {
+      "file": "extensions/codex/src/app-server/run-attempt.continuity-media.test.ts",
+      "fullName": "Codex attachment continuity charges real managed-document restoration to the selected history allowance (oversized)"
+    }
+  ]
+}

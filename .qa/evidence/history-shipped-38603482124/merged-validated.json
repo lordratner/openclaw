@@ -1,0 +1,16 @@
+{
+  "candidate": "5b2b566b10af9ed39f0bbb930251a7d2ee222cb5",
+  "main": "3306fd27bce7e2842c03812a0cd2c29088942e47",
+  "mergedTree": "2cf371e21353650b7ef43b7f2ae6e1901c642ef0",
+  "passed": 111,
+  "failed": 0,
+  "skipped": 0,
+  "wallSeconds": 154.904,
+  "nativeWarmScenarios": [
+    "publication failure",
+    "protected rotation",
+    "protected publication failure"
+  ],
+  "nativeWarmTraceCount": 3,
+  "validated": true
+}

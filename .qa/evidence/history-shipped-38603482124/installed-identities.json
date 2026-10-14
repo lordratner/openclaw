@@ -1,0 +1,20 @@
+{
+  "stableBuildInfo": {
+    "version": "2026.10.3",
+    "commit": "59cb44796b0f1f0daa0e37af8b1495abb45d9bc1",
+    "builtAt": "2026-10-13T07:33:17.552Z",
+    "buildId": "2026.10.3-release-59cb44796b0f-2026-10-13T07-33-17.552Z"
+  },
+  "candidateBuildInfo": {
+    "version": "2026.10.2",
+    "commit": "5b2b566b10af9ed39f0bbb930251a7d2ee222cb5",
+    "builtAt": "2026-10-14T16:21:20.624Z",
+    "buildId": "2026.10.2-5b2b566b10af-2026-10-14T16-21-20.624Z"
+  },
+  "codex": {
+    "id": "codex",
+    "origin": "bundled",
+    "version": "2026.10.2",
+    "activeSourceSha256": "034529dc05652f04dd7ab59abab541b738e8bc034ca0ca2399c4ddbbdba913fe"
+  }
+}

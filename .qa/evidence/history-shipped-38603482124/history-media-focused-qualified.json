@@ -1,0 +1,212 @@
+{
+  "qualifiedFocused": true,
+  "candidate": "6c69c5d3e9f7a574cfc33ebf2af6bb653945c08e",
+  "productionSource": "5b2b566b10af9ed39f0bbb930251a7d2ee222cb5",
+  "runId": 38603824431,
+  "finalDeltaRun": 38603824431,
+  "freshPassed": 45,
+  "retainedPassed": 178,
+  "retainedFiles": 10,
+  "originalFreshPassed": 223,
+  "originalFreshSkipped": 0,
+  "originalRun": 38599164164,
+  "originalOverall": "failure, test-only global NaN lint error corrected; never credited as overall success",
+  "negativeControl": {
+    "role": "stock",
+    "wallSeconds": 123.532,
+    "executed": 3,
+    "passed": 2,
+    "failed": 1,
+    "skippedOrPending": 16,
+    "expectedRegressionNames": [
+      [
+        "extensions/codex/src/app-server/run-attempt.continuity-media.test.ts",
+        "Codex attachment continuity charges real managed-document restoration to the selected history allowance (oversized)"
+      ]
+    ],
+    "verified": true
+  },
+  "negativeAssertion": "Codex attachment continuity charges real managed-document restoration to the selected history allowance (oversized)",
+  "actualTypedJob": 115973655591,
+  "freshGates": "format/lint/assertion-safety success from exact final-delta run",
+  "warning": "Prior source run-attempt-prompt.ts nonblocking max-lines warning 704 vs700 remains; no error suppression or production-only rewrite",
+  "finalSource": {
+    "candidate": "6c69c5d3e9f7a574cfc33ebf2af6bb653945c08e",
+    "priorSource": "5b2b566b10af9ed39f0bbb930251a7d2ee222cb5",
+    "productionSource": "5b2b566b10af9ed39f0bbb930251a7d2ee222cb5",
+    "delta": [
+      "extensions/codex/src/app-server/context-engine-projection.test.ts"
+    ],
+    "retainedPassed": 178,
+    "retainedFiles": [
+      {
+        "path": "extensions/codex/src/app-server/client.test.ts",
+        "sha256": "ff2ffcf599f1ea3c34c4959b6a09e08bfc90b26da6aeec57b4d308e66f8f5d2b",
+        "passed": 28
+      },
+      {
+        "path": "extensions/codex/src/app-server/run-attempt.bounded-continuity.test.ts",
+        "sha256": "52595ce24cbe1f50b9590fa0c86bfc853fce00ebf170723f3ea7a054b3754c40",
+        "passed": 2
+      },
+      {
+        "path": "extensions/codex/src/app-server/run-attempt.context-engine-overflow.test.ts",
+        "sha256": "a2d746682f3f8d5e025cfd9703195c4f2c4e8df196749d46f116e07aa57c60a3",
+        "passed": 7
+      },
+      {
+        "path": "extensions/codex/src/app-server/run-attempt.context-engine.test.ts",
+        "sha256": "e39a012349c6369ee7a63d118f80b8bb14e5cf84eec3c047b1a96e9da9d3a6cb",
+        "passed": 18
+      },
+      {
+        "path": "extensions/codex/src/app-server/run-attempt.continuity-media.test.ts",
+        "sha256": "6c3eb6dfa092d2624c7afc507c835ed72ae14e6dd39a3b3e74f1dbbafed7c647",
+        "passed": 5
+      },
+      {
+        "path": "extensions/codex/src/app-server/run-attempt.history-seed.test.ts",
+        "sha256": "24706d0f356b9974235f0440f8df1642847a63fd08d6c156ddba4df381428a26",
+        "passed": 14
+      },
+      {
+        "path": "extensions/codex/src/app-server/run-attempt.skills.native.test.ts",
+        "sha256": "0ab94ac6391b74cd641dda733dd944fea7c3ccb443c0ae32795770734abcdd22",
+        "passed": 4
+      },
+      {
+        "path": "extensions/codex/src/app-server/thread-lifecycle.binding.test.ts",
+        "sha256": "21a2df74754341fcb50b7f800dc9221c52dab72f01537096f41e7463ab4f0ead",
+        "passed": 84
+      },
+      {
+        "path": "extensions/codex/src/app-server/thread-lifecycle.handoff-cancellation.test.ts",
+        "sha256": "60839723653b95bf3dff4aaec6ff840a0037a115c3b85182a7e4875c4066003e",
+        "passed": 5
+      },
+      {
+        "path": "extensions/codex/src/app-server/thread-lifecycle.native-config.test.ts",
+        "sha256": "a18079a9e1972bd2c7a4da63278d3f797ec596d10616c99b58f6592a68bb7d04",
+        "passed": 11
+      }
+    ],
+    "semantics": "Exact test table global NaN becomes Number.NaN; production unchanged",
+    "retainedTypedJob": 115973655591,
+    "retainedTypedSteps": [
+      "Package-owned core production type gate",
+      "Package-owned extension production type gate"
+    ],
+    "priorOverall": "Failed test-only lint; only observed successful type steps and unchanged passing tests credited",
+    "packageProof": "Separate canonical package run required; no package-build credit from this test workflow"
+  },
+  "metadata": {
+    "conclusion": "success",
+    "headSha": "1eb2eed29b22f151a1147e4e33567aae90565792",
+    "jobs": [
+      {
+        "completedAt": "2026-10-14T17:14:27Z",
+        "conclusion": "success",
+        "databaseId": 115989509874,
+        "name": "layout",
+        "startedAt": "2026-10-14T17:06:39Z",
+        "status": "completed",
+        "steps": [
+          {
+            "conclusion": "success",
+            "name": "Set up job",
+            "number": 1,
+            "status": "completed"
+          },
+          {
+            "conclusion": "success",
+            "name": "Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1",
+            "number": 2,
+            "status": "completed"
+          },
+          {
+            "conclusion": "success",
+            "name": "Run actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c",
+            "number": 3,
+            "status": "completed"
+          },
+          {
+            "conclusion": "success",
+            "name": "Run actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c",
+            "number": 4,
+            "status": "completed"
+          },
+          {
+            "conclusion": "success",
+            "name": "Admit exact one-test-layout delta and unchanged production/retained tests",
+            "number": 5,
+            "status": "completed"
+          },
+          {
+            "conclusion": "success",
+            "name": "Frozen package-owned semantic environment",
+            "number": 6,
+            "status": "completed"
+          },
+          {
+            "conclusion": "success",
+            "name": "Execute changed projection/builder suite once",
+            "number": 7,
+            "status": "completed"
+          },
+          {
+            "conclusion": "success",
+            "name": "Fresh scoped format",
+            "number": 8,
+            "status": "completed"
+          },
+          {
+            "conclusion": "success",
+            "name": "Fresh assertion-safety at frozen fork",
+            "number": 9,
+            "status": "completed"
+          },
+          {
+            "conclusion": "success",
+            "name": "Fresh scoped lint",
+            "number": 10,
+            "status": "completed"
+          },
+          {
+            "conclusion": "success",
+            "name": "Capture clean source readback",
+            "number": 11,
+            "status": "completed"
+          },
+          {
+            "conclusion": "success",
+            "name": "Run actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a",
+            "number": 12,
+            "status": "completed"
+          },
+          {
+            "conclusion": "success",
+            "name": "Post Frozen package-owned semantic environment",
+            "number": 23,
+            "status": "completed"
+          },
+          {
+            "conclusion": "success",
+            "name": "Post Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1",
+            "number": 24,
+            "status": "completed"
+          },
+          {
+            "conclusion": "success",
+            "name": "Complete job",
+            "number": 25,
+            "status": "completed"
+          }
+        ],
+        "url": "https://github.com/lordratner/openclaw/actions/runs/38603824431/job/115989509874"
+      }
+    ],
+    "status": "completed",
+    "url": "https://github.com/lordratner/openclaw/actions/runs/38603824431"
+  },
+  "claimBoundary": "45 fresh plus178 retained under exact hashes; not223 freshly rerun at final head. No local application execution."
+}

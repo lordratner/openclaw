@@ -1,0 +1,44 @@
+{
+  "candidate": "5b2b566b10af9ed39f0bbb930251a7d2ee222cb5",
+  "base": "55a3be43fe8ab39300d8ea7b5aa408d29f941f90",
+  "stockSource": "33f658df1d9fd4304df0a6a33d90f2312ead64a6",
+  "role": "repaired",
+  "restoredPaths": [],
+  "changedPaths": [],
+  "testFiles": [
+    "extensions/codex/src/app-server/client.test.ts",
+    "extensions/codex/src/app-server/context-engine-projection.test.ts",
+    "extensions/codex/src/app-server/run-attempt.bounded-continuity.test.ts",
+    "extensions/codex/src/app-server/run-attempt.context-engine-overflow.test.ts",
+    "extensions/codex/src/app-server/run-attempt.context-engine.test.ts",
+    "extensions/codex/src/app-server/run-attempt.continuity-media.test.ts",
+    "extensions/codex/src/app-server/run-attempt.history-seed.test.ts",
+    "extensions/codex/src/app-server/run-attempt.skills.native.test.ts",
+    "extensions/codex/src/app-server/thread-lifecycle.binding.test.ts",
+    "extensions/codex/src/app-server/thread-lifecycle.handoff-cancellation.test.ts",
+    "extensions/codex/src/app-server/thread-lifecycle.native-config.test.ts"
+  ],
+  "testSha256": {
+    "extensions/codex/src/app-server/client.test.ts": "ff2ffcf599f1ea3c34c4959b6a09e08bfc90b26da6aeec57b4d308e66f8f5d2b",
+    "extensions/codex/src/app-server/context-engine-projection.test.ts": "804c7e07bfaf9e8cae4b86b97de19a524f56894ea7963cb619a558b6a4ed7d9c",
+    "extensions/codex/src/app-server/run-attempt.bounded-continuity.test.ts": "52595ce24cbe1f50b9590fa0c86bfc853fce00ebf170723f3ea7a054b3754c40",
+    "extensions/codex/src/app-server/run-attempt.context-engine-overflow.test.ts": "a2d746682f3f8d5e025cfd9703195c4f2c4e8df196749d46f116e07aa57c60a3",
+    "extensions/codex/src/app-server/run-attempt.context-engine.test.ts": "e39a012349c6369ee7a63d118f80b8bb14e5cf84eec3c047b1a96e9da9d3a6cb",
+    "extensions/codex/src/app-server/run-attempt.continuity-media.test.ts": "6c3eb6dfa092d2624c7afc507c835ed72ae14e6dd39a3b3e74f1dbbafed7c647",
+    "extensions/codex/src/app-server/run-attempt.history-seed.test.ts": "24706d0f356b9974235f0440f8df1642847a63fd08d6c156ddba4df381428a26",
+    "extensions/codex/src/app-server/run-attempt.skills.native.test.ts": "0ab94ac6391b74cd641dda733dd944fea7c3ccb443c0ae32795770734abcdd22",
+    "extensions/codex/src/app-server/thread-lifecycle.binding.test.ts": "21a2df74754341fcb50b7f800dc9221c52dab72f01537096f41e7463ab4f0ead",
+    "extensions/codex/src/app-server/thread-lifecycle.handoff-cancellation.test.ts": "60839723653b95bf3dff4aaec6ff840a0037a115c3b85182a7e4875c4066003e",
+    "extensions/codex/src/app-server/thread-lifecycle.native-config.test.ts": "a18079a9e1972bd2c7a4da63278d3f797ec596d10616c99b58f6592a68bb7d04"
+  },
+  "sourceSha256": {
+    "extensions/codex/src/app-server/run-attempt-prompt.ts": "0ad1d5386262ab89ce5861ef6b627ae17b49d64ea49eff0fa2619a1ee8e5b1a0",
+    "extensions/codex/src/app-server/context-engine-projection.ts": "59cfaa2e27b9fbf8eaa9b7c7a6cba9c802fe1e44e835bc996350fbf220da34aa"
+  },
+  "expectedRegressions": [
+    {
+      "file": "extensions/codex/src/app-server/run-attempt.continuity-media.test.ts",
+      "fullName": "Codex attachment continuity charges real managed-document restoration to the selected history allowance (oversized)"
+    }
+  ]
+}

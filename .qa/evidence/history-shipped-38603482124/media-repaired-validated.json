@@ -1,0 +1,15 @@
+{
+  "role": "repaired",
+  "wallSeconds": 280.518,
+  "executed": 223,
+  "passed": 223,
+  "failed": 0,
+  "skippedOrPending": 0,
+  "expectedRegressionNames": [
+    [
+      "extensions/codex/src/app-server/run-attempt.continuity-media.test.ts",
+      "Codex attachment continuity charges real managed-document restoration to the selected history allowance (oversized)"
+    ]
+  ],
+  "verified": true
+}

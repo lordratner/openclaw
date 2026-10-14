@@ -1,0 +1,148 @@
+{
+  "id": 115973655591,
+  "run_id": 38599164164,
+  "workflow_name": "Restored-media history window focused proof",
+  "head_branch": "qa-history-narrow-media-20261014",
+  "run_url": "https://api.github.com/repos/lordratner/openclaw/actions/runs/38599164164",
+  "run_attempt": 1,
+  "node_id": "CR_kwDOUKc1Xc8AAAAbAJGMJw",
+  "head_sha": "10f4c3ddb62ee5d22d8db8b3427a5f944cffe5a7",
+  "url": "https://api.github.com/repos/lordratner/openclaw/actions/jobs/115973655591",
+  "html_url": "https://github.com/lordratner/openclaw/actions/runs/38599164164/job/115973655591",
+  "status": "completed",
+  "conclusion": "failure",
+  "created_at": "2026-10-14T16:34:07Z",
+  "started_at": "2026-10-14T16:34:09Z",
+  "completed_at": "2026-10-14T16:41:36Z",
+  "name": "repaired-gates",
+  "steps": [
+    {
+      "name": "Set up job",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 1,
+      "started_at": "2026-10-14T16:34:10Z",
+      "completed_at": "2026-10-14T16:34:11Z"
+    },
+    {
+      "name": "Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 2,
+      "started_at": "2026-10-14T16:34:11Z",
+      "completed_at": "2026-10-14T16:34:48Z"
+    },
+    {
+      "name": "Exact repaired source receipt",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 3,
+      "started_at": "2026-10-14T16:34:48Z",
+      "completed_at": "2026-10-14T16:35:26Z"
+    },
+    {
+      "name": "Select fresh scoped gates without hiding candidate diff",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 4,
+      "started_at": "2026-10-14T16:35:26Z",
+      "completed_at": "2026-10-14T16:35:26Z"
+    },
+    {
+      "name": "Frozen environment and compiler containment",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 5,
+      "started_at": "2026-10-14T16:35:26Z",
+      "completed_at": "2026-10-14T16:36:07Z"
+    },
+    {
+      "name": "Package-owned focused format gate",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 6,
+      "started_at": "2026-10-14T16:36:07Z",
+      "completed_at": "2026-10-14T16:36:07Z"
+    },
+    {
+      "name": "Fresh assertion-safety against the verified frozen fork point",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 7,
+      "started_at": "2026-10-14T16:36:07Z",
+      "completed_at": "2026-10-14T16:36:30Z"
+    },
+    {
+      "name": "Package-owned core production type gate",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 8,
+      "started_at": "2026-10-14T16:36:30Z",
+      "completed_at": "2026-10-14T16:37:25Z"
+    },
+    {
+      "name": "Package-owned extension production type gate",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 9,
+      "started_at": "2026-10-14T16:37:25Z",
+      "completed_at": "2026-10-14T16:38:30Z"
+    },
+    {
+      "name": "Package-owned focused lint gate",
+      "status": "completed",
+      "conclusion": "failure",
+      "number": 10,
+      "started_at": "2026-10-14T16:38:30Z",
+      "completed_at": "2026-10-14T16:41:32Z"
+    },
+    {
+      "name": "Retain repaired gate receipts",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 11,
+      "started_at": "2026-10-14T16:41:32Z",
+      "completed_at": "2026-10-14T16:41:32Z"
+    },
+    {
+      "name": "Upload repaired gate artifacts",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 12,
+      "started_at": "2026-10-14T16:41:32Z",
+      "completed_at": "2026-10-14T16:41:33Z"
+    },
+    {
+      "name": "Post Frozen environment and compiler containment",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 23,
+      "started_at": "2026-10-14T16:41:33Z",
+      "completed_at": "2026-10-14T16:41:33Z"
+    },
+    {
+      "name": "Post Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 24,
+      "started_at": "2026-10-14T16:41:33Z",
+      "completed_at": "2026-10-14T16:41:33Z"
+    },
+    {
+      "name": "Complete job",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 25,
+      "started_at": "2026-10-14T16:41:33Z",
+      "completed_at": "2026-10-14T16:41:33Z"
+    }
+  ],
+  "check_run_url": "https://api.github.com/repos/lordratner/openclaw/check-runs/115973655591",
+  "labels": [
+    "ubuntu-24.04"
+  ],
+  "runner_id": 1000001604,
+  "runner_name": "GitHub Actions 1000001604",
+  "runner_group_id": 0,
+  "runner_group_name": "GitHub Actions"
+}

@@ -1,0 +1,25 @@
+{
+  "command": [
+    "pnpm",
+    "test",
+    "extensions/codex/src/app-server/thread-lifecycle.warm-cleanup.native.test.ts",
+    "extensions/codex/src/app-server/thread-lifecycle.handoff-cancellation.test.ts",
+    "extensions/codex/src/app-server/thread-lifecycle.binding.test.ts",
+    "extensions/codex/src/app-server/run-attempt.history-seed.test.ts",
+    "extensions/codex/src/app-server/run-attempt.continuity-media.test.ts",
+    "--maxWorkers=1",
+    "--passWithNoTests=false",
+    "--reporter=verbose",
+    "--reporter=json",
+    "--outputFile=/home/runner/work/_temp/merged-lifecycle-proof/tests.json"
+  ],
+  "files": [
+    "extensions/codex/src/app-server/thread-lifecycle.warm-cleanup.native.test.ts",
+    "extensions/codex/src/app-server/thread-lifecycle.handoff-cancellation.test.ts",
+    "extensions/codex/src/app-server/thread-lifecycle.binding.test.ts",
+    "extensions/codex/src/app-server/run-attempt.history-seed.test.ts",
+    "extensions/codex/src/app-server/run-attempt.continuity-media.test.ts"
+  ],
+  "exit": 0,
+  "wallSeconds": 154.904
+}

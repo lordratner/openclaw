@@ -1,0 +1,13 @@
+{
+  "label": "candidate-after-warm",
+  "threadId": "01a13b60-860d-7210-a959-5d67852b3b6c",
+  "source": "Acknowledged public thread/start rollout path",
+  "files": [
+    {
+      "path": "sessions/2026/10/14/rollout-2026-10-14T17-05-43-01a13b60-860d-7210-a959-5d67852b3b6c.jsonl",
+      "rawSha256": "73e3b6f14c19f96141236fe4524fb0e2a213c51c1eff655e0ea168d766899fdd",
+      "semanticSha256": "71a16e5e606d9e44282169854c56a22e891272efb197f65e9ddced5e758b2e48",
+      "bytes": 3461748
+    }
+  ]
+}

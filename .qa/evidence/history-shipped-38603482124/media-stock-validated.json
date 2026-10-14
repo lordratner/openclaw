@@ -1,0 +1,15 @@
+{
+  "role": "stock",
+  "wallSeconds": 123.532,
+  "executed": 3,
+  "passed": 2,
+  "failed": 1,
+  "skippedOrPending": 16,
+  "expectedRegressionNames": [
+    [
+      "extensions/codex/src/app-server/run-attempt.continuity-media.test.ts",
+      "Codex attachment continuity charges real managed-document restoration to the selected history allowance (oversized)"
+    ]
+  ],
+  "verified": true
+}
