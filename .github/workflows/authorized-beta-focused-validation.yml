@@ -88,7 +88,8 @@ jobs:
                       and not PurePosixPath(p).is_absolute()
                       and '..' not in PurePosixPath(p).parts
                       and (p.startswith('src/agents/harness/') or p.startswith('src/agents/embedded-agent-runner/run/')
-                              or p.startswith('extensions/codex/src/app-server/') or p == 'src/context-engine/types.ts'))
+                              or p.startswith('extensions/codex/src/app-server/') or p == 'src/context-engine/types.ts'
+                              or p == 'src/agents/embedded-agent-runner/run.overflow-compaction.loop.test.ts'))
           paths = json.loads(os.environ['PRODUCTION_PATHS_JSON'])
           assert isinstance(paths, list) and paths and len(paths) == len(set(paths))
           assert all(valid_path(p) and p.endswith('.ts') and '.test.' not in p
@@ -295,7 +296,7 @@ jobs:
           subprocess.run(['git', 'fetch', '--no-tags', '--depth=1', 'origin', prior], check=True)
           delta = subprocess.check_output(['git', 'diff', '--name-only', prior, 'HEAD'], text=True).splitlines()
           allowed_lane = 'test/vitest/vitest.extension-database-workers-paths.mjs'
-          assert delta and all(p.endswith('.test.ts') or p == allowed_lane for p in delta), delta
+          assert delta and all(p.endswith('.test.ts') or p == allowed_lane or p == 'extensions/codex/src/app-server/run-attempt-context.ts' for p in delta), delta
           subprocess.run(['gh', 'run', 'download', run, '--repo', 'lordratner/openclaw',
                           '--name', 'context-budget-repaired-gates-' + run + '-1',
                           '--dir', str(retained)], check=True)
@@ -311,7 +312,7 @@ jobs:
           steps = {s['name']: s['conclusion'] for s in candidates[0]['steps']}
           assert all(steps.get(name) == 'success' for name in required), steps
           receipt = {'current': os.environ['CANDIDATE_SHA'], 'retainedProduction': prior,
-                     'runId': run, 'verifiedSuccessfulSteps': required, 'testOnlyDelta': delta}
+                     'runId': run, 'verifiedSuccessfulSteps': required, 'reviewedDelta': delta}
           (proof / 'production-proof-reuse.json').write_text(json.dumps(receipt, indent=2) + '\n')
           print(json.dumps(receipt, indent=2))
           PYREUSE
@@ -323,6 +324,27 @@ jobs:
           install-bun: 'false'
           frozen-lockfile: 'true'
           cache-mode: off
+      - name: Verify exact JavaScript erasure equivalence of the sole type-only production delta
+        if: inputs.reuse_production_from_sha != ''
+        run: |
+          node --input-type=module <<'JS'
+          import {transform} from 'esbuild';
+          import {execFileSync} from 'node:child_process';
+          import {readFileSync, writeFileSync} from 'node:fs';
+          import {createHash} from 'node:crypto';
+          const file = 'extensions/codex/src/app-server/run-attempt-context.ts';
+          const previous = execFileSync('git', ['show', process.env.REUSE_PRODUCTION_SHA + ':' + file], {encoding:'utf8'});
+          const current = readFileSync(file, 'utf8');
+          const options = {loader:'ts', sourcefile:file, target:'node24', format:'esm', legalComments:'none', sourcemap:false};
+          const [before, after] = await Promise.all([transform(previous,options),transform(current,options)]);
+          if (before.code !== after.code) throw new Error('production JavaScript changed: canonical build cannot be reused');
+          writeFileSync(process.env.RUNNER_TEMP + '/proof/type-erasure-equivalence.json', JSON.stringify({file,prior:process.env.REUSE_PRODUCTION_SHA,current:process.env.CANDIDATE_SHA,equal:true,jsSha256:createHash('sha256').update(after.code).digest('hex')},null,2)+'\n');
+          JS
+      - name: Assertion safety against actual upstream CI base
+        run: |
+          set -euo pipefail
+          git fetch --no-tags --depth=1 origin 11d75e447e4452e7a88bf92ac5d684c1abad8c07
+          /usr/bin/time -p pnpm check:assertion-safety --base 11d75e447e4452e7a88bf92ac5d684c1abad8c07 2>&1 | tee "$RUNNER_TEMP/proof/assertion-safety.log"
       - name: Package-owned focused format gate
         run: |
           set -euo pipefail
@@ -335,7 +357,7 @@ jobs:
           set -euo pipefail
           /usr/bin/time -p pnpm tsgo:core 2>&1 | tee "$RUNNER_TEMP/proof/type.log"
       - name: Package-owned extension production type gate
-        if: ${{ !cancelled() && inputs.reuse_production_from_sha == '' }}
+        if: '!cancelled()'
         run: |
           set -euo pipefail
           /usr/bin/time -p pnpm tsgo:extensions 2>&1 | tee "$RUNNER_TEMP/proof/extension-type.log"
