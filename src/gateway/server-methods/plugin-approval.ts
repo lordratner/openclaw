@@ -80,7 +80,21 @@ export function createPluginApprovalHandlers(
       ) {
         return;
       }
+      const reject = (message: string) =>
+        respond(false, undefined, errorShape(ErrorCodes.INVALID_REQUEST, message));
       const p = params;
+      const hostApprovalOwnerId = normalizeOptionalString(
+        client?.internal?.pluginApprovalRequestOwnerId,
+      );
+      const claimedPluginId = normalizeOptionalString(p.pluginId);
+      if (hostApprovalOwnerId && claimedPluginId && claimedPluginId !== hostApprovalOwnerId) {
+        respond(
+          false,
+          undefined,
+          errorShape(ErrorCodes.INVALID_REQUEST, "plugin approval owner does not match host"),
+        );
+        return;
+      }
       const twoPhase = p.twoPhase === true;
       const timeoutMs = resolvePluginApprovalTimeoutMs(p.timeoutMs);
       const trustedAgentRuntime = client?.internal?.agentRuntimeIdentity;
@@ -89,35 +103,17 @@ export function createPluginApprovalHandlers(
         trustedAgentRuntime &&
         context.validateAgentRuntimeApprovalAuthority?.(trustedAgentRuntime) !== true
       ) {
-        respond(
-          false,
-          undefined,
-          errorShape(
-            ErrorCodes.INVALID_REQUEST,
-            "agent runtime approval authority is no longer active",
-          ),
-        );
+        reject("agent runtime approval authority is no longer active");
         return;
       }
 
       if (trustedAgentRuntime && !trustedAgentRuntime.approvalOwnerPluginId) {
-        respond(
-          false,
-          undefined,
-          errorShape(ErrorCodes.INVALID_REQUEST, "signed plugin approval owner is unavailable"),
-        );
+        reject("signed plugin approval owner is unavailable");
         return;
       }
 
       if (p.policySubject && !trustedAgentRuntime) {
-        respond(
-          false,
-          undefined,
-          errorShape(
-            ErrorCodes.INVALID_REQUEST,
-            "plugin approval policy subject requires agent runtime authority",
-          ),
-        );
+        reject("plugin approval policy subject requires agent runtime authority");
         return;
       }
 
@@ -155,14 +151,7 @@ export function createPluginApprovalHandlers(
         exceedsApprovalTextLimit(sanitizedTitle, PLUGIN_APPROVAL_TITLE_MAX_LENGTH) ||
         exceedsApprovalTextLimit(sanitizedDescription, PLUGIN_APPROVAL_DESCRIPTION_MAX_LENGTH)
       ) {
-        respond(
-          false,
-          undefined,
-          errorShape(
-            ErrorCodes.INVALID_REQUEST,
-            "approval title or description exceeds the display limit after sanitization",
-          ),
-        );
+        reject("approval title or description exceeds the display limit after sanitization");
         return;
       }
       const rawDetail = normalizeNullableString(p.detail);
@@ -175,7 +164,10 @@ export function createPluginApprovalHandlers(
       };
       const turnSource = trustedAgentRuntime ?? p;
       const request: PluginApprovalRequestPayload = {
-        pluginId: trustedAgentRuntime?.approvalOwnerPluginId ?? sanitizeMeta(p.pluginId),
+        pluginId:
+          trustedAgentRuntime?.approvalOwnerPluginId ??
+          hostApprovalOwnerId ??
+          sanitizeMeta(p.pluginId),
         title: sanitizedTitle,
         description: sanitizedDescription,
         scope: p.scope ? sanitizeApprovalScope(p.scope) : null,
@@ -229,7 +221,7 @@ export function createPluginApprovalHandlers(
         record.executionIdentityToken = trustedAgentRuntime.executionIdentity;
       }
       bindApprovalRequesterMetadata({ record, client });
-      if (client?.internal?.approvalRuntime === true) {
+      if (client?.internal?.approvalRuntime === true || hostApprovalOwnerId) {
         bindApprovalReviewerDeviceIds({
           record,
           deviceIds: p.approvalReviewerDeviceIds,

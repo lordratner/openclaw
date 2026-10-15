@@ -34,6 +34,7 @@ export type GatewayClient = Pick<
   | "authPolicy"
   | "invalidated"
   | "connectionSignal"
+  | "remoteControlUiIngress"
   | "browserOrigin"
   | "presenceKey"
   | "clientIp"
@@ -46,7 +47,9 @@ export type GatewayClient = Pick<
   | "pluginNodeCapabilitySurfaces"
   | "pluginNodeCapabilities"
   | "isDeviceTokenAuth"
+  | "sharedGatewaySessionGeneration"
 > & {
+  usesSharedGatewayAuth?: boolean;
   connId?: string;
   authenticatedUserProfile?: Omit<
     NonNullable<GatewayWsClient["authenticatedUserProfile"]>,
@@ -55,8 +58,6 @@ export type GatewayClient = Pick<
     avatarRevision?: string;
   };
   internal?: NonNullable<GatewayWsClient["internal"]> & {
-    /** Authenticated operator transport ingress; never accepted from wire params. */
-    authenticatedOperator?: true;
     /** Marks the server-constructed client used by trusted in-process dispatch. */
     syntheticClient?: true;
     /** Original source restriction carried only by trusted in-process run admission. */
@@ -68,6 +69,9 @@ export type GatewayClient = Pick<
     /** Trusted built-in agent tool caller; never accepted from Gateway wire params. */
     agentToolCaller?: TrustedAgentToolCaller;
     allowModelOverride?: boolean;
+    approvalRuntime?: boolean;
+    /** Host-bound owner for one plugin approval request, without reviewer authority. */
+    pluginApprovalRequestOwnerId?: string;
     cronRunContinuation?: boolean;
     pluginRuntimeOwnerId?: string;
     /** Host-attested session provenance for a trusted official plugin node invocation. */
