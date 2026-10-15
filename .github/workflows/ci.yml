@@ -16,7 +16,7 @@ jobs:
         run: bash .qa/nextcloud-refresh/run-missing-workers.sh pr
       - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
         if: always()
-        with: { name: "nextcloud-missing-pr-${{ github.run_id }}", path: "${{ runner.temp }}/nextcloud-missing-pr/", retention-days: 14, if-no-files-found: error }
+        with: { name: "nextcloud-missing-pr-${{ github.run_id }}", path: "${{ runner.temp }}/nextcloud-missing-pr/", retention-days: 14, if-no-files-found: error, include-hidden-files: true }
   release-workers:
     runs-on: ubuntu-24.04
     timeout-minutes: 25
@@ -35,4 +35,4 @@ jobs:
         run: bash "$RUNNER_TEMP/nextcloud-refresh-payload/run-missing-workers.sh" release
       - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
         if: always()
-        with: { name: "nextcloud-missing-release-${{ github.run_id }}", path: "${{ runner.temp }}/nextcloud-missing-release/", retention-days: 14, if-no-files-found: error }
+        with: { name: "nextcloud-missing-release-${{ github.run_id }}", path: "${{ runner.temp }}/nextcloud-missing-release/", retention-days: 14, if-no-files-found: error, include-hidden-files: true }

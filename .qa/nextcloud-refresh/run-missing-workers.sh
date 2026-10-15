@@ -26,6 +26,22 @@ for p,h in hashes.items():assert hashlib.sha256(Path(p).read_bytes()).hexdigest(
 PY
 # New runner needs canonical runtime workers; do not repeat retained types/lint/profile suites.
 pnpm build qaRuntime 2>&1 | tee "$proof/runtime-worker-build.log"
+if [ "$mode" = release ]; then
+  pnpm config:channels:gen 2>&1 | tee "$proof/channel-config.log"
+  node scripts/lib/plugin-npm-runtime-build.mjs extensions/nextcloud-talk 2>&1 | tee "$proof/plugin-export-recovery.log"
+  node --import ./scripts/tsx.mjs "$RUNNER_TEMP/nextcloud-release-payload/stage-release-plugin.mts"
+  python3 - <<'PY_RECOVERY'
+import json,os,shutil
+from pathlib import Path
+root=Path(os.environ['RUNNER_TEMP']);out=root/'nextcloud-release-proof'
+actual=json.loads((out/'plugin-artifact-manifest.json').read_text());expected=json.loads(Path('.qa/nextcloud-refresh/retained-plugin-artifact-manifest.json').read_text()) if Path('.qa/nextcloud-refresh/retained-plugin-artifact-manifest.json').exists() else json.loads((root/'nextcloud-refresh-payload/retained-plugin-artifact-manifest.json').read_text())
+assert actual['files']==expected['files'],'Rebuilt plugin bytes differ from retained qualified artifact'
+proof=root/'nextcloud-missing-release'
+shutil.copytree(out/'plugin-overlay',proof/'plugin-overlay')
+shutil.copy2(out/'plugin-artifact-manifest.json',proof/'plugin-artifact-manifest.json')
+(proof/'artifact-export-recovery.json').write_text(json.dumps({'status':'PASS','allFilesByteIdenticalToRetainedQualifiedArtifact':True,'includeHiddenFilesRequired':True,'files':len(actual['files'])},indent=2)+'\n')
+PY_RECOVERY
+fi
 files=(extensions/nextcloud-talk/src/inbound.room-info-retry.test.ts extensions/nextcloud-talk/src/webhook-spool.test.ts)
 if [ "$mode" = pr ]; then
   files+=(extensions/nextcloud-talk/src/inbound.authz.test.ts extensions/nextcloud-talk/src/inbound.behavior.test.ts)
