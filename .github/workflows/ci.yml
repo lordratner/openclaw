@@ -1,18 +1,27 @@
-name: Nextcloud shared-source refresh qualification
+name: Nextcloud exact-release production artifact qualification
 on:
   workflow_dispatch:
 permissions:
   contents: read
 jobs:
-  qualify:
+  qualify-release:
     runs-on: ubuntu-24.04
     timeout-minutes: 40
     env:
       CI: "true"
       FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
+      OPENCLAW_E2E_USE_PREBUILT_DIST: "1"
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
+          persist-credentials: false
+          fetch-depth: 1
+      - name: Preserve reviewed artifact inputs outside exact source
+        run: cp -a .qa/nextcloud-release "$RUNNER_TEMP/nextcloud-release-payload"
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          repository: openclaw/openclaw
+          ref: 59cb44796b0f1f0daa0e37af8b1495abb45d9bc1
           persist-credentials: false
           fetch-depth: 1
       - uses: ./.github/actions/setup-node-env
@@ -22,12 +31,12 @@ jobs:
           semantic-checks: "true"
           frozen-lockfile: "true"
           cache-mode: "off"
-      - name: Qualify shared source and canonical generated metadata
-        run: bash .qa/nextcloud-refresh/run-pr-proof.sh
+      - name: Qualify exact-release plugin and additive host seam
+        run: bash "$RUNNER_TEMP/nextcloud-release-payload/run-release-proof.sh"
       - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
         if: always()
         with:
-          name: nextcloud-pr-proof-${{ github.run_id }}
-          path: ${{ runner.temp }}/nextcloud-pr-proof/
+          name: nextcloud-release-proof-${{ github.run_id }}
+          path: ${{ runner.temp }}/nextcloud-release-proof/
           retention-days: 14
           if-no-files-found: error
