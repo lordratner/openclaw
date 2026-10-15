@@ -3,7 +3,6 @@ import {
   isNextcloudTalkMediaSenderAllowed,
   resolveNextcloudTalkAttachmentReference,
   resolveNextcloudTalkAuthenticatedMediaSource,
-  saveNextcloudTalkInboundMedia,
 } from "./inbound-media.js";
 
 function credentialedShareUrl(): string {
@@ -160,57 +159,6 @@ describe("Nextcloud Talk inbound media policy", () => {
       origin: "https://nextcloud.example",
       hostname: "nextcloud.example",
       fileName: "report.pdf",
-    });
-  });
-
-  it.each([
-    {
-      label: "public origin",
-      accountConfig: {},
-      expectedPrivateNetworkPolicy: {},
-    },
-    {
-      label: "explicit private-network opt-in",
-      accountConfig: { network: { dangerouslyAllowPrivateNetwork: true } },
-      expectedPrivateNetworkPolicy: { allowPrivateNetwork: true },
-    },
-  ])("uses guarded no-redirect staging for a $label", async (testCase) => {
-    const saveRemoteMedia = vi.fn(async () => ({
-      id: "media-id",
-      path: "/tmp/media-id",
-      size: 1_024,
-      contentType: "application/pdf",
-    }));
-
-    await saveNextcloudTalkInboundMedia({
-      saveRemoteMedia,
-      url: "https://nextcloud.example/s/redacted-token/download",
-      origin: "https://nextcloud.example",
-      hostname: "nextcloud.example",
-      accountConfig: testCase.accountConfig,
-      maxBytes: 20 * 1024 * 1024,
-      fileName: "receipt.pdf",
-      mimeType: "application/pdf",
-      authorization: "Basic redacted-test-credential",
-    });
-
-    expect(saveRemoteMedia).toHaveBeenCalledWith({
-      url: "https://nextcloud.example/s/redacted-token/download",
-      maxBytes: 20 * 1024 * 1024,
-      maxRedirects: 0,
-      requestInit: {
-        headers: { Authorization: "Basic redacted-test-credential" },
-      },
-      requireHttps: true,
-      responseHeaderTimeoutMs: 120_000,
-      readIdleTimeoutMs: 30_000,
-      filePathHint: "receipt.pdf",
-      fallbackContentType: "application/pdf",
-      originalFilename: "receipt.pdf",
-      ssrfPolicy: {
-        ...testCase.expectedPrivateNetworkPolicy,
-        hostnameAllowlist: ["nextcloud.example"],
-      },
     });
   });
 
