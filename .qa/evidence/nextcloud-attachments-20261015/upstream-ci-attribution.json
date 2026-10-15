@@ -1,0 +1,40 @@
+{
+  "status": "SOURCE_ATTRIBUTION_ONLY_NOT_BASELINE_EXECUTION",
+  "job": 116669030492,
+  "run": 38806330854,
+  "test": "src/gateway/server.agent-late-admission.test.ts",
+  "assertion": "stopReason expected rpc, received restart; providerStarted false",
+  "refs": {
+    "merge": "19032d72",
+    "base": "e5b5a35a3ba68dd5d857dc9fe2042f579fc5abfd"
+  },
+  "files": {
+    "src/gateway/server.agent-late-admission.test.ts": {
+      "merge": "0d1e86b098c33eebfa8a3b90fb971ac662a3a48e",
+      "base": "0d1e86b098c33eebfa8a3b90fb971ac662a3a48e"
+    },
+    "src/gateway/agent-turn/agent-run-admission-phase.ts": {
+      "merge": "d8180e4a9ebf59f9c1f43a31ad6b9b79feffc378",
+      "base": "d8180e4a9ebf59f9c1f43a31ad6b9b79feffc378"
+    },
+    "src/gateway/agent-turn/agent-turn-service.ts": {
+      "merge": "c4f68fca6592c5e778962286a98ece3c484e93ba",
+      "base": "c4f68fca6592c5e778962286a98ece3c484e93ba"
+    },
+    "src/gateway/server-close.ts": {
+      "merge": "f08f44014d2b607828514f167902a3c07b5e9b18",
+      "base": "f08f44014d2b607828514f167902a3c07b5e9b18"
+    },
+    "src/sessions/session-lifecycle-admission.ts": {
+      "merge": "197426a52a71dcee1d64dce171604a2b162c7700",
+      "base": "197426a52a71dcee1d64dce171604a2b162c7700"
+    },
+    "src/gateway/test-helpers.ts": {
+      "merge": "e9fb601c66fbab64db4b814eb35aa3f657fa6baf",
+      "base": "e9fb601c66fbab64db4b814eb35aa3f657fa6baf"
+    }
+  },
+  "allSelectedOwningFilesUnchanged": true,
+  "productPRDoesNotTouchSelectedFiles": true,
+  "notFullCIGreen": true
+}

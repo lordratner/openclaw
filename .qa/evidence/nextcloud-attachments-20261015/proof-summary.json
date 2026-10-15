@@ -76,5 +76,12 @@
   ],
   "productCodeChangedForSupplementalProof": false,
   "hiddenSetupFilesRecoveredByteIdentically": 6,
-  "installedArtifactDependencyChanges": false
+  "installedArtifactDependencyChanges": false,
+  "upstreamMergeCI": {
+    "state": "IN_PROGRESS_WITH_UNRESOLVED_FAILURE",
+    "job": 116669030492,
+    "failure": "Gateway close terminal stopReason expected rpc, received restart",
+    "sourceAttributionOnly": true,
+    "baselineExecutionNotClaimed": true
+  }
 }
