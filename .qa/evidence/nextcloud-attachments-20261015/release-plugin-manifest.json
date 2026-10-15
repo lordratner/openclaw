@@ -1,0 +1,67 @@
+{
+  "release": "59cb44796b0f1f0daa0e37af8b1495abb45d9bc1",
+  "files": {
+    "dist/.setup/api-DWhrRtxR.mjs": {
+      "sha256": "ae01cc004be878a91f73398061b8deb4e3e06098d7d65f0b536cf6191a6bcb4b",
+      "bytes": 119
+    },
+    "dist/.setup/channel-DKftYhyD.mjs": {
+      "sha256": "d6088ad11d4d75a36d2aaf54ab1cb83084e361ed70b0ff2270faba4fdcca2a5a",
+      "bytes": 181579
+    },
+    "dist/.setup/doctor-contract-Cbki4xYn.mjs": {
+      "sha256": "0c48a8d8f51cd1a5b6409f6808a613729bd907b08bf4ea2deac0c12b52a43504",
+      "bytes": 9134
+    },
+    "dist/.setup/runtime-api-DVkVOUSo.mjs": {
+      "sha256": "7f9187eb96ed6d031f63c3a480653fef48d5b9c581f18008598feeee27345cdc",
+      "bytes": 1306
+    },
+    "dist/.setup/secret-contract-Bvm0PmP3.mjs": {
+      "sha256": "88393e46f2f5b42d8868d36c1b0c85a275dd01472601f757005052fa6dfcf051",
+      "bytes": 671
+    },
+    "dist/.setup/secret-contract-api-DtjjYcg2.mjs": {
+      "sha256": "9c4a2515c318a4219b4a60a34f0891b6ea664a66e0d11ec13639c553a3cb4241",
+      "bytes": 267
+    },
+    "dist/api.js": {
+      "sha256": "e224dc6a33c24ecc846cfa52de4d897884cca9b03a2d9b364e6f2e00ad29a95e",
+      "bytes": 106
+    },
+    "dist/channel-plugin-api.js": {
+      "sha256": "e224dc6a33c24ecc846cfa52de4d897884cca9b03a2d9b364e6f2e00ad29a95e",
+      "bytes": 106
+    },
+    "dist/configured-state.js": {
+      "sha256": "ac8ee085fd929e3644c33b516f94891205f915591811d8f541ca443d175a74b5",
+      "bytes": 1859
+    },
+    "dist/doctor-contract-api.js": {
+      "sha256": "ddecf672d4c8eda576b4ae546a5d4e4f57ed7787de7629ef3d1c1de69e092abc",
+      "bytes": 307
+    },
+    "dist/index.js": {
+      "sha256": "eaac1b676ea855c0ce9ea0a8e3157564c7a38f956ace23c22b0c28667dc0b424",
+      "bytes": 648
+    },
+    "dist/runtime-api.js": {
+      "sha256": "75d8cea2b3b32f3286b035ac9169d22df42b50cd145aad275781ccbda96d1b4c",
+      "bytes": 654
+    },
+    "dist/secret-contract-api.js": {
+      "sha256": "4f852dcd7f5acddb1b8545e9655f69b938bfdd77d1c05457d60f07d36970fda8",
+      "bytes": 238
+    },
+    "dist/setup-entry.js": {
+      "sha256": "fb7471ac70145b1131311ea5597ba435d0e6c08f27f55d084e518524eb699f8c",
+      "bytes": 623
+    },
+    "openclaw.plugin.json": {
+      "sha256": "f0f1b4c5392a7587264bddc4591a10dbad215494136f4d5da94bea0a861d607d",
+      "bytes": 33160
+    }
+  },
+  "packageJsonMustRemainInstalledOfficial": true,
+  "requiresCoreSeam": true
+}

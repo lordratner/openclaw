@@ -1,0 +1,80 @@
+{
+  "status": "PASS_SCOPED_SOURCE_AND_EXACT_RELEASE_PROOF",
+  "pr": "https://github.com/openclaw/openclaw/pull/135895",
+  "head": "328ac2397f204cd8b049ad8a955ab8bade580e55",
+  "base": "27721b8fec4bd5593bb0ba609b4ab1257f9613c1",
+  "sourceFiles": 30,
+  "sourceManifestSha256": "b4663151f679106d2e0747ef97ae3a74879915fce44f143feb5450b616fd9e51",
+  "sharedPRTests": {
+    "messaging": 197,
+    "databaseWorkerProfile": 42,
+    "totalTalk": 239,
+    "matrixControls": 5
+  },
+  "exactReleaseTests": {
+    "messaging": 270,
+    "databaseWorkerProfile": 26,
+    "totalTalk": 296,
+    "matrixControls": 6
+  },
+  "exactRelease": "59cb44796b0f1f0daa0e37af8b1495abb45d9bc1",
+  "passedGates": [
+    "canonical build",
+    "catalog/channel/docs metadata generators",
+    "affected format",
+    "core/extension/extension-test types",
+    "focused core/extension lint",
+    "plugin entrypoint profile",
+    "registered worker-profile coverage",
+    "complete plugin export hash verification"
+  ],
+  "runs": [
+    {
+      "id": 38801908491,
+      "url": "https://github.com/lordratner/openclaw/actions/runs/38801908491"
+    },
+    {
+      "id": 38802811817,
+      "url": "https://github.com/lordratner/openclaw/actions/runs/38802811817"
+    },
+    {
+      "id": 38805415585,
+      "url": "https://github.com/lordratner/openclaw/actions/runs/38805415585"
+    }
+  ],
+  "jobCosts": [
+    {
+      "run": 38801908491,
+      "job": "qualify",
+      "conclusion": "success",
+      "jobWallSecondsIncludingSetup": 1092
+    },
+    {
+      "run": 38802811817,
+      "job": "qualify-release",
+      "conclusion": "success",
+      "jobWallSecondsIncludingSetup": 647
+    },
+    {
+      "run": 38805415585,
+      "job": "pr-workers",
+      "conclusion": "success",
+      "jobWallSecondsIncludingSetup": 272
+    },
+    {
+      "run": 38805415585,
+      "job": "release-workers",
+      "conclusion": "success",
+      "jobWallSecondsIncludingSetup": 248
+    }
+  ],
+  "proofLimitations": [
+    "Not full upstream merge-CI qualification",
+    "No new live end-user media test",
+    "Release artifact includes a required additive core cleanup seam; plugin-only stock host compatibility is not claimed",
+    "Maintainer cleanup-API/media-policy acceptance remains separate"
+  ],
+  "productCodeChangedForSupplementalProof": false,
+  "hiddenSetupFilesRecoveredByteIdentically": 6,
+  "installedArtifactDependencyChanges": false
+}
