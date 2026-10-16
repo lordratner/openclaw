@@ -166,6 +166,14 @@ function isProviderReplyDelivery(
   );
 }
 
+// The dispatch mock exposes its last (core-managed) overload. Resolve the
+// captured callback through both supported contracts for native/baseline proof.
+function resolveReplyDelivery(delivery: ChannelInboundTurnPlan["delivery"] | ProviderReplyDelivery) {
+  return isProviderReplyDelivery(delivery)
+    ? delivery.deliverWithProviderMessageSending
+    : delivery.deliver;
+}
+
 type AutomaticReplyContext = {
   fixture: AutomaticReplyFixture;
   controller: AbortController;
@@ -251,9 +259,7 @@ async function withNativeAutomaticReply(run: (context: AutomaticReplyContext) =>
           }
           // The old callback is deliberately executable for baseline controls:
           // the assertion must fail for missing native upload, not a new field.
-          const deliver = isProviderReplyDelivery(request.delivery)
-            ? request.delivery.deliverWithProviderMessageSending
-            : request.delivery.deliver;
+          const deliver = resolveReplyDelivery(request.delivery);
           return await deliver(prepared, info);
         },
       });
