@@ -37,7 +37,6 @@ type SendContext = Pick<
 >;
 
 const sendText = (ctx: SendContext) => nextcloudTalkPlugin.message?.send?.text?.(ctx);
-const sendMedia = (ctx: SendContext) => nextcloudTalkPlugin.outbound?.sendMedia?.(ctx);
 const MESSAGE_PATH = "/ocs/v2.php/apps/spreed/api/v1/bot/allowed/message";
 
 type RecordedRequest = { method?: string; url?: string; body: string };
@@ -114,12 +113,10 @@ afterEach(() => {
   transport.beforeLookup = undefined;
 });
 
-it.each([
-  { name: "message text", media: false, send: sendText },
-  { name: "outbound media", media: true, send: sendMedia },
-])(
-  "blocks $name cancelled during DNS without cancelling a concurrent delivery",
-  async ({ send, media }) => {
+it(
+  "blocks text cancelled during DNS without cancelling a concurrent delivery",
+  async () => {
+    const send = sendText;
     const cancelled = createHandoff();
     const current = createHandoff();
     const started = createDeferred<void>();
@@ -154,7 +151,7 @@ it.each([
         method: "POST",
         url: MESSAGE_PATH,
         body: JSON.stringify({
-          message: media ? "hello\n\nAttachment: https://example.com/image.png" : "hello",
+          message: "hello",
           replyTo: "parent-1",
         }),
       },
@@ -167,7 +164,7 @@ it("rejects a redirect after delivery cancellation", async () => {
   const handoff = createHandoff();
   const requests = await withTalkServer(
     async (ctx) => {
-      await expect(sendMedia({ ...ctx, ...handoff.callbacks })).rejects.toBe(handoff.error);
+      await expect(sendText({ ...ctx, ...handoff.callbacks })).rejects.toBe(handoff.error);
     },
     (response, received) => {
       if (received.length === 1) {
@@ -190,7 +187,7 @@ it.each([false, true])(
     const handoff = createHandoff();
     await withTalkServer(
       async (ctx) => {
-        await expect(sendMedia({ ...ctx, ...handoff.callbacks })).resolves.toMatchObject({
+        await expect(sendText({ ...ctx, ...handoff.callbacks })).resolves.toMatchObject({
           messageId: validBody ? "42" : "unknown",
           receipt: { platformMessageIds: validBody ? ["42"] : [] },
         });

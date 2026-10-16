@@ -320,6 +320,14 @@ export async function handleNextcloudTalkInbound(params: {
     return;
   }
 
+  if (message.attachment) {
+    const { isNextcloudTalkOutboundFileEcho } = await import("./outbound-media.js");
+    if (await isNextcloudTalkOutboundFileEcho({ account, message, signal: ingressAbortSignal })) {
+      runtime.log?.("nextcloud-talk: ignored own outbound file share");
+      return;
+    }
+  }
+
   let stagedMedia: { path: string; contentType?: string } | undefined;
   let stagedMediaId: string | undefined;
   let sourceModality: "audio" | "voice" | undefined;
