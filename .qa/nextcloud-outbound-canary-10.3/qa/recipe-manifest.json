@@ -1,0 +1,42 @@
+{
+  "status": "FRESH_REVIEW_QUALIFICATION_PREPARED_NOT_EXECUTED",
+  "baselineCommit": "59cb44796b0f1f0daa0e37af8b1495abb45d9bc1",
+  "sourcePortManifestSha256": "949d76e6bc136ea103573139a59eb26a14e31d8eb6ebba2640bce5e833eeeb8f",
+  "sourceFiles": 11,
+  "freshOnly": true,
+  "forbiddenEnvironment": [
+    "CANARY_RETAINED_PROOF_DIR"
+  ],
+  "expectedFreshPassingTests": 83,
+  "expectedFreshNegativeControls": 14,
+  "expectedPositiveSuites": {
+    "outbound-media.test.ts": 31,
+    "send.handoff.test.ts": 6,
+    "inbound.behavior.test.ts": 29,
+    "inbound.authz.test.ts": 2,
+    "inbound.room-info-retry.test.ts": 3,
+    "webhook-spool.test.ts": 12
+  },
+  "rootInputs": {
+    "port-manifest.json": "949d76e6bc136ea103573139a59eb26a14e31d8eb6ebba2640bce5e833eeeb8f",
+    "paths.json": "c1adbde13293ac8213726a1f56d31d5401045aae13ab0f004fce9a90d95943bf",
+    "release-manifest.json": "4b899e678266920e1ca50f3465655d4aa09a5d1f2249bebcfaa8f461c79efaac"
+  },
+  "frozenPriorFeatureProducer": 38913658320,
+  "frozenPriorFeatureSourceManifestSha256": "b0d65239d6ad7a7b644f52667eaeb4826492ebf8beb4ecdf5b21465d027449c9",
+  "files": {
+    "README.md": "3285403309e4f87b65e0325185ba21a29558bb13be251c7badb47cb31917c4df",
+    "fork-profile.ts": "9d0ee172e5bf86cbdb537a13893792de895ba80a2a67d55cbe6dd99d4ca1d945",
+    "legal/saxes-6.0.0-LICENSE.txt": "0fac2374380621b22e6b50451057721a9c52935b02d16d106a9f04897f061d0e",
+    "negative-controls.mjs": "e29b79c9c2056dd66e5332abfc667d02664311a7f1006ae486508590cf01e459",
+    "parser-build-inputs.json": "7d2e2d0fee523a898046951baa3b80ee331b147a5b7bf0c3e5e465d70c09dfec",
+    "prior-feature/extensions/nextcloud-talk/src/message-adapter.ts": "2b0d40e029cd175ce630b1da51164081a586743d75c27e78fc53ce90c34d8b92",
+    "prior-feature/extensions/nextcloud-talk/src/outbound-media.ts": "20812cb62901da7886cec48b0ebaa66e0cd53413fe15005fff2c8b20a1208e29",
+    "prior-feature/manifest.json": "22d4173c0497db5baff83cda1caf191e0d1d91ea20cc314cf371249637a43f65",
+    "prior-feature/producer-source-manifest.json": "b0d65239d6ad7a7b644f52667eaeb4826492ebf8beb4ecdf5b21465d027449c9",
+    "qualify.mjs": "e67827a635d28c1c0b46ecdb60075d71d564f9152f88a195e3ccc59665fa89bf",
+    "stock-consumer.mjs": "4f21c42b32a7188245457c88d283051b6bb0c3694d51ce147d85f7db66640a64",
+    "stock-ingress.mjs": "757a0724d43db1b5eed9ebdaa8b1fbe36fe98ff249099ba6bd731c88c0c6897e",
+    "workflow.yml": "aba8d964f788b50c490d49c5f03322eb643b760b5aef6dfa3248550618e73297"
+  }
+}

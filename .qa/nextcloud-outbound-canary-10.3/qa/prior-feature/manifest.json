@@ -1,0 +1,11 @@
+{
+  "kind": "immutable previously qualified source input; not retained execution evidence",
+  "producerRun": 38913658320,
+  "producerQaHead": "f3307129747bd75a3a99f591bf3fc9276aac6621",
+  "baselineCommit": "59cb44796b0f1f0daa0e37af8b1495abb45d9bc1",
+  "producerSourceManifestSha256": "b0d65239d6ad7a7b644f52667eaeb4826492ebf8beb4ecdf5b21465d027449c9",
+  "files": {
+    "extensions/nextcloud-talk/src/message-adapter.ts": "2b0d40e029cd175ce630b1da51164081a586743d75c27e78fc53ce90c34d8b92",
+    "extensions/nextcloud-talk/src/outbound-media.ts": "20812cb62901da7886cec48b0ebaa66e0cd53413fe15005fff2c8b20a1208e29"
+  }
+}
