@@ -1,0 +1,10 @@
+[
+  "docs/channels/nextcloud-talk.md",
+  "extensions/nextcloud-talk/src/inbound-media.ts",
+  "extensions/nextcloud-talk/src/inbound.ts",
+  "extensions/nextcloud-talk/src/message-adapter.ts",
+  "extensions/nextcloud-talk/src/outbound-media.test.ts",
+  "extensions/nextcloud-talk/src/outbound-media.ts",
+  "extensions/nextcloud-talk/src/send.handoff.test.ts",
+  "extensions/nextcloud-talk/src/webdav.ts"
+]
