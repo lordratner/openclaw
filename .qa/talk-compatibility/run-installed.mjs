@@ -159,6 +159,7 @@ async function createLeg(name,spec,version,candidateMode){
     entry:path.join(prefix,'lib/node_modules/openclaw/openclaw.mjs'),expectedVersion:version,candidate:candidateMode};
   await install(prefix,spec,name+'-install');
   const cfg={gateway:{mode:'local',bind:'loopback',port:gatewayPort,auth:{mode:'none'},controlUi:{enabled:false}},
+    session:{dmScope:'per-channel-peer'},
     agents:{entries:{main:{}},defaults:{workspace,heartbeat:{every:'0m'}}},
     plugins:{allow:['nextcloud-talk'],entries:{'nextcloud-talk':{enabled:true}}},tools:{profile:'minimal'}};
   modelConfig.applyMockOpenAiModelConfig(cfg,{mockPort});
