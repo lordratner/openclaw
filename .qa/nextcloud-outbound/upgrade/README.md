@@ -32,7 +32,10 @@ candidate checkout's canonical model helper and the same admitted package.
    its official registry integrity/version and state-owned root. Official core4
    does **not** bundle Talk; it does bundle OpenAI. Then create one bot-only
    configuration, protected bot-secret file,
-   authored workspace sentinels and real Talk room. No API-account fields are
+   authored workspace sentinels and real Talk room. The fixture explicitly
+   allows only the usable bundled weather skill (curl prerequisite checked), so
+   full Doctor has no unrelated missing-skill settings to repair. This nonempty
+   allowlist is preserved exactly, not masked or added after upgrade. No API-account fields are
    configured in the app. The harness's fixture API user is separate.
 3. Send the immutable public LICENSE URL through the installed stable CLI and
    automatic Gateway; validate real bot-message observations, exact completed inbound
@@ -62,7 +65,10 @@ candidate checkout's canonical model helper and the same admitted package.
    The doctor child alone uses the supported service-repair policy
    `OPENCLAW_SERVICE_REPAIR_POLICY=external`, preventing service installation,
    start or restart. Doctor is the full repair owner, not claimed DB-only; these strict
-   postconditions reject unrelated state/config/source-selection changes.
+   postconditions reject unrelated state/config/source-selection changes. The
+   only additional config write accepted after Doctor is its exact canonical
+   wizard audit object: command=doctor, mode=local, actual package version and a
+   canonical ISO timestamp bounded by this invocation. No subtree exclusions.
    Validate existing settings and actual runtime selection; repeat CLI/Gateway
    URL delivery in the same room and stable-created session. Preserve old bot
    message IDs and session ID. Require both exact successful completions.
@@ -141,3 +147,14 @@ but correctly stopped at candidate boot: stable agent schema24 requires offline
 the recipe now performs the documented migration on its stopped disposable
 fixture only. The live installation is not upgraded or migrated. Existing strict
 Gateway session-ID and room-history preservation assertions remain unchanged.
+
+Run38934829427 successfully migrated schema24→27 with the exact session identities
+preserved, but its strict settings oracle rejected full Doctor disabling27
+unavailable optional skills and writing wizard audit metadata. The next recipe
+starts with an explicit weather-only skill policy and accepts only the bounded
+canonical Doctor audit object; all authored settings, including the complete
+skills subtree, remain deeply compared. No selective schema-only public Doctor
+repair exists; private import/recovery paths are not substituted. The previous
+failed run remains failed. Its independent native job passed and is retained
+with the same source/package/admission/native recipe identities; the next run
+executes only the affected upgrade job, without rerunning native tests/builds.

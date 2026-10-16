@@ -39,6 +39,8 @@ const env = {...process.env, HOME: root, OPENCLAW_HOME: root, OPENCLAW_STATE_DIR
 delete env.CODEX_HOME;
 delete env.GH_TOKEN;
 delete env.GITHUB_TOKEN;
+delete env.GIT_COMMIT;
+delete env.GIT_SHA;
 const steps = [], requests = [], callbacks = [], inference = [], utility = [], errors = [];
 const phases = [], negatives = [];
 let gateway, gatewayLog, mock, relay, proxy, roomToken, proxyOrigin, botId;
@@ -159,7 +161,7 @@ async function snapshot(label) {
   }
   const snapshot = {hashes, authoredConfig}; await jsonFile(label + '.json', snapshot); return snapshot;
 }
-function assertAuthoredPreserved(before, after) {
+function assertAuthoredPreserved(before, after, doctorAudit) {
   const expected = structuredClone(before.authoredConfig);
   const defaults = expected.agents.defaults;
   assert.equal(defaults.modelPolicy, undefined, 'fixture must begin with the legacy models-map restriction');
@@ -172,6 +174,14 @@ function assertAuthoredPreserved(before, after) {
   // mark already-explicit utility selection. No other key is excluded or reset.
   defaults.modelPolicy = {allow: derivedAllowlist};
   expected.meta = {...expected.meta, migrations: {modelPolicyAllowlist: true, utilityModelSeparation: true}};
+  if (doctorAudit) {
+    assert.equal(expected.wizard, undefined, 'fixture must begin before doctor audit metadata');
+    const audit = after.authoredConfig.wizard;
+    const recordedAt = Date.parse(audit?.lastRunAt);
+    assert(Number.isFinite(recordedAt) && recordedAt >= doctorAudit.startedAt && recordedAt <= doctorAudit.endedAt, 'doctor audit timestamp outside this invocation');
+    assert.equal(new Date(recordedAt).toISOString(), audit.lastRunAt);
+    expected.wizard = {lastRunAt: audit.lastRunAt, lastRunVersion: doctorAudit.version, lastRunCommand: 'doctor', lastRunMode: 'local'};
+  }
   assert.deepEqual(after.authoredConfig, expected, 'settings differ beyond the exact canonical host migrations');
   for (const [name, hash] of Object.entries(before.hashes)) if (name !== path.relative(root, configPath)) assert.equal(after.hashes[name], hash, `authored file changed: ${name}`);
   return {derivedAllowlist, primaryModel: defaults.model.primary, utilityModel: defaults.utilityModel, exactAddedPaths: ['/agents/defaults/modelPolicy', '/meta/migrations'], allOtherAuthoredKeysUnchanged: true};
@@ -329,6 +339,10 @@ try {
   });
   const callbackUrl = `http://host.docker.internal:${await listen(relay, '0.0.0.0')}/nextcloud-talk-webhook`;
   const cfg = {gateway: {mode: 'local', bind: 'loopback', port: gatewayPort, auth: {mode: 'token', token: env.OPENCLAW_GATEWAY_TOKEN}, controlUi: {enabled: false}}, agents: {entries: {main: {memory: {search: {enabled: false}}}}, defaults: {workspace, systemAgent: {agentId: 'main'}, heartbeat: {every: '0m'}}}, memory: {search: {enabled: false}}, session: {dmScope: 'per-channel-peer'}, plugins: {allow: ['nextcloud-talk', 'openai'], entries: {'nextcloud-talk': {enabled: true}, openai: {enabled: true}}}, channels: {'nextcloud-talk': {enabled: true, baseUrl: proxyOrigin, botSecretFile: secretPath, webhookPublicUrl: callbackUrl, legacyWebhook: false, network: {dangerouslyAllowPrivateNetwork: true}, dmPolicy: 'allowlist', allowFrom: [`users/${recipient}`], groupAllowFrom: [`users/${recipient}`], groupPolicy: 'allowlist', rooms: {[roomToken]: {requireMention: false}}}}};
+  // Keep unrelated optional skill availability out of this migration fixture.
+  // A nonempty allowlist is required: [] canonically means allow all.
+  await command('curl', ['--version'], 'fixture-weather-prerequisite');
+  cfg.skills = {allowBundled: ['weather']};
   cfg.logging = {level: 'debug', consoleLevel: 'debug', file: path.join(evidence, 'upgrade-core.jsonl')};
   const fixturePath = path.resolve(process.env.STABLE_MODEL_FIXTURE);
   const fixtureBytes = await fs.readFile(fixturePath);
@@ -364,15 +378,18 @@ try {
   assert(databaseBefore.sessionIdentities.some(row => row[1] === stable.session.sessionId));
   // The candidate refuses older schemas at boot. Use its documented offline
   // repair owner, never manual SQL or a fresh state/session directory.
+  const doctorStartedAt = Date.now();
   await command(process.execPath, [entry, 'doctor', '--fix', '--non-interactive', '--no-workspace-suggestions'], 'candidate-offline-doctor', 0, {...env, OPENCLAW_SERVICE_REPAIR_POLICY: 'external'});
+  const doctorEndedAt = Date.now();
   const databaseAfter = await agentDatabaseSnapshot('after-offline-doctor');
   assert.equal(databaseAfter.schemaVersion, 27, 'canonical migration did not reach candidate schema');
   assert.deepEqual(databaseAfter.sessionIdentities, databaseBefore.sessionIdentities, 'doctor changed existing session identities');
   const afterDoctor = await snapshot('after-offline-doctor-settings');
-  assertAuthoredPreserved(before, afterDoctor);
+  const doctorAudit = {startedAt: doctorStartedAt, endedAt: doctorEndedAt, version: JSON.parse(await fs.readFile(path.join(path.dirname(entry), 'package.json'))).version};
+  assertAuthoredPreserved(before, afterDoctor, doctorAudit);
   const doctorPlugins = await inspectPlugins('candidate-after-doctor');
   assert.deepEqual(doctorPlugins, candidatePlugins, 'doctor changed the selected runtime/plugin install owner');
-  const canonicalAgentDatabaseMigration = {supportedCommand: 'doctor --fix --non-interactive --no-workspace-suggestions', stoppedOwnedGateway: true, serviceRepairPolicy: 'external', beforeSchema: databaseBefore.schemaVersion, afterSchema: databaseAfter.schemaVersion, existingSessionIdentitiesUnchanged: true, backup: 'stable-agent-before-doctor.sqlite', authoredSettingsPreserved: true, selectedPluginOwnersUnchanged: true};
+  const canonicalAgentDatabaseMigration = {supportedCommand: 'doctor --fix --non-interactive --no-workspace-suggestions', stoppedOwnedGateway: true, serviceRepairPolicy: 'external', audit: afterDoctor.authoredConfig.wizard, beforeSchema: databaseBefore.schemaVersion, afterSchema: databaseAfter.schemaVersion, existingSessionIdentitiesUnchanged: true, backup: 'stable-agent-before-doctor.sqlite', authoredSettingsPreserved: true, selectedPluginOwnersUnchanged: true};
   const candidate = await proveUrlPhase('candidate', gatewayPort);
   assert.equal(candidate.existingSessionBeforeTurn?.sessionId, stable.session.sessionId, 'existing stable-created session was not loaded');
   assert.equal(candidate.session.sessionId, stable.session.sessionId, 'upgrade replaced existing conversation/session');
