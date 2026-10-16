@@ -44,9 +44,13 @@ candidate checkout's canonical model helper and the same admitted package.
    `plugins install nextcloud-talk --force` to select the candidate's paired Talk
    bundle. Record the old npm owner and new `source:path`/exact bundled install
    path. This is an explicit plugin-source selection, **not** an automatic
-   core-only cutover. Across it, compare every authored config key (including the
-   entire plugins subtree), secret and authored-workspace hash; only the config
-   writer's `meta.lastTouchedAt/lastTouchedVersion` stamps are excluded. No direct
+   core-only cutover. The new host canonically materializes the legacy
+   `agents.defaults.models` restriction into `modelPolicy.allow` and adds the
+   `modelPolicyAllowlist`/`utilityModelSeparation` migration markers. Assert those
+   exact derived additions, unchanged explicit main/utility choices, and every
+   other authored key including channels/plugins/model maps. Only the config
+   writer's `meta.lastTouchedAt/lastTouchedVersion` stamps are excluded. Secret
+   and authored-workspace hashes remain exact. No direct
    install-record edits, manual plugin deletion, load-path rewrite or state reset.
    Validate existing settings and actual runtime selection; repeat CLI/Gateway
    URL delivery in the same room and stable-created session. Preserve old bot
@@ -72,6 +76,14 @@ from its HMAC-verified room-Join callback. Require one match; when a concrete CL
 ID is returned it must equal that observation. Native-file receipt equality is
 unchanged and remains mandatory. The initial failed upgrade oracle is retained
 at run38930252668; it stopped before automatic delivery or migration.
+
+Run38931725973 then qualified stable CLI/automatic delivery and exact raw config
+preservation across core installation, but its comparison wrongly rejected the
+canonical host migrations above. The refined oracle constructs that exact
+expected config and deeply compares all keys; it does not mask subtrees or
+silently claim unchanged config bytes after a migration. Canonical owners are
+`src/config/model-policy-allowlist-migration.ts`,
+`src/config/utility-model-separation-migration.ts` and `src/config/io.meta.ts`.
 
 The model mock uses separate explicit main/utility identities, stable canonical
 config helper, minimal canonical Responses SSE events and no memory search.

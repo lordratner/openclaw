@@ -160,8 +160,21 @@ async function snapshot(label) {
   const snapshot = {hashes, authoredConfig}; await jsonFile(label + '.json', snapshot); return snapshot;
 }
 function assertAuthoredPreserved(before, after) {
-  assert.deepEqual(after.authoredConfig, before.authoredConfig, 'plugin source selection changed authored settings');
+  const expected = structuredClone(before.authoredConfig);
+  const defaults = expected.agents.defaults;
+  assert.equal(defaults.modelPolicy, undefined, 'fixture must begin with the legacy models-map restriction');
+  assert.equal(defaults.model.primary, `openai/${mainModel}`);
+  assert.equal(defaults.utilityModel, `openai/${utilityModel}`);
+  const derivedAllowlist = Object.keys(defaults.models);
+  assert.deepEqual(derivedAllowlist, [`openai/${mainModel}`, `openai/${utilityModel}`]);
+  assert.equal(expected.meta?.migrations, undefined, 'fixture must begin before the canonical migration markers');
+  // These exact core-owned migrations materialize the legacy restriction and
+  // mark already-explicit utility selection. No other key is excluded or reset.
+  defaults.modelPolicy = {allow: derivedAllowlist};
+  expected.meta = {...expected.meta, migrations: {modelPolicyAllowlist: true, utilityModelSeparation: true}};
+  assert.deepEqual(after.authoredConfig, expected, 'settings differ beyond the exact canonical host migrations');
   for (const [name, hash] of Object.entries(before.hashes)) if (name !== path.relative(root, configPath)) assert.equal(after.hashes[name], hash, `authored file changed: ${name}`);
+  return {derivedAllowlist, primaryModel: defaults.model.primary, utilityModel: defaults.utilityModel, exactAddedPaths: ['/agents/defaults/modelPolicy', '/meta/migrations'], allOtherAuthoredKeysUnchanged: true};
 }
 async function describe(label) {
   const described = JSON.parse(await cli(['gateway', 'call', 'sessions.describe', '--params', JSON.stringify({key: `agent:main:nextcloud-talk:group:${roomToken}`}), '--json'], label));
@@ -321,7 +334,8 @@ try {
   // Core replacement alone does not promise to replace an explicitly managed
   // plugin. Use the public install owner to select the new paired bundle.
   await cli(['plugins', 'install', 'nextcloud-talk', '--force'], 'candidate-select-paired-talk');
-  const afterSelection = await snapshot('after-supported-plugin-source-selection'); assertAuthoredPreserved(before, afterSelection);
+  const afterSelection = await snapshot('after-supported-plugin-source-selection');
+  const canonicalHostConfigMigrations = assertAuthoredPreserved(before, afterSelection);
   await cli(['config', 'validate'], 'candidate-existing-config-validate'); const candidatePlugins = await inspectPlugins('candidate');
   assert.deepEqual(candidatePlugins.openai.install, stablePlugins.openai.install, 'selection changed a non-target plugin install owner');
   assert.equal(candidatePlugins['nextcloud-talk'].install?.source, 'path');
@@ -345,7 +359,8 @@ try {
   for (const message of preservedHistory.filter(message => message.actorType === 'bots')) {
     assert(![workspace, secretPath, proxyOrigin, 'file://', 'synthetic-user', 'synthetic-secret', 'private-local.txt'].some(value => message.message.includes(value)), 'private reference leaked into bot conversation');
   }
-  const afterProof = await snapshot('after-bot-only-proof'); assertAuthoredPreserved(before, afterProof);
+  const afterProof = await snapshot('after-bot-only-proof');
+  assert.deepEqual(assertAuthoredPreserved(before, afterProof), canonicalHostConfigMigrations);
   let nativeControl = {status: 'NOT_REQUESTED'};
   if (process.env.RUN_CONFIGURED_NATIVE_CONTROL === 'true') {
     configuredNativeStarted = true;
@@ -369,7 +384,7 @@ try {
     nativeControl = {status: 'PASS', deliberateConfigChangeAfterPreservationProof: true, messageId: String(message.id), recipientByteEquality: true, replyToId: candidate.automaticMessageId, readOnlyRoomShare: true};
   }
   assert.equal(errors.length, 0, errors.join('\n'));
-  result = {status: 'PASS', scope: 'Actual published official 2026.10.4 plus official managed Talk, upgraded in the same disposable prefix/state/room to the qualified candidate and explicitly selected paired Talk through its public installer; synthetic provider, no production/UI proof.', stableTagCommit, stablePublishWorkflowCommit, candidate: process.env.CANDIDATE_SHA, packageCandidate: admission.packageCandidate, productionBytesUnchanged: admission.productionBytesUnchanged, retainedProducerRun: admission.retainedProducerRun, producerRun: Number(process.env.QUALIFIED_RUN_ID), packageSha256: admission.packageSha256, publicUrl: webUrl, samePrefix: true, sameStateDirectory: true, stableCreatedSessionPreserved: true, existingBotReceiptsPreserved: true, coreInstallPreservedConfigBytes: true, authoredConfigSecretWorkspaceHashesPreserved: true, pluginSourceTransition: {stable: stablePlugins['nextcloud-talk'], candidateBeforeSelection: {rootDir: beforeSelection.plugin?.rootDir, install: beforeSelection.install}, supportedCommand: 'plugins install nextcloud-talk --force', candidate: candidatePlugins['nextcloud-talk']}, noNativeIOInBotOnlyPhases: true, rejectedReferences: negatives, phases, configuredNativeControl: nativeControl};
+  result = {status: 'PASS', scope: 'Actual published official 2026.10.4 plus official managed Talk, upgraded in the same disposable prefix/state/room to the qualified candidate and explicitly selected paired Talk through its public installer; synthetic provider, no production/UI proof.', stableTagCommit, stablePublishWorkflowCommit, candidate: process.env.CANDIDATE_SHA, packageCandidate: admission.packageCandidate, productionBytesUnchanged: admission.productionBytesUnchanged, retainedProducerRun: admission.retainedProducerRun, producerRun: Number(process.env.QUALIFIED_RUN_ID), packageSha256: admission.packageSha256, publicUrl: webUrl, samePrefix: true, sameStateDirectory: true, stableCreatedSessionPreserved: true, existingBotReceiptsPreserved: true, coreInstallPreservedConfigBytes: true, authoredConfigSemanticsPreserved: true, secretAndAuthoredWorkspaceHashesPreserved: true, canonicalHostConfigMigrations, pluginSourceTransition: {stable: stablePlugins['nextcloud-talk'], candidateBeforeSelection: {rootDir: beforeSelection.plugin?.rootDir, install: beforeSelection.install}, supportedCommand: 'plugins install nextcloud-talk --force', candidate: candidatePlugins['nextcloud-talk']}, noNativeIOInBotOnlyPhases: true, rejectedReferences: negatives, phases, configuredNativeControl: nativeControl};
 } catch (error) {failure = error;}
 finally {
   await stopGateway(); await closeServer(relay); await closeServer(mock); await closeServer(proxy);
