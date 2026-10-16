@@ -185,7 +185,10 @@ type AutomaticReplyContext = {
 
 // Capture synthetic assistant output at the inbound reply boundary; the shared
 // outbound planner, scoped media loading, and native HTTP transport remain real.
-async function withNativeAutomaticReply(run: (context: AutomaticReplyContext) => Promise<void>) {
+async function withNativeAutomaticReply(
+  run: (context: AutomaticReplyContext) => Promise<void>,
+  options: { botOnly?: boolean } = {},
+) {
   await withNextcloudTalkOutboundFixture(async (fixture) => {
     const stateDir = path.join(fixture.directory, "state");
     const workspace = path.join(fixture.directory, "agent-workspace");
@@ -202,6 +205,11 @@ async function withNativeAutomaticReply(run: (context: AutomaticReplyContext) =>
     }
     work.dmPolicy = "allowlist";
     work.allowFrom = ["user-1"];
+    if (options.botOnly) {
+      delete work.apiUser;
+      delete work.apiPassword;
+      delete work.apiPasswordFile;
+    }
     const core = createPluginRuntimeMock();
     vi.mocked(core.state.resolveStateDir).mockReturnValue(stateDir);
     vi.mocked(core.channel.session.resolveStorePath).mockReturnValue(
@@ -244,7 +252,7 @@ async function withNativeAutomaticReply(run: (context: AutomaticReplyContext) =>
         throw new Error("expected admitted automatic reply delivery");
       }
       await run({
-        fixture: { ...fixture, mediaUrl },
+        fixture: Object.assign(fixture, { mediaUrl }),
         controller,
         onPlatformSendDispatch,
         deliver: async (payload, kind) => {
@@ -586,6 +594,99 @@ describe("nextcloud-talk inbound behavior", () => {
           ),
         ).toBe(true);
       });
+    },
+  );
+
+  it.each([
+    { kind: "final" as const, caption: "The report" },
+    { kind: "block" as const, caption: "The report" },
+    { kind: "final" as const, caption: "" },
+  ])(
+    "preserves a bot-only automatic $kind web link with caption '$caption'",
+    async ({ kind, caption }) => {
+      await withNativeAutomaticReply(
+        async ({ fixture, deliver }) => {
+          const mediaUrl = "https://example.com/report.pdf";
+          const result = await deliver(
+            { text: caption || undefined, mediaUrl, replyToId: "41" },
+            kind,
+          );
+          expect(result).toMatchObject({
+            visibleReplySent: true,
+            receipt: { platformMessageIds: ["900"] },
+          });
+          expect(fixture.requests).toHaveLength(1);
+          expect(fixture.requests[0]?.url.pathname).toBe(
+            "/cloud/ocs/v2.php/apps/spreed/api/v1/bot/allowed/message",
+          );
+          expect(JSON.parse(fixture.requests[0]!.body.toString())).toEqual({
+            message: `${caption}\n\nAttachment: ${mediaUrl}`.trim(),
+            replyTo: "41",
+          });
+        },
+        { botOnly: true },
+      );
+    },
+  );
+
+  it("preserves ordered bot-only automatic links and caption through the shared planner", async () => {
+    await withNativeAutomaticReply(
+      async ({ fixture, deliver }) => {
+        const urls = ["https://example.com/first.pdf", "https://example.com/second.pdf"];
+        const result = await deliver(
+          { text: "The reports", mediaUrls: urls, replyToId: "41" },
+          "final",
+        );
+        expect(result).toMatchObject({ visibleReplySent: true });
+        expect(fixture.requests).toHaveLength(2);
+        expect(fixture.requests.map((request) => JSON.parse(request.body.toString()))).toEqual([
+          { message: `The reports\n\nAttachment: ${urls[0]}`, replyTo: "41" },
+          { message: `Attachment: ${urls[1]}`, replyTo: "41" },
+        ]);
+        expect(
+          fixture.requests.every((request) =>
+            request.url.pathname.endsWith("/bot/allowed/message"),
+          ),
+        ).toBe(true);
+      },
+      { botOnly: true },
+    );
+  });
+
+  it.each(["final", "block"] as const)(
+    "retains the first bot-only $kind link receipt when a later link fails",
+    async (kind) => {
+      await withNativeAutomaticReply(
+        async ({ fixture, deliver }) => {
+          let posts = 0;
+          fixture.respond = (request, response) => {
+            if (!request.url.pathname.endsWith("/bot/allowed/message") || ++posts !== 2) {
+              return false;
+            }
+            response.writeHead(500);
+            response.end();
+            return true;
+          };
+          await expect(
+            deliver(
+              {
+                text: "The reports",
+                mediaUrls: ["https://example.com/first.pdf", "https://example.com/second.pdf"],
+              },
+              kind,
+            ),
+          ).rejects.toMatchObject({
+            deliveryResult: { visibleReplySent: true, receipt: { platformMessageIds: ["900"] } },
+          });
+          expect(fixture.requests).toHaveLength(2);
+          expect(
+            fixture.requests.every((request) =>
+              request.url.pathname.endsWith("/bot/allowed/message"),
+            ),
+          ).toBe(true);
+        },
+        { botOnly: true },
+      );
     },
   );
 

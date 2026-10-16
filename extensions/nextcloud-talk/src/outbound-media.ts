@@ -300,7 +300,15 @@ export async function sendMediaNextcloudTalk(
       },
       async (response) => {
         if (response.status !== 201) {
-          throw new Error(`Nextcloud Talk attachment upload failed (${response.status}).`);
+          const recovery =
+            response.status === 401
+              ? "Check apiUser and update its app password (apiPassword/apiPasswordFile) before retrying."
+              : response.status === 507
+                ? "Free Files storage or increase the API user's quota before retrying."
+                : "Check Nextcloud server logs and the API user's Files write access.";
+          throw new Error(
+            `Nextcloud Talk attachment upload failed (${response.status}). ${recovery}`,
+          );
         }
         uploaded = true;
       },
