@@ -33,10 +33,8 @@ import {
   readSessionMessagesAsync,
   type SessionTranscriptReadScope,
 } from "./session-transcript-readers.js";
-import {
-  readSessionTitleFieldsFromTranscript,
-  readSessionTitleFieldsFromTranscriptAsync,
-} from "./session-transcript-title-reader.js";
+import { readSessionTitleFieldsFromTranscriptAsync } from "./session-transcript-title-reader.js";
+import { readSessionTitleFieldsFromTranscript } from "./session-transcript-title-reader.worker.js";
 
 vi.mock("../config/sessions/session-accessor.js", async (importOriginal) => {
   const actual = await importOriginal<typeof import("../config/sessions/session-accessor.js")>();
@@ -89,7 +87,7 @@ async function writeTranscript(sessionId: string, events: unknown[]) {
 
 async function writeSqliteMessages(
   sessionId: string,
-  messages: Array<{ content: unknown; provenance?: unknown; role: string }>,
+  messages: Array<{ content: unknown; display?: boolean; provenance?: unknown; role: string }>,
 ) {
   const scope = {
     agentId: "main",
@@ -478,8 +476,8 @@ describe("session transcript Markdown title previews", () => {
         { role: "system", content: "system event" },
         { role: "assistant", content: [{ type: "thinking", thinking: "private thought" }] },
         { role: "assistant", content: "NO_REPLY" },
-        { role: "assistant", content: "ANNOUNCE_SKIP" },
-        { role: "assistant", content: "REPLY_SKIP" },
+        { role: "assistant", content: "ANNOUNCE_SKIP", display: false },
+        { role: "assistant", content: "REPLY_SKIP", display: false },
         { role: "assistant", content: [{ type: "text", text: "" }] },
         { role: "assistant", content: "```ts\nconst hidden = true;\n```" },
       ];
@@ -493,7 +491,11 @@ describe("session transcript Markdown title previews", () => {
       const scope = await writeSqliteMessages(`reader-title-short-circuit-${widen}`, [
         ...prefix,
         { role: "assistant", content: [{ type: "text", text: olderText }] },
-        { role: "assistant", content: "# Latest\n\nRead the [guide](https://example.com)." },
+        {
+          role: "assistant",
+          content: "# Latest\n\nRead the [guide](https://example.com).",
+          display: true,
+        },
         ...(widen ? Array.from({ length: 3 }, () => hiddenMessages).flat() : []),
       ]);
       const actual = await vi.importActual<typeof import("../config/sessions/session-accessor.js")>(

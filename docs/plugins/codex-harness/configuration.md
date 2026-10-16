@@ -139,7 +139,7 @@ context settings instead of inheriting the outer agent's model cap.
 On ordinary configured model chats, that authored cap also bounds host context
 engine assembly and maintenance. OpenClaw reserves space for the current input,
 instructions, tools, and output before assembling history, and retains the
-successful assembly's settings when recovering accepted turns. A smaller current
+successful assembly's budget when recovering accepted turns. A smaller current
 run budget still wins. This is operator policy, not discovery of Codex's usable
 allowance: Codex can apply a smaller native limit or a model-specific reserve.
 Choose the authored limit with enough native headroom. Unconfigured models do
@@ -155,6 +155,13 @@ context-engine slot when Codex is the active runtime, but native Codex still
 owns compaction. The native app-server harness supports context engines
 that need pre-prompt assembly; generic CLI backends, including `codex-cli`,
 do not provide that host capability.
+
+When OpenClaw has no resolved token budget, context engines receive the usable
+window reported by Codex. Assembly can reuse a bound thread's observation only
+for the same model and when no newer unreported turn superseded it. Before an
+observation is available, only an explicit authored cap supplies a budget;
+otherwise the budget remains unknown. Resolved OpenClaw budgets take precedence,
+and learning a native window does not change the thread's bootstrap policy.
 
 Fresh Codex threads, including ordinary **Fork conversation** sessions, receive
 recent saved history within a bounded continuity window. Conversation text and

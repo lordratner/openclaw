@@ -215,8 +215,8 @@ export async function prepareCodexAttemptPrompt(context: CodexAttemptContext) {
                   configuredContextBudget -
                   resolveProjectionPromptBudgetTokens({
                     contextTokenBudget: configuredContextBudget,
-                  }) +
-                  (params.images?.length ?? 0) * IMAGE_BLOCK_TOKENS,
+                  }),
+                inputTokens: (params.images?.length ?? 0) * IMAGE_BLOCK_TOKENS,
                 systemPrompt: joinPresentSections(
                   baseDeveloperInstructions,
                   refreshableInstructions,
@@ -259,7 +259,6 @@ export async function prepareCodexAttemptPrompt(context: CodexAttemptContext) {
                 { ...runtimeParams },
                 contextEngineProjection,
               ),
-              projection: contextEngineProjection,
               dynamicToolsFingerprint: codexDynamicToolsFingerprint(toolBridge.specs),
               legacyDynamicToolsFingerprint: codexLegacyDynamicToolsFingerprint(toolBridge.specs),
             })

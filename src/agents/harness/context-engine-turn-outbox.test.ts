@@ -20,8 +20,6 @@ import type {
   TranscriptTurnBoundary,
 } from "../../config/sessions/transcript-entry-anchor.js";
 import { withSessionTranscriptWriteAssertion } from "../../config/sessions/transcript-write-context.js";
-import { OPENCLAW_EMBEDDED_CONTEXT_ENGINE_HOST } from "../../context-engine/host-compat.js";
-import { buildContextEngineRuntimeSettings } from "../../context-engine/runtime-settings.js";
 import type { ContextEngine } from "../../context-engine/types.js";
 import { openNodeSqliteDatabase } from "../../infra/node-sqlite.js";
 import { admitSqliteSchema } from "../../infra/sqlite-schema-facts.js";
@@ -376,21 +374,10 @@ describe("context-engine turn outbox", () => {
     },
   );
 
-  it.each(["accepted", "legacy accepted", "admission-only"] as const)(
+  it.each(["accepted", "admission-only"] as const)(
     "recovers %s prior work before recording the next dispatch",
     async (state) => {
       const accepted = state !== "admission-only";
-      const runtimeSettings =
-        state === "accepted"
-          ? buildContextEngineRuntimeSettings({
-              contextEngineHost: OPENCLAW_EMBEDDED_CONTEXT_ENGINE_HOST,
-              provider: "anthropic",
-              resolvedModel: "claude-sonnet-4-6",
-              promptTokenBudget: 180_000,
-              maxOutputTokens: 20_000,
-              selectedContextEngineId: "test",
-            })
-          : undefined;
       const {
         target,
         current: admitted,
@@ -417,7 +404,6 @@ describe("context-engine turn outbox", () => {
           database,
           engineId: "test",
           isHeartbeat: true,
-          runtimeSettings,
           runtimeContext: {
             provider: "anthropic",
             modelId: "claude-sonnet-4-6",
@@ -478,14 +464,10 @@ describe("context-engine turn outbox", () => {
           database.db.prepare("SELECT advancement_key FROM context_engine_turn_outbox").all(),
         ).toHaveLength(0);
         expect(commitTurn.mock.calls[0]?.[0]).not.toHaveProperty("prePromptMessageCount");
-        if (runtimeSettings) {
-          expect(commitTurn.mock.calls[0]?.[0].runtimeSettings).toMatchObject({
-            model: { provider: "anthropic", resolved: "claude-sonnet-4-6" },
-            limits: { promptTokenBudget: 180_000, maxOutputTokens: 20_000 },
-          });
-        } else {
-          expect(commitTurn.mock.calls[0]?.[0]).not.toHaveProperty("runtimeSettings");
-        }
+        expect(commitTurn.mock.calls[0]?.[0].runtimeSettings).toMatchObject({
+          model: { provider: "anthropic", resolved: "claude-sonnet-4-6" },
+          limits: { promptTokenBudget: 180_000 },
+        });
         recorder.markRuntimePersisted(currentMessage, currentAdmission);
         // The dispatch wait settles admission in the agent database worker.
         expect(recorder.hasRuntimePersistencePending()).toBe(true);
@@ -531,6 +513,14 @@ describe("context-engine turn outbox", () => {
       database.db
         .prepare("SELECT payload_state FROM context_engine_turn_outbox WHERE advancement_key = ?")
         .get(payload.boundary.admission.logicalTurnId)?.payload_state;
+    const sequence = () =>
+      database.db
+        .prepare(
+          "SELECT enqueue_sequence FROM context_engine_turn_outbox WHERE advancement_key = ?",
+        )
+        .get(payload.boundary.admission.logicalTurnId)?.enqueue_sequence;
+    const admittedSequence = sequence();
+    expect(admittedSequence).toBe(1);
     expect(storedState()).toBe("admitted");
     acceptContextEngineTurnIntent({
       boundary: payload.boundary,
@@ -539,6 +529,7 @@ describe("context-engine turn outbox", () => {
       isHeartbeat: false,
     });
     expect(storedState()).toBe("accepted");
+    expect(sequence()).toBe(admittedSequence);
     const warn = vi.fn();
 
     recoverContextEngineTurnOutbox({
@@ -548,6 +539,7 @@ describe("context-engine turn outbox", () => {
       warn,
     });
     expect(storedState()).toBe("blocked");
+    expect(sequence()).toBe(admittedSequence);
 
     const queued = database.db
       .prepare("SELECT payload_json FROM context_engine_turn_outbox WHERE advancement_key = ?")
@@ -661,6 +653,13 @@ describe("context-engine turn outbox", () => {
       "session-a:z-first",
       "session-b:1",
     ]);
+    expect(
+      database.db
+        .prepare(
+          "SELECT enqueue_sequence, attempt_count FROM context_engine_turn_outbox WHERE advancement_key = 'session-a:z-first'",
+        )
+        .get(),
+    ).toEqual({ enqueue_sequence: 1, attempt_count: 1 });
     failFirstTurn = false;
 
     await drainContextEngineTurnOutbox({

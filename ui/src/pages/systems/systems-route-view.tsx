@@ -1,26 +1,35 @@
+import { Show } from "solid-js";
+import type { SolidRouteProps } from "../../app-route-types.ts";
 import type { ApplicationContext } from "../../app/context.ts";
-import { solidContent } from "../../lit/solid-content.tsx";
 import { SystemsController, type SystemsRouteData } from "./systems-controller.ts";
-import "./systems-page.tsx";
+import { SystemsPage } from "./systems-page.tsx";
 import "./systems-sidebar.tsx";
 
-function SystemsPageHost(props: { routeData: SystemsRouteData; presented: boolean }) {
+/** Route rendering stays in the lazy page module, not in startup route metadata. */
+export function renderSolid(props: SolidRouteProps<SystemsRouteData>) {
   return (
-    <openclaw-systems-page prop:routeData={props.routeData} prop:presented={props.presented} />
+    <Show when={props.data}>
+      {(data) => <SystemsPage controller={data().controller} presented={props.presented} />}
+    </Show>
   );
 }
 
-function SystemsSidebarHost(props: { controller: SystemsController }) {
-  return <openclaw-systems-sidebar prop:controller={props.controller} />;
-}
-
-/** Route rendering stays in the lazy page module, not in startup route metadata. */
-export function render(data: SystemsRouteData | undefined, _pending: boolean, presented = true) {
-  return data ? solidContent(SystemsPageHost, { routeData: data, presented }) : undefined;
-}
+const sidebarNodes = new WeakMap<
+  SystemsController,
+  HTMLElementTagNameMap["openclaw-systems-sidebar"]
+>();
 
 export function renderSidebar(data: SystemsRouteData | undefined) {
-  return data ? solidContent(SystemsSidebarHost, { controller: data.controller }) : undefined;
+  if (!data) {
+    return null;
+  }
+  let sidebar = sidebarNodes.get(data.controller);
+  if (!sidebar) {
+    sidebar = document.createElement("openclaw-systems-sidebar");
+    sidebar.controller = data.controller;
+    sidebarNodes.set(data.controller, sidebar);
+  }
+  return sidebar;
 }
 
 export function load(context: ApplicationContext): SystemsRouteData {

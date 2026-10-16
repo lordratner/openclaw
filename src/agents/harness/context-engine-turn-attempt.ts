@@ -4,11 +4,7 @@ import {
 } from "../../config/sessions/session-accessor.js";
 import type { OpenClawConfig } from "../../config/types.openclaw.js";
 import { supportsContextEngineDurableTurnAdvancement } from "../../context-engine/host-compat.js";
-import type {
-  ContextEngine,
-  ContextEngineRuntimeSettings,
-  ContextEngineSessionTarget,
-} from "../../context-engine/types.js";
+import type { ContextEngine, ContextEngineSessionTarget } from "../../context-engine/types.js";
 import type { UserTurnTranscriptRecorder } from "../../sessions/user-turn-transcript.types.js";
 import { rethrowIncognitoSessionError } from "../../state/incognito-session-error.js";
 import { runContextEngineMaintenance } from "../embedded-agent-runner/context-engine-maintenance.js";
@@ -32,7 +28,6 @@ export type ContextEngineTurnAttemptFacts = {
   yieldAborted: boolean;
   isHeartbeat?: boolean;
   runtimeContext?: ContextEngineTurnRuntimeContext;
-  runtimeSettings?: ContextEngineRuntimeSettings;
 };
 
 export async function drainPendingContextEngineTurnsBeforeRun(params: {
@@ -230,7 +225,6 @@ export async function finalizeAcceptedContextEngineTurn(params: {
       isHeartbeat: params.facts.isHeartbeat === true,
       ownerPluginId: params.lease.effectiveEnginePluginId,
       runtimeContext: params.facts.runtimeContext,
-      runtimeSettings: params.facts.runtimeSettings,
     };
     // Acceptance commits before the fallible read and publication, so their
     // failure leaves the turn accepted for the next recovery to advance.

@@ -30,6 +30,7 @@ import {
 import { DEFAULT_CONTEXT_TOKENS } from "../../defaults.js";
 import { FailoverError } from "../../failover-error.js";
 import { resolveModelContextWindowProfile } from "../../model-context-window.js";
+import { readModelServingContextWindow } from "../../model-serving-context.js";
 import { log } from "../logger.js";
 
 type HookRunnerLike = Pick<
@@ -184,11 +185,13 @@ export function resolveEmbeddedRuntimeModelPolicy(params: {
     catalogEntry: params.runtimeModel,
     selected: params.contextWindow,
   });
+  const servingContextWindow = readModelServingContextWindow(params.runtimeModel);
   const resolvedCtxInfo = resolveContextWindowInfo({
     cfg: params.cfg,
     provider: params.contextConfigProvider ?? params.provider,
     modelId: params.modelId,
     modelContextTokens: asFiniteNumber(params.runtimeModel.contextTokens),
+    modelServingContextWindow: servingContextWindow,
     modelContextWindow: contextWindowProfile.contextTokens,
     modelContextWindowSource: contextWindowProfile.contextWindow
       ? undefined
@@ -263,6 +266,7 @@ export function resolveEmbeddedRuntimeModelPolicy(params: {
     // session-selectable windows cannot become persisted model facts.
     contextTokensSource:
       !params.nativeModelOwned &&
+      servingContextWindow === undefined &&
       contextWindowInfo.source === "model" &&
       contextWindowInfo.referenceTokens === undefined &&
       !params.runtimeModel.contextWindows?.length

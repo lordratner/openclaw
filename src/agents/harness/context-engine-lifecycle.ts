@@ -37,8 +37,7 @@ import {
 } from "../sessions/session-manager-message-anchor.js";
 import {
   clearContextEngineAssemblySnapshot,
-  prepareContextEngineAssemblySnapshot,
-  readContextEngineAssemblySettings,
+  readContextEngineAssemblyBudget,
   recordContextEngineAssemblySnapshot,
   type ContextEngineAssemblySnapshot,
 } from "./context-engine-assembly-attempt.js";
@@ -188,6 +187,7 @@ type HarnessContextEngineAssemblyParams = Omit<
   promptBudget?: {
     contextTokens?: number;
     reserveTokens: number;
+    inputTokens?: number;
     systemPrompt: string;
     prompt: string;
   };
@@ -223,11 +223,18 @@ function resolveAssemblyHistoryTokenBudget(params: HarnessContextEngineAssemblyP
   if (!params.promptBudget) {
     return tokenBudget;
   }
-  const { contextTokens, reserveTokens, systemPrompt, prompt } = params.promptBudget;
+  const {
+    contextTokens,
+    reserveTokens,
+    inputTokens = 0,
+    systemPrompt,
+    prompt,
+  } = params.promptBudget;
   const budget = Math.max(1, Math.floor(contextTokens ?? DEFAULT_CONTEXT_TOKENS));
   const historyBudget = Math.max(
     1,
     Math.max(1, budget - Math.max(0, Math.floor(reserveTokens))) -
+      Math.max(0, Math.floor(inputTokens)) -
       estimateRenderedLlmBoundaryTokenPressure({ systemPrompt, prompt }),
   );
   return tokenBudget === undefined ? historyBudget : Math.min(tokenBudget, historyBudget);
@@ -253,27 +260,13 @@ async function assembleHarnessContextEngineWithinSourceScope(
     maxOutputTokens,
     tokenBudget,
   });
-  const snapshot = prepareContextEngineAssemblySnapshot(
-    {
-      sessionId: params.sessionId,
-      sessionKey: params.sessionKey,
-      provider: params.providerId,
-      modelId: params.modelId,
-    },
-    {
-      ...runtimeSettings,
-      limits: {
-        ...runtimeSettings.limits,
-        promptTokenBudget:
-          tokenBudget === undefined
-            ? runtimeSettings.limits.promptTokenBudget
-            : runtimeSettings.limits.promptTokenBudget === null
-              ? tokenBudget
-              : Math.min(tokenBudget, runtimeSettings.limits.promptTokenBudget),
-        maxOutputTokens: maxOutputTokens ?? runtimeSettings.limits.maxOutputTokens,
-      },
-    },
-  );
+  const snapshot: ContextEngineAssemblySnapshot = {
+    sessionId: params.sessionId,
+    sessionKey: params.sessionKey,
+    provider: params.providerId,
+    modelId: params.modelId,
+    tokenBudget,
+  };
   const runtimeContext = preparePreTurnRuntimeContext(params.runtimeContext);
   const assemble = () =>
     contextEngine.assemble({
@@ -284,7 +277,10 @@ async function assembleHarnessContextEngineWithinSourceScope(
       ...(params.availableTools ? { availableTools: params.availableTools } : {}),
       ...(params.citationsMode ? { citationsMode: params.citationsMode } : {}),
       model: params.modelId,
-      runtimeSettings: structuredClone(snapshot.runtimeSettings),
+      runtimeSettings: {
+        ...runtimeSettings,
+        limits: { ...runtimeSettings.limits, promptTokenBudget: tokenBudget ?? null },
+      },
       runtimeContext,
       ...(params.prompt !== undefined ? { prompt: params.prompt } : {}),
     });
@@ -463,17 +459,17 @@ export async function finalizeHarnessContextEngineTurn(
           aborted: params.aborted,
           yieldAborted: params.yieldAborted,
           isHeartbeat: params.isHeartbeat,
-          runtimeSettings: readContextEngineAssemblySettings({
-            sessionId: params.sessionIdUsed,
-            sessionKey: params.sessionKey,
-            provider: params.providerId,
-            modelId: params.modelId,
-          }),
           runtimeContext: {
             provider: params.providerId ?? undefined,
             modelId: params.modelId ?? undefined,
             modelContextWindow: params.modelContextWindow,
-            tokenBudget: params.tokenBudget ?? undefined,
+            tokenBudget:
+              readContextEngineAssemblyBudget({
+                sessionId: params.sessionIdUsed,
+                sessionKey: params.sessionKey,
+                provider: params.providerId,
+                modelId: params.modelId,
+              }) ?? params.tokenBudget,
           },
         });
       }

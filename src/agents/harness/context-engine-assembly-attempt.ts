@@ -1,7 +1,10 @@
 import { AsyncLocalStorage } from "node:async_hooks";
-import { buildContextEngineRuntimeSettings } from "../../context-engine/runtime-settings.js";
-import type { ContextEngineRuntimeSettings } from "../../context-engine/types.js";
 import { resolveGlobalSingleton } from "../../shared/global-singleton.js";
+import type {
+  EmbeddedRunAttemptParams,
+  EmbeddedRunAttemptResult,
+} from "../embedded-agent-runner/run/types.js";
+import type { ContextEngineTurnRuntimeContext } from "./context-engine-turn-outbox.js";
 
 type AssemblyTarget = {
   sessionId: string;
@@ -11,7 +14,7 @@ type AssemblyTarget = {
 };
 
 export type ContextEngineAssemblySnapshot = AssemblyTarget & {
-  runtimeSettings: ContextEngineRuntimeSettings;
+  tokenBudget?: number;
 };
 
 type AssemblyAttempt = { active: boolean; snapshot?: ContextEngineAssemblySnapshot };
@@ -42,34 +45,6 @@ export function clearContextEngineAssemblySnapshot(): void {
   }
 }
 
-export function prepareContextEngineAssemblySnapshot(
-  target: AssemblyTarget,
-  settings: ContextEngineRuntimeSettings,
-): ContextEngineAssemblySnapshot {
-  // Project known primitive fields, not a plugin's mutable object or runtime capabilities.
-  const runtimeSettings = buildContextEngineRuntimeSettings({
-    mode: settings.runtime.mode,
-    harnessId: settings.runtime.harnessId,
-    runtimeId: settings.runtime.runtimeId,
-    requestedModel: settings.model.requested,
-    resolvedModel: target.modelId,
-    provider: target.provider,
-    modelFamily: settings.model.family,
-    selectedContextEngineId: settings.contextEngineSelection.selectedId,
-    contextEngineSelectionSource: settings.contextEngineSelection.source,
-    promptTokenBudget: settings.limits.promptTokenBudget,
-    maxOutputTokens: settings.limits.maxOutputTokens,
-    fallbackReason: settings.diagnostics.fallbackReason,
-    degradedReason: settings.diagnostics.degradedReason,
-    contextEngineHost: {
-      id: settings.executionHost.id ?? "",
-      label: settings.executionHost.label ?? "",
-      capabilities: [],
-    },
-  });
-  return { ...target, runtimeSettings };
-}
-
 export function recordContextEngineAssemblySnapshot(snapshot: ContextEngineAssemblySnapshot): void {
   const attempt = assemblyAttempt.getStore();
   if (attempt?.active) {
@@ -77,10 +52,10 @@ export function recordContextEngineAssemblySnapshot(snapshot: ContextEngineAssem
   }
 }
 
-export function readContextEngineAssemblySettings(
+export function readContextEngineAssemblyBudget(
   target: AssemblyTarget,
   snapshot: ContextEngineAssemblySnapshot | null | undefined = assemblyAttempt.getStore()?.snapshot,
-): ContextEngineRuntimeSettings | undefined {
+): number | undefined {
   if (
     !snapshot ||
     snapshot.sessionId !== target.sessionId ||
@@ -90,5 +65,60 @@ export function readContextEngineAssemblySettings(
   ) {
     return undefined;
   }
-  return snapshot.runtimeSettings;
+  return snapshot.tokenBudget ?? undefined;
+}
+
+export function resolveContextEngineCompletionRuntimeContext(
+  params: EmbeddedRunAttemptParams,
+  result: EmbeddedRunAttemptResult,
+  nativeSession: boolean,
+  assembly: ContextEngineAssemblySnapshot | undefined,
+): ContextEngineTurnRuntimeContext {
+  const acceptedModel = result.runtimeModelSelection ?? {
+    provider: params.provider,
+    model: params.modelId,
+  };
+  const assemblyBudget = readContextEngineAssemblyBudget(
+    {
+      sessionId: result.sessionIdUsed,
+      sessionKey: params.sessionKey,
+      provider: acceptedModel.provider,
+      modelId: acceptedModel.model,
+    },
+    assembly ?? null,
+  );
+  // A startup estimate may describe the thread's previous model.
+  const reportedContextTokens =
+    result.contextTokensSource === "runtime" || result.contextTokensSource === "runtime-configured"
+      ? result.contextTokens
+      : undefined;
+  if (
+    result.runtimeModelSelection &&
+    (nativeSession ||
+      acceptedModel.provider !== params.provider ||
+      acceptedModel.model !== params.modelId)
+  ) {
+    // Native identity alone does not attest the host's window or context cap.
+    return {
+      provider: acceptedModel.provider,
+      modelId: acceptedModel.model,
+      ...(reportedContextTokens === undefined ? {} : { modelContextWindow: reportedContextTokens }),
+      ...(assemblyBudget === undefined && reportedContextTokens === undefined
+        ? {}
+        : { tokenBudget: assemblyBudget ?? reportedContextTokens }),
+    };
+  }
+  return {
+    provider: params.provider,
+    modelId: params.modelId,
+    modelContextWindow:
+      params.contextTokenBudget === undefined
+        ? (reportedContextTokens ?? params.modelContextWindow)
+        : params.modelContextWindow,
+    tokenBudget:
+      assemblyBudget ??
+      params.contextTokenBudget ??
+      reportedContextTokens ??
+      params.authoredContextTokenCap,
+  };
 }

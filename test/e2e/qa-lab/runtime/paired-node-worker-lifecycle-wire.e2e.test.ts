@@ -1,7 +1,7 @@
 import fs from "node:fs/promises";
 import { GatewayClient } from "openclaw/plugin-sdk/gateway-runtime";
 import { redactSensitiveText } from "openclaw/plugin-sdk/logging-core";
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { afterAll, afterEach, beforeAll, describe, expect, it, vi } from "vitest";
 import { createQaGatewayChild } from "../../../../extensions/qa-lab/api.js";
 import {
   executeSqliteQueryTakeFirstSync,
@@ -223,17 +223,20 @@ async function expectPublicBundleStatus(params: {
             .map((frame) => {
               const input = JSON.parse(frame.paramsJSON!) as {
                 sequence?: number;
+                acknowledgedBundleGeneration?: number;
                 bundleStatusHash?: string;
                 bundleHashes?: unknown[];
                 retain?: unknown[];
               };
               return {
                 sequence: input.sequence,
+                acknowledgedBundleGeneration: input.acknowledgedBundleGeneration,
                 bundleStatusHash: input.bundleStatusHash,
                 bundleCount: input.bundleHashes?.length,
                 workspaceCount: input.retain?.length,
               };
             }),
+          bundleInstalls: bundleInstallFrames(params.host).length,
           invokeErrors: params.host.invokeErrors.map(String),
           gatewayLogTail: params.gateway.logs().slice(-4_000),
         }),
@@ -289,30 +292,52 @@ function processIsAlive(pid: number): boolean {
 }
 
 describe("paired node worker lifecycle wire", () => {
+  const gatewayOwner = createQaGatewayChild();
+  let provider: Awaited<ReturnType<typeof startPairedNodeWorkerLifecycleProvider>>;
+  let gateway: WireGateway;
+  let operator: GatewayClient;
+
+  // Each case owns its node, workspace and sessions; Gateway startup is not under test.
+  beforeAll(async () => {
+    provider = await startPairedNodeWorkerLifecycleProvider([
+      HOLD_REVOKED,
+      HOLD_UNCONFIRMED,
+      HOLD_A,
+      HOLD_B,
+    ]);
+    gateway = await startPairedNodeWorkerGateway({
+      owner: gatewayOwner,
+      providerBaseUrl: provider.baseUrl,
+      useRepoCli: false,
+    });
+    operator = await connectWireClient({ gateway, role: "operator", identity: null });
+  });
+
+  afterAll(async () => {
+    provider?.releaseAll();
+    const cleanup = await Promise.allSettled([
+      operator?.stopAndWait({ timeoutMs: 2_000 }) ?? Promise.resolve(),
+      stopQaGatewayFixture(gatewayOwner),
+      provider?.stop() ?? Promise.resolve(),
+    ]);
+    const failures = cleanup.flatMap((result) =>
+      result.status === "rejected" ? [result.reason] : [],
+    );
+    if (failures.length) {
+      throw new AggregateError(failures, "paired node lifecycle Gateway cleanup failed");
+    }
+  });
   it(
     "fences revoked and unconfirmed turns before real node successor I/O",
     { timeout: TEST_TIMEOUT_MS },
     async () => {
       const root = tempDirs.make("openclaw-paired-node-worker-turn-fence-");
-      const provider = await startPairedNodeWorkerLifecycleProvider([
-        HOLD_REVOKED,
-        HOLD_UNCONFIRMED,
-      ]);
       const published = await createPublishedWireWorkspace(root);
-      const gatewayOwner = createQaGatewayChild();
-      let gateway: WireGateway | undefined;
-      let operator: GatewayClient | undefined;
       let workerNode: PairedNodeWorkerHost | undefined;
       let testFailure: unknown;
       let cleanupFailures: unknown[];
       let releaseStopAcknowledgement: (() => void) | undefined;
       try {
-        gateway = await startPairedNodeWorkerGateway({
-          owner: gatewayOwner,
-          providerBaseUrl: provider.baseUrl,
-          useRepoCli: false,
-        });
-        operator = await connectWireClient({ gateway, role: "operator", identity: null });
         workerNode = await createPairedNodeWorkerHost({ gateway, operator, root });
         const nodeId = workerNode.identity.deviceId;
 
@@ -504,12 +529,10 @@ describe("paired node worker lifecycle wire", () => {
         testFailure = error;
       } finally {
         releaseStopAcknowledgement?.();
-        provider.releaseAll();
+        provider.release(HOLD_REVOKED);
+        provider.release(HOLD_UNCONFIRMED);
         const cleanup = await Promise.allSettled([
           workerNode?.stop() ?? Promise.resolve(),
-          operator?.stopAndWait({ timeoutMs: 2_000 }) ?? Promise.resolve(),
-          stopQaGatewayFixture(gatewayOwner),
-          provider.stop(),
           closeWireServer(published.server),
         ]);
         cleanupFailures = cleanup.flatMap((result) =>
@@ -531,21 +554,11 @@ describe("paired node worker lifecycle wire", () => {
     { timeout: TEST_TIMEOUT_MS },
     async () => {
       const root = tempDirs.make("openclaw-paired-node-worker-lifecycle-");
-      const provider = await startPairedNodeWorkerLifecycleProvider([HOLD_A, HOLD_B]);
       const published = await createPublishedWireWorkspace(root);
-      const gatewayOwner = createQaGatewayChild();
-      let gateway: WireGateway | undefined;
-      let operator: GatewayClient | undefined;
       let workerNode: PairedNodeWorkerHost | undefined;
       let testFailure: { error: unknown } | undefined;
       let cleanupFailures: unknown[];
       try {
-        gateway = await startPairedNodeWorkerGateway({
-          owner: gatewayOwner,
-          providerBaseUrl: provider.baseUrl,
-          useRepoCli: false,
-        });
-        operator = await connectWireClient({ gateway, role: "operator", identity: null });
         workerNode = await createPairedNodeWorkerHost({
           gateway,
           operator,
@@ -844,9 +857,6 @@ describe("paired node worker lifecycle wire", () => {
         provider.releaseAll();
         const cleanup = await Promise.allSettled([
           workerNode?.stop() ?? Promise.resolve(),
-          operator?.stopAndWait({ timeoutMs: 2_000 }) ?? Promise.resolve(),
-          stopQaGatewayFixture(gatewayOwner),
-          provider.stop(),
           closeWireServer(published.server),
         ]);
         cleanupFailures = cleanup.flatMap((result) =>
