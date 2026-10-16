@@ -1,0 +1,33 @@
+{
+  "scope": "Pinned public npm package and upstream legal source inputs for CI-only compiled-parser bundling; not generated test proof",
+  "packages": {
+    "saxes": {
+      "version": "6.0.0",
+      "tarball": "https://registry.npmjs.org/saxes/-/saxes-6.0.0.tgz",
+      "integrity": "sha512-xAg7SOnEhrm5zI3puOOKyy1OMcMlIJZYNJY7xLBwSze0UjhPLnWfj2GF2EpT0jmzaJKIWKHLsaSSajf35bcYnA==",
+      "dependencies": {
+        "xmlchars": "^2.2.0"
+      },
+      "license": "ISC",
+      "legal": {
+        "asset": "legal/saxes-6.0.0-LICENSE.txt",
+        "sourceUrl": "https://raw.githubusercontent.com/lddubeau/saxes/211fa0ebec9b628affc09219199639887174bfc3/LICENSE",
+        "upstreamGitHead": "211fa0ebec9b628affc09219199639887174bfc3",
+        "sha256": "0fac2374380621b22e6b50451057721a9c52935b02d16d106a9f04897f061d0e",
+        "reason": "Published saxes6 package omits LICENSE; this is the exact npm version gitHead upstream notice, retained whole."
+      }
+    },
+    "xmlchars": {
+      "version": "2.2.0",
+      "tarball": "https://registry.npmjs.org/xmlchars/-/xmlchars-2.2.0.tgz",
+      "integrity": "sha512-JZnDKK8B0RCDw84FNdDAIpZK+JuJw+s7Lz8nksI7SIuU3UXJJslUthsi+uWBUYOwPFwW7W7PRLRfUKpxjtjFCw==",
+      "dependencies": {},
+      "license": "MIT",
+      "legal": {
+        "packagePath": "LICENSE",
+        "sha256": "45d196313c2647d313cc65ca9b093d2d6974b64d35ee7346f2c60c9d518dff2c",
+        "sourceUrl": "https://registry.npmjs.org/xmlchars/-/xmlchars-2.2.0.tgz"
+      }
+    }
+  }
+}

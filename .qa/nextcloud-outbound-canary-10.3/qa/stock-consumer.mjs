@@ -25,6 +25,9 @@ await fs.cp(path.resolve('extensions/nextcloud-talk/dist'), path.join(plugin, 'd
 assert.equal(sha(await fs.readFile(path.join(plugin, 'package.json'))), sha(originalPackage));
 assert.equal(sha(await fs.readFile(path.join(plugin, 'openclaw.plugin.json'))), sha(originalManifest));
 const requireFromPlugin = createRequire(path.join(plugin, 'package.json'));
+const resolvedSdk = await fs.realpath(requireFromPlugin.resolve('openclaw/plugin-sdk/channel-outbound'));
+assert.equal(resolvedSdk, await fs.realpath(path.join(host, 'dist/plugin-sdk/channel-outbound.js')), 'plugin must actually resolve the asserted stock 10.3 SDK, not another peer install');
+const sdkSha256 = sha(await fs.readFile(resolvedSdk));
 for (const name of ['saxes', 'xmlchars']) {
   assert.throws(() => requireFromPlugin.resolve(name), {code: 'MODULE_NOT_FOUND'}, `${name} must not resolve outside compiled artifact`);
 }
@@ -111,6 +114,6 @@ try {
 } finally {
   server.closeAllConnections();
   await new Promise(resolve => server.close(resolve));
-  await fs.writeFile(path.join(proof, 'stock-consumer.json'), JSON.stringify({status: failure ? 'FAIL' : 'PASS', scope: 'Compiled plugin native media and ordinary text against exact official 10.3 SDK/dependencies using real loopback HTTP; not installed Gateway or real Nextcloud proof', ...(failure ? {error: String(failure)} : {}), hostVersion: build.version, hostCommit: build.commit, pluginPackageSha256: sha(originalPackage), pluginManifestSha256: sha(originalManifest), lazyMediaExecuted: !failure, bundledXmlParserExecuted: !failure, parserDependenciesUnresolvable: true, packageAndManifestPreserved: true, mediaSha256: sha(bytes), requests, errors}, null, 2));
+  await fs.writeFile(path.join(proof, 'stock-consumer.json'), JSON.stringify({status: failure ? 'FAIL' : 'PASS', scope: 'Compiled plugin native media and ordinary text against exact official 10.3 SDK/dependencies using real loopback HTTP; not installed Gateway or real Nextcloud proof', ...(failure ? {error: String(failure)} : {}), hostVersion: build.version, hostCommit: build.commit, stockSdkResolutionVerified: true, sdkSha256, pluginPackageSha256: sha(originalPackage), pluginManifestSha256: sha(originalManifest), lazyMediaExecuted: !failure, bundledXmlParserExecuted: !failure, parserDependenciesUnresolvable: true, packageAndManifestPreserved: true, mediaSha256: sha(bytes), requests, errors}, null, 2));
 }
 if (failure) throw failure;

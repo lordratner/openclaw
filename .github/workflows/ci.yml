@@ -1,8 +1,9 @@
-name: Qualify outbound-only Talk canary on exact 10.3
+name: Finish exact-10.3 Talk canary packaging and stock consumer
 on:
   workflow_dispatch:
 permissions:
   contents: read
+  actions: read
 env:
   CI: 'true'
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: 'true'
@@ -30,9 +31,18 @@ jobs:
           semantic-checks: 'true'
           frozen-lockfile: 'true'
           cache-mode: restore
-      - name: Qualify exact-release outbound-only source and dist
+      - name: Download the exact failed producer, including its passing evidence
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c
+        with:
+          github-token: ${{ github.token }}
+          repository: lordratner/openclaw
+          run-id: 38909679105
+          name: nextcloud-outbound-canary-10.3-38909679105
+          path: ${{ runner.temp }}/nextcloud-outbound-canary-10.3-prior
+      - name: Guard retained exact-source proof, rebuild and finish pending gates
         env:
           CANARY_INPUT_ROOT: .proof-tools/.qa/nextcloud-outbound-canary-10.3
+          CANARY_RETAINED_PROOF_DIR: ${{ runner.temp }}/nextcloud-outbound-canary-10.3-prior
         run: node .proof-tools/.qa/nextcloud-outbound-canary-10.3/qa/qualify.mjs
       - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
         if: always()
