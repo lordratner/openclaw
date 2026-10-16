@@ -1,6 +1,6 @@
 # GitHub-only exact-10.3 qualification recipes
 
-**Prepared, not executed or dispatched.** This directory is QA tooling, not product source or an activation script. No canary source, live files, dependencies, services, refs or test messages were changed while preparing it. The parent's fresh source review covers the unchanged ten-path source port; it does not constitute execution of these new recipes.
+**Updated recipes prepared, not rerun or dispatched.** Initial run `38904653794` passed source/format binding, pinned parser inputs and lint, then failed the runtime prerequisite on a missing plugin-private cleanup helper. Its logs and FAIL receipt remain unchanged. The local repair adds that existing helper as an eleventh path and applies only verified CI formatter bytes to the outbound test fixture; fresh parent review/qualification is pending. No live files, dependencies, services, refs or test messages changed during this repair. This directory is QA tooling, not an activation script.
 
 ## Publisher layout
 
@@ -13,18 +13,18 @@ The parent should publish the selected input package at:
   port-manifest.json
   release-manifest.json
   parser-build-inputs.json
-  source/extensions/nextcloud-talk/...  # exactly the ten paths in paths.json
+  source/extensions/nextcloud-talk/...  # exactly the eleven paths in paths.json
 ```
 
 Publish `qa/workflow.yml` as the fork-only workflow. The workflow checks out **official release commit `59cb44796b0f1f0daa0e37af8b1495abb45d9bc1`**, then checks out only these proof tools/inputs under `.proof-tools`. That layout is intentional: `fork-profile.ts` imports the first checkout's canonical helper through a fixed four-parent relative path. Do not relocate it without reviewing that import.
 
-No production package/lock/config manifest is changed. The QA overlay changes only the ten reviewed plugin/test paths; the source identity receipt records post-format hashes, so the parent must reconcile any format-only changes before publishing an exact-source artifact claim.
+No production package/lock/config manifest is changed. The QA overlay changes only the eleven plugin/test paths; the source identity receipt records post-format hashes, so the parent must reconcile format-only changes and the helper repair before publishing an exact-source artifact claim.
 
 ## One-job gates
 
 `qualify.mjs` runs bounded phases and retains every executed command's log, exit code and wall time. Independent phases may continue after a failure; dependent ones are marked BLOCKED. The final qualification can be PASS **only if every gate is PASS**. A timeout/nonzero process exit cannot be rescued by a child-written receipt.
 
-1. Verify exact checkout and immutable release-file hashes; verify all ten overlay input hashes; format the overlay using the release's formatter; capture formatted source and a new source manifest.
+1. Verify exact checkout and immutable release-file hashes; verify all eleven overlay input hashes; format the overlay using the release's formatter; capture formatted source and a new source manifest.
 2. Install pinned parser inputs into a separate runner-temp prefix, scripts disabled, and verify **Saxes 6.0.0 / XMLChars 2.2.0** lockfile versions and npm integrities. Add only a task-owned source-build symlink for Saxes; production manifests and frozen lock remain unchanged.
 3. Build the exact release's `pnpm build qaRuntime` prerequisites with the selected Talk scope.
 4. Run exact release `pnpm tsgo:extensions`, `pnpm tsgo:extensions:test` and the release `run-oxlint` plugin lane.

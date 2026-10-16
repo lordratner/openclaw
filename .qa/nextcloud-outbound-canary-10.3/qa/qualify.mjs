@@ -64,7 +64,7 @@ async function assertSource() {
   await assertImmutable();
   const ordinal = ++scopeOrdinal;
   const tracked = (await command('tracked-scope-' + ordinal, 'git', ['diff', '--name-only'])).output.trim().split('\n').filter(Boolean);
-  assert(tracked.every(file => paths.includes(file)), 'tracked changes outside the ten-path plugin port');
+  assert(tracked.every(file => paths.includes(file)), 'tracked changes outside the eleven-path plugin port');
   const untracked = (await command('untracked-scope-' + ordinal, 'git', ['ls-files', '--others', '--exclude-standard'])).output.trim().split('\n').filter(Boolean);
   assert(untracked.every(file => paths.includes(file) || file === '.proof-tools/' || file.startsWith('.proof-tools/')), 'unexpected untracked source outside reviewed port/tools');
 }
@@ -93,7 +93,7 @@ await phase('prepare-and-format', [], async () => {
   paths = await readJson(path.join(input, 'paths.json'));
   const port = await readJson(path.join(input, 'port-manifest.json'));
   assert.equal(port.baselineCommit, release);
-  assert.equal(paths.length, 10);
+  assert.equal(paths.length, 11);
   assert.deepEqual(paths.slice().sort(), Object.keys(port.files).sort());
   for (const file of immutablePaths) immutable.set(file, sha(await fs.readFile(file)));
   for (const file of paths) {

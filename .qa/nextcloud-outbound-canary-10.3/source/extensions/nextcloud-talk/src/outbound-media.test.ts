@@ -238,23 +238,26 @@ it.each([
   '<root xmlns:oc="http://owncloud.org/ns"><oc:fileid>81</oc:fileid><oc:fileid>82</oc:fileid></root>',
   '<oc:fileid xmlns:oc="http://owncloud.org/ns">8<child/>1</oc:fileid>',
   '<oc:fileid xmlns:oc="http://owncloud.org/ns">81',
-])("cleans an unshared upload rather than trusting invalid WebDAV file identity %s", async (xml) => {
-  await withTalk(async (fixture) => {
-    fixture.respond = (request, response) => {
-      if (request.method === "PUT") {
-        response.writeHead(201);
-        response.end();
-        return true;
-      }
-      if (request.method === "PROPFIND") {
-        response.writeHead(207, { "content-type": "application/xml" });
-        response.end(xml);
-        return true;
-      }
-      return false;
-    };
-    await expect(send(fixture.ctx)).rejects.toThrow(/file identity/);
-    expect(fixture.requests.some(({ url }) => url.pathname.endsWith("/shares"))).toBe(false);
-    expect(fixture.requests.filter(({ method }) => method === "DELETE")).toHaveLength(1);
-  });
-});
+])(
+  "cleans an unshared upload rather than trusting invalid WebDAV file identity %s",
+  async (xml) => {
+    await withTalk(async (fixture) => {
+      fixture.respond = (request, response) => {
+        if (request.method === "PUT") {
+          response.writeHead(201);
+          response.end();
+          return true;
+        }
+        if (request.method === "PROPFIND") {
+          response.writeHead(207, { "content-type": "application/xml" });
+          response.end(xml);
+          return true;
+        }
+        return false;
+      };
+      await expect(send(fixture.ctx)).rejects.toThrow(/file identity/);
+      expect(fixture.requests.some(({ url }) => url.pathname.endsWith("/shares"))).toBe(false);
+      expect(fixture.requests.filter(({ method }) => method === "DELETE")).toHaveLength(1);
+    });
+  },
+);

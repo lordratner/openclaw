@@ -1,14 +1,18 @@
 {
   "status": "PREPARED_NOT_EXECUTED",
+  "supersedesFailedProducerRun": 38904653794,
   "baselineCommit": "59cb44796b0f1f0daa0e37af8b1495abb45d9bc1",
-  "sourcePortManifestSha256": "64e8be4531efbe918a140f555596c0a639b96501ea93af1d398a9b633bd30962",
-  "sourceInputsUnchanged": true,
+  "sourcePortManifestSha256": "efa5afd4715f9974b6397cb12e4603d03dc55b3388c379f202b77c362555b64a",
+  "sourceInputsScope": "Current eleven-path repaired port; prior ten CI-formatted inputs match producer hashes",
   "files": {
-    "README.md": "a0c1e8e3ff8b3c98b5c88e81476e30acf7b88714cc55d5e071411b9b9c29766a",
+    "README.md": "40998b5fd9bf2f420fde4c0f03d17df51f96d21d2fd98f12a2d16eab43771e53",
     "fork-profile.ts": "9d0ee172e5bf86cbdb537a13893792de895ba80a2a67d55cbe6dd99d4ca1d945",
-    "qualify.mjs": "424037e386e90dce3c2d4942f90ab8f0a04276823e7d1150b2ebbba8c8ca5267",
+    "qualify.mjs": "44394be18ff2344fa5aea99b6ca0a4c521ae7088d0b32fd0b8d12d8896a61eff",
     "stock-consumer.mjs": "1f705365928ade4f6fd80f091a68e3c9f834be35515f9377e3b5afdd03bc5b94",
     "stock-ingress.mjs": "757a0724d43db1b5eed9ebdaa8b1fbe36fe98ff249099ba6bd731c88c0c6897e",
     "workflow.yml": "ee1daa7054d7a69f32c8a6b102152849e5a5cca6bb9857efa432b7cb19ed122d"
-  }
+  },
+  "sourceInputsChangedByAuthorizedRepair": true,
+  "previousTenCiFormattedInputsUnchanged": true,
+  "helperCopiedByteExactFromParentOwner": true
 }

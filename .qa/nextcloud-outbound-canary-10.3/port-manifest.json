@@ -11,6 +11,11 @@
       "candidateSha256": "d2971a093f9cbf4d1abaf389e159ae8d4a3c01f48ad1d1f00aba33796493ca04",
       "kind": "production"
     },
+    "extensions/nextcloud-talk/src/guarded-response.ts": {
+      "baselineSha256": "77b37a2bf4d637b745401e92d60b6c96086cc34570ab4b12c96b41305b684f6c",
+      "candidateSha256": "939d9e57065b17a14768cdc93a80d16950da126c94541b3307978d1f68f2d668",
+      "kind": "production"
+    },
     "extensions/nextcloud-talk/src/inbound.behavior.test.ts": {
       "baselineSha256": "ebe8af9e1aad1623ee843b964e8b6fdb435f211f663da99d3cd35ea334b602d7",
       "candidateSha256": "e36cf2b214e593a6c8c904ed9f7be689d3032b79f3d5b382432a12481aac2639",
@@ -33,7 +38,7 @@
     },
     "extensions/nextcloud-talk/src/outbound-media.test.ts": {
       "baselineSha256": null,
-      "candidateSha256": "64a109a9b492d3d2b1fa0a236906895347fae52eea8771abf0452d56b2bfedbc",
+      "candidateSha256": "dd992095e02fad8601642ba662938683ed227216aea67cd3ca45e36116560fba",
       "kind": "test"
     },
     "extensions/nextcloud-talk/src/outbound-media.ts": {

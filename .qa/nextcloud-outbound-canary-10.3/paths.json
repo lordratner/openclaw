@@ -1,5 +1,6 @@
 [
   "extensions/nextcloud-talk/runtime-api.ts",
+  "extensions/nextcloud-talk/src/guarded-response.ts",
   "extensions/nextcloud-talk/src/inbound.behavior.test.ts",
   "extensions/nextcloud-talk/src/inbound.ts",
   "extensions/nextcloud-talk/src/message-adapter.ts",
