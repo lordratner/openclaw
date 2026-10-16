@@ -1,0 +1,151 @@
+{
+  "kind": "contributor-readiness-qualification",
+  "candidate": "412fb31d86cab77ff8fd711d80ddbf5ca2dc6a6e",
+  "priorHead": "328ac2397f204cd8b049ad8a955ab8bade580e55",
+  "productDelta": {
+    "files": 1,
+    "added": 0,
+    "removed": 52,
+    "productionCodeChanged": false,
+    "description": "Remove two complete mocked staging argument echoes and now-unused import"
+  },
+  "producer": {
+    "run": 38826014761,
+    "artifact": 12014584447,
+    "packageSha256": "357c380c2725b90a9b07bd6fe4881c5627a1790ddcfb963f10c67ebe6745d517",
+    "focusedMediaTests": 29,
+    "formatLint": "PASS",
+    "canonicalPackage": "PASS"
+  },
+  "fresh": {
+    "status": "PASS",
+    "mode": "fresh-only",
+    "sourceHead": "412fb31d86cab77ff8fd711d80ddbf5ca2dc6a6e",
+    "candidatePackageSha256": "357c380c2725b90a9b07bd6fe4881c5627a1790ddcfb963f10c67ebe6745d517",
+    "scope": "configured fresh paired PR host/plugin installation through real CLI and Gateway",
+    "gates": {
+      "freshText": true,
+      "freshMediaClosed": true,
+      "freshOptInImage": true,
+      "senderListsPreserved": true,
+      "selectedRuntimeMatchesPackage": true
+    },
+    "limitations": [
+      "No stable-upgrade proof in this leg",
+      "Not a published candidate release",
+      "No old-host plugin-only compatibility claim",
+      "No production activation"
+    ]
+  },
+  "dataSurvival": {
+    "status": "PASS",
+    "mode": "data-survival",
+    "sourceHead": "412fb31d86cab77ff8fd711d80ddbf5ca2dc6a6e",
+    "candidatePackageSha256": "357c380c2725b90a9b07bd6fe4881c5627a1790ddcfb963f10c67ebe6745d517",
+    "baseline": {
+      "version": "2026.10.4",
+      "dist": {
+        "shasum": "ac000cc196b31208b0108c171780a3312ea26e5e",
+        "tarball": "https://registry.npmjs.org/openclaw/-/openclaw-2026.10.4.tgz",
+        "fileCount": 13985,
+        "integrity": "sha512-+FH0StZF1tlTazM7JJGY6JePeJmhFNSRByi2Q3jXPRiLO7o4dJh2xa9Vy4Dk8Cd2ic8B7Zkf5NfEaCCWUkgqnQ==",
+        "signatures": [
+          {
+            "sig": "MEQCIF7R2cEkfiaVO71Z7UD7v2/TNQbqE7piRDxZYxIPtz9iAiACEXpV6Zd3zK8uHThCfd5zmDD9kojON7bhtmo4gpOtMA==",
+            "keyid": "SHA256:DhQ8wR5APBvFHLF/+Tc+AYvPOdTpcIDqOhxsBHRwC7U"
+          },
+          {
+            "keyid": "SHA256:DhQ8wR5APBvFHLF/+Tc+AYvPOdTpcIDqOhxsBHRwC7U",
+            "sig": "MEUCIQD5pMN1uK7sFoLjMyW+Vt0iBnmGBp/CG+4p74sY7cDIlgIgERIeBFp17qyG7e1K5ObDdSyUtmXuURJrO+UjzIKm18A="
+          }
+        ],
+        "attestations": {
+          "url": "https://registry.npmjs.org/-/npm/v1/attestations/openclaw@2026.10.4",
+          "provenance": {
+            "predicateType": "https://slsa.dev/provenance/v1"
+          }
+        },
+        "unpackedSize": 257836855
+      }
+    },
+    "candidatePackageVersion": "2026.10.3",
+    "selfUpdatePassed": false,
+    "semanticVersionUpgrade": false,
+    "scope": "published-stable Talk data survival across external package replacement into an unpublished paired source build; not a released semantic-version upgrade",
+    "gates": {
+      "stableCreatedConversation": true,
+      "sameSessionId": true,
+      "authoredChannelSettingsPreserved": true,
+      "workspaceSentinelPreserved": true,
+      "stableHistoryAtProvider": true,
+      "upgradedMediaClosed": true,
+      "upgradedOptInImage": true,
+      "senderListsPreserved": true
+    },
+    "limitations": [
+      "Not in-process updater proof",
+      "Not unmodified old-host plugin compatibility",
+      "Not a published candidate release",
+      "Existing accepted cleanup/cancellation proof retained, not repeated",
+      "Maintainer contract acceptance remains unresolved",
+      "No production activation"
+    ]
+  },
+  "executionRuns": {
+    "fresh": 38835244988,
+    "dataSurvival": 38835618787
+  },
+  "retainedProof": {
+    "priorSharedSourceRun": 38801908491,
+    "priorWorkerProfileRun": 38805415585,
+    "applicableTalkCases": 237,
+    "freshlyRerunMediaCases": 29,
+    "unchangedMatrixControls": 5,
+    "explanation": "Composite source-bound evidence, not a new 237-case global execution; all production bytes unchanged"
+  },
+  "cost": {
+    "successfulJobs": [
+      {
+        "run": 38826014761,
+        "job": 116733544975,
+        "wallSecondsIncludingSetup": 749.0
+      },
+      {
+        "run": 38835244988,
+        "job": 116762806962,
+        "wallSecondsIncludingSetup": 178.0
+      },
+      {
+        "run": 38835618787,
+        "job": 116763972801,
+        "wallSecondsIncludingSetup": 367.0
+      }
+    ],
+    "meaning": "wall time including setup; not CPU/billing"
+  },
+  "remainingGates": [
+    "Maintainer acceptance of required public staged-media cleanup and narrowing media policy",
+    "Release-owner selection and publication of matching host/plugin identities and enforceable version floor",
+    "Broader PR CI disposition remains separate; no merge waiver"
+  ],
+  "notClaims": [
+    "Not a released semantic-version upgrade or successful self-update",
+    "Not candidate plugin compatibility with an unmodified older host",
+    "Not a new production canary installation or fresh cancellation/media sample",
+    "Not a requested rating/label override"
+  ],
+  "supersededAttempts": [
+    {
+      "run": 38829589334,
+      "outcome": "setup-only cancelled before installed scenario to explicitly isolate DM session"
+    },
+    {
+      "run": 38829764748,
+      "outcome": "baseline drift refused before installed scenario; stable became10.4"
+    },
+    {
+      "run": 38834811204,
+      "outcome": "install/startup passed, verifier external-vs-bundled path assumption failed; repaired without product change"
+    }
+  ]
+}
