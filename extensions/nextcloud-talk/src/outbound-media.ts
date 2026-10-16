@@ -33,7 +33,7 @@ const FILE_ID_REQUEST =
   '<d:propfind xmlns:d="DAV:" xmlns:oc="http://owncloud.org/ns"><d:prop><oc:fileid/></d:prop></d:propfind>';
 
 function createFileClient(account: ResolvedNextcloudTalkAccount) {
-  const credentials = resolveNextcloudTalkApiCredentialsResult({ ...account.config });
+  const credentials = resolveNextcloudTalkApiCredentialsResult(account.config);
   if (credentials.status !== "available") {
     throw new Error(
       "Nextcloud Talk attachments require available apiUser and apiPassword/apiPasswordFile credentials.",
@@ -61,17 +61,15 @@ function createFileClient(account: ResolvedNextcloudTalkAccount) {
     options: { signal?: AbortSignal; beforeRequest?: () => void } = {},
   ): Promise<T> {
     options.signal?.throwIfAborted();
+    const headers = new Headers(init.headers);
+    headers.set("Authorization", authorization);
+    headers.set("OCS-APIRequest", "true");
+    if (!headers.has("Accept")) {
+      headers.set("Accept", "application/json");
+    }
     const guarded = await fetchWithSsrFGuard({
       url: url(pathname),
-      init: {
-        ...init,
-        headers: {
-          Authorization: authorization,
-          "OCS-APIRequest": "true",
-          Accept: "application/json",
-          ...init.headers,
-        },
-      },
+      init: { ...init, headers },
       maxRedirects: 0,
       requireHttps: base.protocol === "https:",
       policy: {
@@ -123,7 +121,12 @@ function createFileClient(account: ResolvedNextcloudTalkAccount) {
       !data.id ||
       data.id === "." ||
       data.id === ".." ||
-      /[/\\\x00-\x1f\x7f]/u.test(data.id)
+      data.id.includes("/") ||
+      data.id.includes("\\") ||
+      [...data.id].some((character) => {
+        const code = character.charCodeAt(0);
+        return code <= 0x1f || code === 0x7f;
+      })
     ) {
       throw new Error("Nextcloud Talk API account has no valid canonical user ID.");
     }
@@ -429,7 +432,7 @@ export async function sendMediaNextcloudTalk(
       try {
         await client.request(davPath, { method: "DELETE" }, async (response) => {
           if (!response.ok && response.status !== 404) {
-            throw new Error("cleanup rejected");
+            throw new Error("cleanup rejected", { cause: error });
           }
         });
       } catch {
