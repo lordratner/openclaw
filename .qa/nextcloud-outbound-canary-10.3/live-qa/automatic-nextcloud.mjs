@@ -234,7 +234,13 @@ export async function proveAutomaticReply({root, evidence, entry, env, origin, u
     const download = await fetch(`${origin}/remote.php/dav/files/${recipient}/${encodedPath}`, {headers: {Authorization: `Basic ${Buffer.from(`${recipient}:${password}`).toString('base64')}`}, redirect: 'error', signal: AbortSignal.timeout(30_000)});
     assert(download.ok, `automatic recipient download: ${download.status}`);
     assert.equal(sha(Buffer.from(await download.arrayBuffer())), sha(expectedBytes));
-    const automaticShares=await ocs(user,'/apps/files_sharing/api/v1/shares?path='+encodeURIComponent('/'+fileMessage.messageParameters.file.path));
+    // A recipient sees a Talk-mounted alias, not the owner's WebDAV path.
+    // Bind the owner lookup to this exact native chat receipt before querying
+    // its share; preserve recipient download verification above independently.
+    const ownerFileMessage=(await history(user,roomToken)).find(message=>String(message.id)===String(fileMessage.id));
+    assert.equal(ownerFileMessage?.actorId,user,'owner history did not contain the exact automatic native message');
+    assert(ownerFileMessage.messageParameters?.file?.path,'owner native attachment path missing');
+    const automaticShares=await ocs(user,'/apps/files_sharing/api/v1/shares?path='+encodeURIComponent('/'+ownerFileMessage.messageParameters.file.path));
     assert(automaticShares.some(share=>Number(share.share_type)===10 && share.share_with===roomToken && Number(share.permissions)===1),'automatic file share is not read-only in the exact room');
     const ownEcho = await eventually('real API-account native-file webhook accepted by Gateway', () => callbacks.find(item => item.actor === `users/${user}` && item.hasFile && String(item.objectId) === String(fileMessage.id) && item.type === 'Activity' && item.gatewayStatus === 200 && item.accepted === null));
     const echoWindowStart = Date.now();
