@@ -18,7 +18,7 @@ export async function inspectReplyCompletion({entry, evidence, gatewayLog, expec
   const {name, source} = matches[0];
   const lines = source.split('\n');
   const marker = lines.findIndex(line => line.includes('const recordMissingReply = () => {'));
-  const build = lines.findIndex(line => line.includes('let replyPayloads = await buildFinalPayloads(payloadCandidates)'));
+  const build = lines.findIndex(line => line.includes('let replyPayloads = await buildFinalPayloads('));
   assert(marker >= 0 && build >= 0);
   const log = await fs.readFile(gatewayLog, 'utf8');
   const endpoint = log.match(/Debugger listening on (ws:\/\/127\.0\.0\.1:\d+\/[^\s]+)/)?.[1];
