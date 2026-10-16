@@ -158,3 +158,11 @@ repair exists; private import/recovery paths are not substituted. The previous
 failed run remains failed. Its independent native job passed and is retained
 with the same source/package/admission/native recipe identities; the next run
 executes only the affected upgrade job, without rerunning native tests/builds.
+
+Run38936036982 confirmed the weather-only fixture avoids unrelated skill repair:
+Doctor migrated24→27 while leaving the complete authored configuration exactly
+unchanged, with no wizard object written. The oracle had wrongly required an
+audit stamp even without a config write. It now accepts the exact unchanged
+configuration; if a wizard audit is actually written, every canonical audit
+field and invocation-bounded timestamp is still checked before full deep equality.
+The failed run is retained; no product change or general exclusion was added.

@@ -174,7 +174,7 @@ function assertAuthoredPreserved(before, after, doctorAudit) {
   // mark already-explicit utility selection. No other key is excluded or reset.
   defaults.modelPolicy = {allow: derivedAllowlist};
   expected.meta = {...expected.meta, migrations: {modelPolicyAllowlist: true, utilityModelSeparation: true}};
-  if (doctorAudit) {
+  if (doctorAudit && after.authoredConfig.wizard !== undefined) {
     assert.equal(expected.wizard, undefined, 'fixture must begin before doctor audit metadata');
     const audit = after.authoredConfig.wizard;
     const recordedAt = Date.parse(audit?.lastRunAt);
@@ -389,7 +389,7 @@ try {
   assertAuthoredPreserved(before, afterDoctor, doctorAudit);
   const doctorPlugins = await inspectPlugins('candidate-after-doctor');
   assert.deepEqual(doctorPlugins, candidatePlugins, 'doctor changed the selected runtime/plugin install owner');
-  const canonicalAgentDatabaseMigration = {supportedCommand: 'doctor --fix --non-interactive --no-workspace-suggestions', stoppedOwnedGateway: true, serviceRepairPolicy: 'external', audit: afterDoctor.authoredConfig.wizard, beforeSchema: databaseBefore.schemaVersion, afterSchema: databaseAfter.schemaVersion, existingSessionIdentitiesUnchanged: true, backup: 'stable-agent-before-doctor.sqlite', authoredSettingsPreserved: true, selectedPluginOwnersUnchanged: true};
+  const canonicalAgentDatabaseMigration = {supportedCommand: 'doctor --fix --non-interactive --no-workspace-suggestions', stoppedOwnedGateway: true, serviceRepairPolicy: 'external', auditWritten: afterDoctor.authoredConfig.wizard !== undefined, audit: afterDoctor.authoredConfig.wizard, beforeSchema: databaseBefore.schemaVersion, afterSchema: databaseAfter.schemaVersion, existingSessionIdentitiesUnchanged: true, backup: 'stable-agent-before-doctor.sqlite', authoredSettingsPreserved: true, selectedPluginOwnersUnchanged: true};
   const candidate = await proveUrlPhase('candidate', gatewayPort);
   assert.equal(candidate.existingSessionBeforeTurn?.sessionId, stable.session.sessionId, 'existing stable-created session was not loaded');
   assert.equal(candidate.session.sessionId, stable.session.sessionId, 'upgrade replaced existing conversation/session');
