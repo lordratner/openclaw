@@ -123,7 +123,7 @@ function createFileClient(account: ResolvedNextcloudTalkAccount) {
       data.id === ".." ||
       data.id.includes("/") ||
       data.id.includes("\\") ||
-      [...data.id].some((character) => {
+      Array.from(data.id).some((character) => {
         const code = character.charCodeAt(0);
         return code <= 0x1f || code === 0x7f;
       })

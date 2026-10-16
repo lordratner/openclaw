@@ -4,7 +4,12 @@ import path from "node:path";
 import type { ChannelMessageSendMediaContext } from "openclaw/plugin-sdk/channel-outbound";
 import { withServer, withTempDir } from "openclaw/plugin-sdk/test-env";
 
-export type NextcloudTalkOutboundRequest = { method: string; url: URL; body: Buffer; authorization?: string };
+export type NextcloudTalkOutboundRequest = {
+  method: string;
+  url: URL;
+  body: Buffer;
+  authorization?: string;
+};
 export type NextcloudTalkOutboundFixture = {
   directory: string;
   requests: NextcloudTalkOutboundRequest[];
@@ -127,4 +132,3 @@ export async function withNextcloudTalkOutboundFixture(
     );
   });
 }
-

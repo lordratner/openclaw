@@ -160,18 +160,17 @@ type NativeReplyDelivery = ProviderReplyDelivery["deliverWithProviderMessageSend
 function isProviderReplyDelivery(
   delivery: ChannelInboundTurnPlan["delivery"] | ProviderReplyDelivery,
 ): delivery is ProviderReplyDelivery {
-  return "deliverWithProviderMessageSending" in delivery &&
-    typeof delivery.deliverWithProviderMessageSending === "function";
+  return (
+    "deliverWithProviderMessageSending" in delivery &&
+    typeof delivery.deliverWithProviderMessageSending === "function"
+  );
 }
 
 type AutomaticReplyContext = {
   fixture: AutomaticReplyFixture;
   controller: AbortController;
   onPlatformSendDispatch: ReturnType<typeof vi.fn<() => Promise<void>>>;
-  deliver: (
-    payload: ReplyPayload,
-    kind: "final" | "block",
-  ) => ReturnType<NativeReplyDelivery>;
+  deliver: (payload: ReplyPayload, kind: "final" | "block") => ReturnType<NativeReplyDelivery>;
 };
 
 // Capture synthetic assistant output at the inbound reply boundary; the shared
@@ -195,15 +194,20 @@ async function withNativeAutomaticReply(run: (context: AutomaticReplyContext) =>
     work.allowFrom = ["user-1"];
     const core = createPluginRuntimeMock();
     vi.mocked(core.state.resolveStateDir).mockReturnValue(stateDir);
-    vi.mocked(core.channel.session.resolveStorePath)
-      .mockReturnValue(path.join(stateDir, "agents", "main", "sessions.json"));
+    vi.mocked(core.channel.session.resolveStorePath).mockReturnValue(
+      path.join(stateDir, "agents", "main", "sessions.json"),
+    );
     setNextcloudTalkRuntime(core);
-    setActivePluginRegistry(createTestRegistry([{
-      pluginId: "nextcloud-talk",
-      plugin: nextcloudTalkPlugin,
-      source: "nextcloud-talk-native-reply-test",
-      origin: "bundled",
-    }]));
+    setActivePluginRegistry(
+      createTestRegistry([
+        {
+          pluginId: "nextcloud-talk",
+          plugin: nextcloudTalkPlugin,
+          source: "nextcloud-talk-native-reply-test",
+          origin: "bundled",
+        },
+      ]),
+    );
     installPairingController(vi.fn(async () => []));
     // Existing pairing tests retain their text spy; native reply cases delegate
     // the spy to the real transport so the old URL fallback remains observable.
@@ -513,17 +517,23 @@ describe("nextcloud-talk inbound behavior", () => {
     const info = { kind: "final" as const };
     const mediaOnlyPayload = { mediaUrl: "https://example.com/a.png" };
     expect(await preparePayload(mediaOnlyPayload, info)).toBe(mediaOnlyPayload);
-    expect(await preparePayload({
-      text: "Done.\n⚠️ 🛠️ `search repos (agent)` failed",
-      mediaUrls: ["https://example.com/a.png"],
-      replyToId: "41",
-    }, info)).toEqual({
+    expect(
+      await preparePayload(
+        {
+          text: "Done.\n⚠️ 🛠️ `search repos (agent)` failed",
+          mediaUrls: ["https://example.com/a.png"],
+          replyToId: "41",
+        },
+        info,
+      ),
+    ).toEqual({
       text: "Done.",
       mediaUrls: ["https://example.com/a.png"],
       replyToId: "41",
     });
-    expect(await preparePayload({ text: "⚠️ 🛠️ `search repos (agent)` failed" }, info))
-      .toEqual({ text: "" });
+    expect(await preparePayload({ text: "⚠️ 🛠️ `search repos (agent)` failed" }, info)).toEqual({
+      text: "",
+    });
     expect(sendMessageNextcloudTalkMock).not.toHaveBeenCalled();
   });
 
@@ -531,55 +541,71 @@ describe("nextcloud-talk inbound behavior", () => {
     { kind: "final" as const, caption: "The report" },
     { kind: "block" as const, caption: "The report" },
     { kind: "final" as const, caption: "" },
-  ])("uploads an automatic $kind reply with caption '$caption' through native delivery", async ({ kind, caption }) => {
-    await withNativeAutomaticReply(async ({ fixture, deliver }) => {
-      const result = await deliver({
-        text: caption ? `${caption}\n⚠️ 🛠️ \`search repos (agent)\` failed` : undefined,
-        mediaUrl: fixture.mediaUrl,
-        replyToId: "41",
-      }, kind);
-      const upload = fixture.requests.find(({ method }) => method === "PUT");
-      expect(upload?.body).toEqual(fixture.bytes);
-      expect(upload?.url.pathname).toMatch(/^\/cloud\/remote.php\/dav\/files\/canonical-user\//);
-      const shareRequests = fixture.requests.filter(({ url }) => url.pathname.endsWith("/shares"));
-      expect(shareRequests).toHaveLength(1);
-      const share = new URLSearchParams(shareRequests[0]!.body.toString());
-      expect(share.get("shareType")).toBe("10");
-      expect(share.get("shareWith")).toBe("allowed");
-      expect(share.get("permissions")).toBe("1");
-      expect(JSON.parse(share.get("talkMetaData") ?? "{}")).toEqual({ caption, replyTo: 41 });
-      expect(result).toMatchObject({
-        visibleReplySent: true,
-        receipt: { platformMessageIds: ["42"] },
+  ])(
+    "uploads an automatic $kind reply with caption '$caption' through native delivery",
+    async ({ kind, caption }) => {
+      await withNativeAutomaticReply(async ({ fixture, deliver }) => {
+        const result = await deliver(
+          {
+            text: caption ? `${caption}\n⚠️ 🛠️ \`search repos (agent)\` failed` : undefined,
+            mediaUrl: fixture.mediaUrl,
+            replyToId: "41",
+          },
+          kind,
+        );
+        const upload = fixture.requests.find(({ method }) => method === "PUT");
+        expect(upload?.body).toEqual(fixture.bytes);
+        expect(upload?.url.pathname).toMatch(/^\/cloud\/remote.php\/dav\/files\/canonical-user\//);
+        const shareRequests = fixture.requests.filter(({ url }) =>
+          url.pathname.endsWith("/shares"),
+        );
+        expect(shareRequests).toHaveLength(1);
+        const share = new URLSearchParams(shareRequests[0]!.body.toString());
+        expect(share.get("shareType")).toBe("10");
+        expect(share.get("shareWith")).toBe("allowed");
+        expect(share.get("permissions")).toBe("1");
+        expect(JSON.parse(share.get("talkMetaData") ?? "{}")).toEqual({ caption, replyTo: 41 });
+        expect(result).toMatchObject({
+          visibleReplySent: true,
+          receipt: { platformMessageIds: ["42"] },
+        });
+        expect(fixture.requests.some(({ url }) => url.pathname.includes("/bot/"))).toBe(false);
+        expect(
+          fixture.requests.every(
+            ({ authorization }) =>
+              authorization ===
+              `Basic ${Buffer.from("login-alias:synthetic-app-password").toString("base64")}`,
+          ),
+        ).toBe(true);
       });
-      expect(fixture.requests.some(({ url }) => url.pathname.includes("/bot/"))).toBe(false);
-      expect(fixture.requests.every(({ authorization }) => authorization ===
-        `Basic ${Buffer.from("login-alias:synthetic-app-password").toString("base64")}`))
-        .toBe(true);
-    });
-  });
+    },
+  );
 
   it("does not upload an automatic reply from outside its agent workspace", async () => {
     await withNativeAutomaticReply(async ({ fixture, deliver }) => {
       await expect(deliver({ mediaUrl: fixture.ctx.mediaUrl }, "final")).rejects.toThrow();
-      expect(fixture.requests.some(({ method }) => method === "PUT" || method === "MKCOL"))
-        .toBe(false);
+      expect(fixture.requests.some(({ method }) => method === "PUT" || method === "MKCOL")).toBe(
+        false,
+      );
     });
   });
 
   it("cancels a nonfinal automatic attachment before platform dispatch", async () => {
-    await withNativeAutomaticReply(async ({ fixture, deliver, controller, onPlatformSendDispatch }) => {
-      controller.abort(new Error("reply stopped"));
-      await expect(deliver({ mediaUrl: fixture.mediaUrl }, "block")).rejects.toThrow();
-      expect(fixture.requests).toEqual([]);
-      expect(onPlatformSendDispatch).not.toHaveBeenCalled();
-    });
+    await withNativeAutomaticReply(
+      async ({ fixture, deliver, controller, onPlatformSendDispatch }) => {
+        controller.abort(new Error("reply stopped"));
+        await expect(deliver({ mediaUrl: fixture.mediaUrl }, "block")).rejects.toThrow();
+        expect(fixture.requests).toEqual([]);
+        expect(onPlatformSendDispatch).not.toHaveBeenCalled();
+      },
+    );
   });
 
   it("keeps a warning-only automatic reply invisible after sanitation", async () => {
     await withNativeAutomaticReply(async ({ fixture, deliver }) => {
-      await expect(deliver({ text: "⚠️ 🛠️ `search repos (agent)` failed" }, "final"))
-        .resolves.toMatchObject({ visibleReplySent: false });
+      await expect(
+        deliver({ text: "⚠️ 🛠️ `search repos (agent)` failed" }, "final"),
+      ).resolves.toMatchObject({ visibleReplySent: false });
       expect(fixture.requests).toEqual([]);
     });
   });

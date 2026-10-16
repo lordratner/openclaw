@@ -24,7 +24,14 @@ type ReplyParams = Pick<
 export async function deliverNextcloudTalkReply(params: ReplyParams) {
   const { cfg, accountId, agentId, ctxPayload, payload, info, to } = params;
   const final = await deliverInboundReplyWithMessageSendContext({
-    cfg, channel: "nextcloud-talk", accountId, agentId, ctxPayload, payload, info, to,
+    cfg,
+    channel: "nextcloud-talk",
+    accountId,
+    agentId,
+    ctxPayload,
+    payload,
+    info,
+    to,
   });
   if (final.status === "handled_visible" || final.status === "handled_no_send") {
     return final.delivery;
@@ -63,10 +70,19 @@ export async function deliverNextcloudTalkReply(params: ReplyParams) {
     throw send.error;
   }
   const deliveryIntent = send.deliveryIntent
-    ? { id: send.deliveryIntent.id, kind: "outbound_queue" as const, queuePolicy: send.deliveryIntent.queuePolicy }
+    ? {
+        id: send.deliveryIntent.id,
+        kind: "outbound_queue" as const,
+        queuePolicy: send.deliveryIntent.queuePolicy,
+      }
     : undefined;
   if (send.status === "suppressed") {
-    return { visibleReplySent: false, receipt: send.receipt, suppression: { reason: send.reason }, ...(deliveryIntent ? { deliveryIntent } : {}) };
+    return {
+      visibleReplySent: false,
+      receipt: send.receipt,
+      suppression: { reason: send.reason },
+      ...(deliveryIntent ? { deliveryIntent } : {}),
+    };
   }
   const result = {
     ...createAcceptedChannelDeliveryResult({ results: [{ receipt: send.receipt }] }),
