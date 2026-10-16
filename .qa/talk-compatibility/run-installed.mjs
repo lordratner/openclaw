@@ -12,6 +12,8 @@ const repo=process.cwd();
 const tools=path.dirname(fileURLToPath(import.meta.url));
 const root=path.join(process.env.RUNNER_TEMP,'nextcloud-compat-installed');
 const candidate=process.env.CANDIDATE_TARBALL;
+const mode=process.env.QA_LEG??'all';
+assert(['all','fresh','data-survival'].includes(mode),'unknown proof leg');
 assert(candidate?.startsWith(process.env.RUNNER_TEMP+path.sep));
 const evidence=path.join(process.env.RUNNER_TEMP,'nextcloud-compat-evidence');
 await fs.mkdir(root,{recursive:true,mode:0o700});
@@ -73,24 +75,13 @@ async function inspect(leg,label){
   assert.equal(plugin.version,leg.expectedVersion);
   const compiled=path.join(leg.prefix,'lib/node_modules/openclaw/dist/extensions/nextcloud-talk');
   if(leg.candidate){
-    const liveRoot=plugin.root??path.dirname(path.dirname(plugin.source));
     const manifest=JSON.parse(await fs.readFile(path.join(compiled,'package.json'),'utf8'));
     assert.equal(manifest.openclaw.build.bundledDist,true);
-    // Ensure runtime actually selected the matching packaged owner, not a stale managed override.
-    async function inventory(directory,relative=''){
-      const result={};
-      for(const entry of (await fs.readdir(directory,{withFileTypes:true})).sort((a,b)=>a.name.localeCompare(b.name))){
-        const file=path.join(directory,entry.name),key=path.posix.join(relative,entry.name);
-        assert(!entry.isSymbolicLink(),'unexpected runtime-dist symlink');
-        if(entry.isDirectory())Object.assign(result,await inventory(file,key));
-        else{assert(entry.isFile());result[key]=sha(await fs.readFile(file));}
-      }
-      return result;
-    }
-    assert.deepEqual(await inventory(path.join(liveRoot,'dist')),await inventory(path.join(compiled,'dist')),'selected Talk runtime differs from paired package');
-    for(const file of ['openclaw.plugin.json','package.json']){
-      assert.equal(sha(await fs.readFile(path.join(liveRoot,file))),sha(await fs.readFile(path.join(compiled,file))),`different installed Talk ${file}`);
-    }
+    // Bundled inspection publishes rootDir and a root-level compiled index.js.
+    // Require the exact admitted package owner, never a stale managed override.
+    assert.equal(await fs.realpath(plugin.rootDir),await fs.realpath(compiled),'selected Talk root is not the paired package');
+    const source=await fs.realpath(plugin.source);
+    assert(source.startsWith((await fs.realpath(compiled))+path.sep),'runtime entry escaped paired package');
   }
   return info;
 }
@@ -183,6 +174,7 @@ try{
   await service(['--import','./scripts/tsx.mjs','scripts/e2e/mock-openai-server.mjs'],'mock-provider',
     {...baseEnv,MOCK_PORT:String(mockPort),MOCK_REQUEST_LOG:mockLog,SUCCESS_MARKER:'OPENCLAW_E2E_COMPAT_OK'});
   await until(async()=>{try{return(await fetch(`http://127.0.0.1:${mockPort}/health`,{signal:AbortSignal.timeout(1000)})).ok;}catch{return false;}},'mock provider');
+  if(mode!=='data-survival'){
   phase='fresh';
   const fresh=await createLeg('fresh',candidate,'2026.10.3',true);
   await start(fresh,'fresh');
@@ -191,7 +183,8 @@ try{
   await optIn(fresh,'fresh-opt-in');
   await turn(fresh,'image','allowed-image','COMPAT_FRESH_IMAGE','fresh-image');
   await stop(fresh.gateway);
-  if(process.env.QA_LEG==='fresh'){
+  }
+  if(mode==='fresh'){
     phase='complete';
     await fs.writeFile(path.join(evidence,'qualification.json'),JSON.stringify({status:'PASS',mode:'fresh-only',
       sourceHead:process.env.CANDIDATE_SHA,candidatePackageSha256:sha(await fs.readFile(candidate)),
@@ -201,7 +194,7 @@ try{
         'No old-host plugin-only compatibility claim','No production activation'],steps},null,2)+'\n',{flag:'wx'});
   }else{
   const baseline=JSON.parse(await fs.readFile(process.env.BASELINE_METADATA,'utf8'));
-  assert.equal(baseline.version,'2026.10.3','stable moved: explicitly reselect and review baseline');
+  assert.equal(baseline.version,process.env.BASELINE_EXPECTED_VERSION??'2026.10.3','stable moved: explicitly reselect and review baseline');
   phase='stable-created';
   const upgraded=await createLeg('upgrade',process.env.BASELINE_TARBALL,baseline.version,false);
   await start(upgraded,'stable');
@@ -218,6 +211,11 @@ try{
   upgraded.candidate=true;upgraded.expectedVersion='2026.10.3';
   await cli(upgraded,['plugins','install','nextcloud-talk','--force','--no-enable'],'upgrade-select-matching-plugin',600000);
   await cli(upgraded,['doctor','--fix','--non-interactive'],'upgrade-doctor',180000);
+  const transition=JSON.parse(await run(process.execPath,[
+    path.join(repo,'scripts/e2e/lib/external-package-transition.mjs'),'receipt',
+    baseline.version,'2026.10.3',evidence],'external-package-transition-receipt',upgraded.env));
+  assert.equal(transition.selfUpdatePassed,false);
+  await fs.writeFile(path.join(evidence,'external-package-transition.json'),JSON.stringify(transition,null,2)+'\n',{flag:'wx'});
   await cli(upgraded,['config','validate'],'upgrade-validate');
   await start(upgraded,'upgraded');
   const after=await snapshot(upgraded,'upgraded-before-turn');
@@ -235,10 +233,11 @@ try{
   assert.equal(finalSession[0].sessionId,session[0].sessionId);
   await stop(upgraded.gateway);
   phase='complete';
-  await fs.writeFile(path.join(evidence,'qualification.json'),JSON.stringify({status:'PASS',
+  await fs.writeFile(path.join(evidence,'qualification.json'),JSON.stringify({status:'PASS',mode,
     sourceHead:process.env.CANDIDATE_SHA,candidatePackageSha256:sha(await fs.readFile(candidate)),baseline,
-    scope:'configured fresh paired PR host/plugin and published stable external-package-manager upgrade',
-    gates:{freshText:true,freshMediaClosed:true,freshOptInImage:true,stableCreatedConversation:true,
+    candidatePackageVersion:'2026.10.3',selfUpdatePassed:false,semanticVersionUpgrade:false,
+    scope:'published-stable Talk data survival across external package replacement into an unpublished paired source build; not a released semantic-version upgrade',
+    gates:{...(mode==='all'?{freshText:true,freshMediaClosed:true,freshOptInImage:true}:{}),stableCreatedConversation:true,
       sameSessionId:true,authoredChannelSettingsPreserved:true,workspaceSentinelPreserved:true,
       stableHistoryAtProvider:true,upgradedMediaClosed:true,upgradedOptInImage:true,senderListsPreserved:true},
     limitations:['Not in-process updater proof','Not unmodified old-host plugin compatibility',
