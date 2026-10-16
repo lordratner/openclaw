@@ -1,0 +1,14 @@
+{
+  "status": "PREPARED_NOT_EXECUTED",
+  "baselineCommit": "59cb44796b0f1f0daa0e37af8b1495abb45d9bc1",
+  "sourcePortManifestSha256": "64e8be4531efbe918a140f555596c0a639b96501ea93af1d398a9b633bd30962",
+  "sourceInputsUnchanged": true,
+  "files": {
+    "README.md": "a0c1e8e3ff8b3c98b5c88e81476e30acf7b88714cc55d5e071411b9b9c29766a",
+    "fork-profile.ts": "9d0ee172e5bf86cbdb537a13893792de895ba80a2a67d55cbe6dd99d4ca1d945",
+    "qualify.mjs": "424037e386e90dce3c2d4942f90ab8f0a04276823e7d1150b2ebbba8c8ca5267",
+    "stock-consumer.mjs": "1f705365928ade4f6fd80f091a68e3c9f834be35515f9377e3b5afdd03bc5b94",
+    "stock-ingress.mjs": "757a0724d43db1b5eed9ebdaa8b1fbe36fe98ff249099ba6bd731c88c0c6897e",
+    "workflow.yml": "ee1daa7054d7a69f32c8a6b102152849e5a5cca6bb9857efa432b7cb19ed122d"
+  }
+}

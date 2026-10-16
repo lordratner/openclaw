@@ -1,0 +1,60 @@
+{
+  "status": "SOURCE_PORT_NOT_QUALIFIED_NOT_INSTALLED",
+  "baselineCommit": "59cb44796b0f1f0daa0e37af8b1495abb45d9bc1",
+  "baselineVersion": "2026.10.3",
+  "noCoreChanges": true,
+  "noInboundAdmissionOrRetrievalChanges": true,
+  "noInstalledPackageOrConfigurationChanges": true,
+  "files": {
+    "extensions/nextcloud-talk/runtime-api.ts": {
+      "baselineSha256": "53233d7959d7cbf7edebb9c1df436e26cc344b6dcaca30fc1cf38d5d847cf216",
+      "candidateSha256": "d2971a093f9cbf4d1abaf389e159ae8d4a3c01f48ad1d1f00aba33796493ca04",
+      "kind": "production"
+    },
+    "extensions/nextcloud-talk/src/inbound.behavior.test.ts": {
+      "baselineSha256": "ebe8af9e1aad1623ee843b964e8b6fdb435f211f663da99d3cd35ea334b602d7",
+      "candidateSha256": "e36cf2b214e593a6c8c904ed9f7be689d3032b79f3d5b382432a12481aac2639",
+      "kind": "test"
+    },
+    "extensions/nextcloud-talk/src/inbound.ts": {
+      "baselineSha256": "ece6f882010289a9148c055628b7ab476a98f2f85a43fa7440071084a6e05d88",
+      "candidateSha256": "e774ccc7fda1e339fe9660212c03b63ca9003b1e12c08b73240858f4800e8ea0",
+      "kind": "production"
+    },
+    "extensions/nextcloud-talk/src/message-adapter.ts": {
+      "baselineSha256": "8ba0a5bf3d0b5fd3b09925495ac37380928af78adfbdbddad2943458f183d148",
+      "candidateSha256": "2b0d40e029cd175ce630b1da51164081a586743d75c27e78fc53ce90c34d8b92",
+      "kind": "production"
+    },
+    "extensions/nextcloud-talk/src/outbound-media.test-harness.ts": {
+      "baselineSha256": null,
+      "candidateSha256": "d495da820479f882688b5e5bea7cc9714a438ce9e7fbffa9b092dc22de04ef6c",
+      "kind": "test"
+    },
+    "extensions/nextcloud-talk/src/outbound-media.test.ts": {
+      "baselineSha256": null,
+      "candidateSha256": "64a109a9b492d3d2b1fa0a236906895347fae52eea8771abf0452d56b2bfedbc",
+      "kind": "test"
+    },
+    "extensions/nextcloud-talk/src/outbound-media.ts": {
+      "baselineSha256": null,
+      "candidateSha256": "20812cb62901da7886cec48b0ebaa66e0cd53413fe15005fff2c8b20a1208e29",
+      "kind": "production"
+    },
+    "extensions/nextcloud-talk/src/reply.ts": {
+      "baselineSha256": null,
+      "candidateSha256": "d4eb72c1e55beac9d22f482fbb02452c49923554ae1d7aca8cafcf44984820d0",
+      "kind": "production"
+    },
+    "extensions/nextcloud-talk/src/send.handoff.test.ts": {
+      "baselineSha256": "2ec53e8bda43bb0e64ee05d8bf1f09107230927dd47e68d57683a093701ccd6f",
+      "candidateSha256": "5325aac9d9d55071fcf9761e52b143e3caca2f565c60ae258c1987db666afae3",
+      "kind": "test"
+    },
+    "extensions/nextcloud-talk/src/webdav.ts": {
+      "baselineSha256": null,
+      "candidateSha256": "22efffac7e8b82c4e9c3d6989fa32627b1c2cbb2c149518d866a9f8c0b16c05d",
+      "kind": "production"
+    }
+  }
+}
