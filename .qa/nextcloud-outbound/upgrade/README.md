@@ -35,7 +35,7 @@ candidate checkout's canonical model helper and the same admitted package.
    authored workspace sentinels and real Talk room. No API-account fields are
    configured in the app. The harness's fixture API user is separate.
 3. Send the immutable public LICENSE URL through the installed stable CLI and
-   automatic Gateway; validate real bot-message receipts, exact completed inbound
+   automatic Gateway; validate real bot-message observations, exact completed inbound
    turn, done/inactive session and a real signed durable webhook.
 4. Stop only the owned Gateway, snapshot settings/secret/authored-workspace
    hashes, install the admitted candidate into the same prefix, and assert the
@@ -64,6 +64,14 @@ candidate checkout's canonical model helper and the same admitted package.
    receipt/read-only room share and recipient byte equality. This final optional
    control is CLI-only; its signed echo is recorded but not forwarded to a stopped
    Gateway. The independent `native` job owns full automatic/echo qualification.
+
+Legacy Talk bot sends return HTTP201/null, so their CLI receipt can legitimately
+say `unknown`. URL phases preserve that receipt separately from the observed
+chat ID: correlate a fresh nonce, exact message/room and bot identity obtained
+from its HMAC-verified room-Join callback. Require one match; when a concrete CLI
+ID is returned it must equal that observation. Native-file receipt equality is
+unchanged and remains mandatory. The initial failed upgrade oracle is retained
+at run38930252668; it stopped before automatic delivery or migration.
 
 The model mock uses separate explicit main/utility identities, stable canonical
 config helper, minimal canonical Responses SSE events and no memory search.

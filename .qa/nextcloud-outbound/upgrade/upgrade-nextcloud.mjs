@@ -180,16 +180,28 @@ async function startGateway(label, gatewayPort) {
 async function proveUrlPhase(label, gatewayPort) {
   await startGateway(label, gatewayPort);
   if (label === 'stable') await ocs(user, `/apps/spreed/api/v1/bot/${roomToken}/${botId}`, {});
+  const joinedBot = await eventually('signed registered room bot identity', () => callbacks.find(callback => callback.type === 'Join' && callback.objectId === roomToken && callback.signed && callback.gatewayStatus === 200 && callback.actor?.startsWith('bots/')));
+  const botActorId = joinedBot.actor.slice('bots/'.length);
+  const priorIds = new Set((await history()).map(message => String(message.id)));
   const caption = `Upgrade ${label} CLI ${randomUUID()}`;
   const sent = JSON.parse(await cli(['message', 'send', '--channel', 'nextcloud-talk', '--target', roomToken, '--message', caption, '--media', webUrl, '--json'], `${label}-cli-url`));
-  const manual = (await history()).find(message => String(message.id) === String(sent.messageId));
-  assert(manual && manual.actorType === 'bots' && manual.message.includes(caption) && manual.message.includes(`Attachment: ${webUrl}`));
+  // Talk's legacy bot endpoint acknowledges with 201/null, not a chat ID.
+  // Preserve that honest receipt and independently correlate authoritative
+  // history using a fresh nonce, exact text/room and signed registered actor.
+  const manual = await eventually(label + ' exact bot URL room message', async () => {
+    const matches = (await history()).filter(message => !priorIds.has(String(message.id)) && message.token === roomToken && message.actorType === 'bots' && message.actorId === botActorId && message.message === `${caption}\n\nAttachment: ${webUrl}`);
+    assert(matches.length <= 1, 'ambiguous bot URL history correlation');
+    return matches[0];
+  });
+  const cliReceiptMessageId = String(sent.messageId ?? 'unknown');
+  assert(cliReceiptMessageId === 'unknown' || /^[1-9]\d*$/u.test(cliReceiptMessageId), 'unexpected bot receipt shape');
+  if (cliReceiptMessageId !== 'unknown') assert.equal(cliReceiptMessageId, String(manual.id), 'concrete bot receipt differs from observed chat ID');
   activePhase = {label, marker: `Upgrade ${label} trigger ${randomUUID()}`, caption: `Upgrade ${label} automatic ${randomUUID()}`};
   const modelBefore = inference.length;
   const before = label === 'candidate' ? await describe('candidate-existing-session') : undefined;
   const startedAt = Date.now();
   const posted = await ocs(recipient, `/apps/spreed/api/v1/chat/${roomToken}`, {message: activePhase.marker});
-  const automatic = await eventually(label + ' bot URL automatic reply', async () => (await history()).find(message => message.actorType === 'bots' && message.message.includes(activePhase.caption) && message.message.includes(`Attachment: ${webUrl}`)));
+  const automatic = await eventually(label + ' bot URL automatic reply', async () => (await history()).find(message => message.actorType === 'bots' && message.actorId === botActorId && message.message.includes(activePhase.caption) && message.message.includes(`Attachment: ${webUrl}`)));
   const terminal = await eventually(label + ' exact terminal outcome', async () => {
     const log = await fs.readFile(path.join(evidence, `${label}-gateway.log`), 'utf8');
     const match = log.match(new RegExp(`message processed: channel=nextcloud-talk .*?messageId=${String(posted.id)}\\b.*? outcome=(\\w+)`));
@@ -202,7 +214,7 @@ async function proveUrlPhase(label, gatewayPort) {
   assert(callbacks.some(callback => callback.objectId === String(posted.id) && callback.gatewayStatus === 200 && callback.accepted === 'durable'));
   assert(!automatic.message.includes('MEDIA:'));
   await noNativeEffects();
-  const phase = {label, cliMessageId: String(manual.id), automaticMessageId: String(automatic.id), triggeringMessageId: String(posted.id), terminal, session, existingSessionBeforeTurn: before, inferenceCount: inference.length};
+  const phase = {label, cliReceiptMessageId, cliReceipt: sent.receipt, observedCliChatId: String(manual.id), observedVia: 'exact nonce/text/room and signed registered bot identity in Talk history', botActorId, automaticMessageId: String(automatic.id), triggeringMessageId: String(posted.id), terminal, session, existingSessionBeforeTurn: before, inferenceCount: inference.length};
   phases.push(phase); await jsonFile(label + '-phase.json', phase);
   await stopGateway(); return phase;
 }
@@ -327,7 +339,7 @@ try {
   }
   await noNativeEffects();
   const preservedHistory = await history();
-  assert(preservedHistory.some(message => String(message.id) === stable.cliMessageId));
+  assert(preservedHistory.some(message => String(message.id) === stable.observedCliChatId));
   assert(preservedHistory.some(message => String(message.id) === stable.automaticMessageId));
   assert(!preservedHistory.some(message => message.message === 'No answer was returned. Ask again if you still need one.'));
   for (const message of preservedHistory.filter(message => message.actorType === 'bots')) {
