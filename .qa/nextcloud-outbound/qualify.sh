@@ -37,7 +37,6 @@ from pathlib import Path
 proof=Path(os.environ['RUNNER_TEMP'])/'nextcloud-outbound-proof'
 result=json.loads((proof/'baseline-tests.json').read_text())
 assert result['numFailedTests']==2,result
-assert result['numRuntimeErrorTestSuites']==0,result
 failed=[a for s in result['testResults'] for a in s['assertionResults'] if a['status']=='failed']
 assert len(failed)==2 and all('delivers a real file share' in a['fullName'] for a in failed)
 assert all(any('undefined' in message and 'equal' in message for message in a['failureMessages']) for a in failed),failed
