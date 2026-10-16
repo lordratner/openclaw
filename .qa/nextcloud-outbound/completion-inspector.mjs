@@ -33,17 +33,14 @@ export async function inspectReplyCompletion({entry, evidence, gatewayLog, expec
     pending.set(id, {resolve, reject, timeout});
     ws.send(JSON.stringify({id, method, params}));
   });
-  const expression = `JSON.stringify((()=>{
-    const read = f => {try{return f()}catch(e){return {unavailable:String(e)}}};
-    const payload = p => ({textLength:p.text?.length,mediaCount:p.mediaUrls?.length ?? (p.mediaUrl ? 1 : 0),isCommentary:p.isCommentary,isReasoning:p.isReasoning,isError:p.isError,metadata:read(()=>{const m=getReplyPayloadMetadata(p);return m?{keys:Object.keys(m),assistantMessageIndex:m.assistantMessageIndex,blockReplySources:m.blockReplySources?.map(s=>({complete:s.complete,keys:Object.keys(s)}))}:null})});
-    return {
-      completion:read(()=>completion),sourceReplyDelivery:read(()=>sourceReplyDelivery),terminalReplyDelivery:read(()=>terminalReplyDelivery),hasTerminalReply:read(()=>hasTerminalReply),hasDirectlySentBlockReply:read(()=>hasDirectlySentBlockReply),
-      runResult:read(()=>({sourceReplyDeliveryState:runResult.sourceReplyDeliveryState,terminalReply:runResult.meta?.terminalReply,error:runResult.meta?.error,finalTextLength:runResult.meta?.finalAssistantVisibleText?.length})),
-      pipeline:read(()=>blockReplyPipeline ? {didStream:blockReplyPipeline.didStream(),didStreamTerminalReply:blockReplyPipeline.didStreamTerminalReply?.(),isAborted:blockReplyPipeline.isAborted()}:null),
-      direct:read(()=>directBlockDeliveries?.map(d=>({outcome:d.outcome,pending:d.pending,terminalDeliveryConfirmed:d.terminalDeliveryConfirmed,payload:payload(d.payload)}))),
-      payloadArray:read(()=>payloadArray.map(payload)),replyPayloads:read(()=>replyPayloads.map(payload))
-    };
-  })())`;
+  const expressions = [
+    'completion.outcome','sourceReplyDelivery','terminalReplyDelivery','hasTerminalReply',
+    'waitingStatusPayload === undefined','strandedFinal','blockStreamingEnabled',
+    'hasDirectlySentBlockReply','runResult.sourceReplyDeliveryState',
+    'runResult.meta?.terminalReply?.disposition','runResult.meta?.terminalReply?.code',
+    'payloadArray.length','replyPayloads.length','directBlockDeliveries.length',
+    'blockReplyPipeline === null'
+  ];
   ws.addEventListener('message', async event => {
     const message = JSON.parse(event.data);
     if (message.id) {
@@ -56,8 +53,26 @@ export async function inspectReplyCompletion({entry, evidence, gatewayLog, expec
     if (message.method !== 'Debugger.paused') return;
     try {
       const top = message.params.callFrames[0];
-      const result = await request('Debugger.evaluateOnCallFrame', {callFrameId:top.callFrameId,expression,returnByValue:true,throwOnSideEffect:true});
-      captures.push({functionName:top.functionName,line:top.location.lineNumber+1,exception:result.exceptionDetails?.text,state:result.result?.value ? JSON.parse(result.result.value) : result.result});
+      const frame = message.params.callFrames.find(item => item.functionName === 'prepareReplyAgentPayloads') ?? top;
+      const state = {};
+      const read = async expression => {
+        const result = await request('Debugger.evaluateOnCallFrame', {callFrameId:frame.callFrameId,expression,returnByValue:true,throwOnSideEffect:true});
+        state[expression] = result.exceptionDetails
+          ? {unavailable:result.result?.description ?? result.exceptionDetails.text}
+          : result.result?.type === 'undefined' ? {undefined:true} : result.result?.value;
+        return state[expression];
+      };
+      for (const expression of expressions) await read(expression);
+      for (const [collection,count] of [['payloadArray',state['payloadArray.length']],['replyPayloads',state['replyPayloads.length']],['directBlockDeliveries',state['directBlockDeliveries.length']]]) {
+        if (!Number.isInteger(count)) continue;
+        for (let i=0;i<Math.min(count,8);i++) {
+          const object = collection === 'directBlockDeliveries' ? `${collection}[${i}].payload` : `${collection}[${i}]`;
+          for (const field of ['text?.length','mediaUrl !== undefined','mediaUrls?.length','isCommentary','isReasoning','isError']) await read(`${object}.${field}`);
+          for (const field of ['assistantMessageIndex','blockReplySources?.length','blockReplySources?.[0]?.complete']) await read(`getReplyPayloadMetadata(${object})?.${field}`);
+          if (collection === 'directBlockDeliveries') for (const field of ['pending','terminalDeliveryConfirmed','outcome','source?.complete','source?.kind']) await read(`${collection}[${i}].${field}`);
+        }
+      }
+      captures.push({functionName:top.functionName,line:top.location.lineNumber+1,readFrame:frame.functionName,readFrameLine:frame.location.lineNumber+1,state});
       await fs.writeFile(path.join(evidence, 'completion-inspector.json'), JSON.stringify({scope:'Read-only debugger observations; no runtime source or state mutation',owner:name,captures,errors},null,2));
     } catch(error) { errors.push(String(error)); }
     finally { await request('Debugger.resume').catch(error=>errors.push(String(error))); }
