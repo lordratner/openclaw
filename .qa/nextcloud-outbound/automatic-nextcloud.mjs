@@ -89,7 +89,9 @@ export async function proveAutomaticReply({root, evidence, entry, env, origin, u
   const inboundMarker = `Request automatic native attachment ${randomUUID()}`;
   const actorMarker = `API account ordinary text control ${randomUUID()}`;
   const actorAnswer = `API account ordinary text accepted ${randomUUID()}`;
-  const inference = [], callbacks = [], errors = [];
+  const inference = [], utility = [], callbacks = [], errors = [];
+  const mainModel = 'gpt-5.6-luna';
+  const utilityModel = 'gpt-5.6-luna-utility';
   let gateway, gatewayLog, result, failure;
   let mock, relay;
   try {
@@ -101,18 +103,28 @@ export async function proveAutomaticReply({root, evidence, entry, env, origin, u
       try {
         if (req.method === 'GET' && req.url === '/v1/models') {
           res.writeHead(200, {'content-type': 'application/json'});
-          res.end(JSON.stringify({object: 'list', data: [{id: 'gpt-5.6-luna', object: 'model', owned_by: 'synthetic-proof'}]}));
+          res.end(JSON.stringify({object: 'list', data: [mainModel, utilityModel].map(id => ({id, object: 'model', owned_by: 'synthetic-proof'}))}));
           return;
         }
         assert.equal(req.method, 'POST');
         assert.equal(req.url, '/v1/responses');
         const body = JSON.parse((await bodyBytes(req)).toString());
-        assert.equal(body.model, 'gpt-5.6-luna');
         const bodyText = JSON.stringify(body.input);
-        assert(bodyText.includes(inboundMarker) || bodyText.includes(actorMarker), 'unexpected utility/model call');
-        inference.push({ordinal: inference.length + 1, receivedAt: Date.now(), model: body.model, inputBytes: Buffer.byteLength(bodyText), inputSha256: sha(bodyText), sawInboundMarker: bodyText.includes(inboundMarker), sawApiActorMarker: bodyText.includes(actorMarker)});
-        const text = inference.length === 1 ? `${caption}\n\nMEDIA:${mediaPath}` : actorAnswer;
-        const events = responseEvents(text, inference.length);
+        let text, responseId;
+        if (body.model === utilityModel) {
+          utility.push({ordinal: utility.length + 1, model: body.model, inputSha256: sha(bodyText)});
+          text = 'Synthetic fixture utility response.';
+          responseId = `utility_${utility.length}`;
+        } else {
+          assert.equal(body.model, mainModel);
+          const sawInboundMarker = bodyText.includes(inboundMarker);
+          const sawApiActorMarker = bodyText.includes(actorMarker);
+          assert(sawInboundMarker || sawApiActorMarker, 'unexpected main-model call');
+          inference.push({ordinal: inference.length + 1, receivedAt: Date.now(), model: body.model, inputBytes: Buffer.byteLength(bodyText), inputSha256: sha(bodyText), sawInboundMarker, sawApiActorMarker});
+          text = sawApiActorMarker ? actorAnswer : `${caption}\n\nMEDIA:${mediaPath}`;
+          responseId = `main_${inference.length}`;
+        }
+        const events = responseEvents(text, responseId);
         if (body.stream === false) {
           res.writeHead(200, {'content-type': 'application/json'});
           res.end(JSON.stringify(events.at(-1).response));
@@ -168,7 +180,13 @@ export async function proveAutomaticReply({root, evidence, entry, env, origin, u
     });
     const relayPort = await listen(relay, '0.0.0.0');
     const callbackUrl = `http://host.docker.internal:${relayPort}/nextcloud-talk-webhook`;
-    applyMockOpenAiModelConfig(cfg, {mockPort: modelPort});
+    applyMockOpenAiModelConfig(cfg, {mockPort: modelPort, modelRef: `openai/${mainModel}`, utilityModelRef: `openai/${utilityModel}`});
+    // This lane proves channel delivery, not memory indexing. Utility inference
+    // has its own explicit model identity, never a byte-length/order heuristic.
+    cfg.memory = {...cfg.memory, search: {...cfg.memory?.search, enabled: false}};
+    for (const agent of Object.values(cfg.agents.entries ?? {})) {
+      agent.memory = {...agent.memory, search: {...agent.memory?.search, enabled: false}};
+    }
     cfg.plugins = {...cfg.plugins, allow: [...new Set([...(cfg.plugins?.allow ?? []), 'nextcloud-talk', 'openai'])], entries: {...cfg.plugins?.entries, openai: {...cfg.plugins?.entries?.openai, enabled: true}}};
     cfg.gateway = {...cfg.gateway, mode: 'local', bind: 'loopback', port: gatewayPort, auth: {mode: 'token', token: 'disposable-automatic-proof-gateway-token'}, controlUi: {enabled: false}};
     cfg.session = {...cfg.session, dmScope: 'per-channel-peer'};
@@ -231,7 +249,7 @@ export async function proveAutomaticReply({root, evidence, entry, env, origin, u
     assert(callbacks.some(item => item.actor === `users/${recipient}` && item.hasInboundMarker && item.gatewayStatus === 200 && item.accepted === 'durable'));
     assert(callbacks.some(item => item.actor === `users/${user}` && item.hasApiActorMarker && item.gatewayStatus === 200 && item.accepted === 'durable'));
     assert.equal(errors.length, 0, errors.join('\n'));
-    result = {status: 'PASS', scope: 'Disposable official Nextcloud 35/Talk 25; installed Gateway automatic reply via real signed bot webhook and synthetic Responses model. No production server, deployment, UI or real-model proof.', nativeChatId: String(fileMessage.id), triggeringChatId: String(posted.id), ordinaryControlReplyId: String(ordinaryReply.id), recipientByteEquality: true, mediaSha256: sha(expectedBytes), captionAccepted: true, ownFileEcho: {objectId: String(ownEcho.objectId), durableAccepted: true, authorizedApiActor: true, observationMs: echoObservationMs, modelRequestsBeforeAndAfterWindow: [1, 1]}, apiActorOrdinaryTextAccepted: true, inference, callbacks};
+    result = {status: 'PASS', scope: 'Disposable official Nextcloud 35/Talk 25; installed Gateway automatic reply via real signed bot webhook and synthetic Responses model. No production server, deployment, UI or real-model proof.', nativeChatId: String(fileMessage.id), triggeringChatId: String(posted.id), ordinaryControlReplyId: String(ordinaryReply.id), recipientByteEquality: true, mediaSha256: sha(expectedBytes), captionAccepted: true, ownFileEcho: {objectId: String(ownEcho.objectId), durableAccepted: true, authorizedApiActor: true, observationMs: echoObservationMs, modelRequestsBeforeAndAfterWindow: [1, 1]}, apiActorOrdinaryTextAccepted: true, inference, utility, memorySearchDisabled: true, callbacks};
   } catch (error) {
     failure = error;
   } finally {
@@ -241,7 +259,7 @@ export async function proveAutomaticReply({root, evidence, entry, env, origin, u
     if (mock) await closeServer(mock);
     await fs.writeFile(configPath, beforeConfig);
     await fs.writeFile(secretPath, beforeSecret, {mode: 0o600});
-    await fs.writeFile(path.join(evidence, 'automatic-reply.json'), JSON.stringify(failure ? {status: 'FAIL', error: String(failure), errors, inference, callbacks, ownedProcessesClosed: true} : {...result, ownedProcessesClosed: true, isolatedConfigRestored: true}, null, 2));
+    await fs.writeFile(path.join(evidence, 'automatic-reply.json'), JSON.stringify(failure ? {status: 'FAIL', error: String(failure), errors, inference, utility, callbacks, ownedProcessesClosed: true} : {...result, ownedProcessesClosed: true, isolatedConfigRestored: true}, null, 2));
   }
   if (failure) throw failure;
   return result;
