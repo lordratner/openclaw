@@ -89,7 +89,7 @@ export async function proveAutomaticReply({root, evidence, entry, env, origin, u
   const inboundMarker = `Request automatic native attachment ${randomUUID()}`;
   const actorMarker = `API account ordinary text control ${randomUUID()}`;
   const actorAnswer = `API account ordinary text accepted ${randomUUID()}`;
-  const inference = [], utility = [], callbacks = [], errors = [];
+  const inference = [], utility = [], callbacks = [], errors = [], terminal = [];
   const mainModel = 'gpt-5.6-luna';
   const utilityModel = 'gpt-5.6-luna-utility';
   let gateway, gatewayLog, result, failure;
@@ -189,6 +189,7 @@ export async function proveAutomaticReply({root, evidence, entry, env, origin, u
     }
     cfg.plugins = {...cfg.plugins, allow: [...new Set([...(cfg.plugins?.allow ?? []), 'nextcloud-talk', 'openai'])], entries: {...cfg.plugins?.entries, openai: {...cfg.plugins?.entries?.openai, enabled: true}}};
     cfg.gateway = {...cfg.gateway, mode: 'local', bind: 'loopback', port: gatewayPort, auth: {mode: 'token', token: 'disposable-automatic-proof-gateway-token'}, controlUi: {enabled: false}};
+    cfg.logging = {...cfg.logging, level: 'debug', consoleLevel: 'debug', file: path.join(evidence, 'automatic-core.jsonl')};
     cfg.session = {...cfg.session, dmScope: 'per-channel-peer'};
     const senderIds = [user, recipient].map(uid => `users/${uid}`);
     cfg.channels['nextcloud-talk'] = {...cfg.channels['nextcloud-talk'], botSecretFile: secretPath, webhookPublicUrl: callbackUrl, legacyWebhook: false, dmPolicy: 'allowlist', allowFrom: senderIds, groupAllowFrom: senderIds, mediaAllowFrom: senderIds, groupPolicy: 'allowlist', rooms: {[roomToken]: {requireMention: false}}};
@@ -222,6 +223,7 @@ export async function proveAutomaticReply({root, evidence, entry, env, origin, u
     });
     await ocs(user, `/apps/spreed/api/v1/bot/${roomToken}/${botId}`, {});
     const priorIds = new Set((await history(recipient, roomToken)).map(message => String(message.id)));
+    const triggerStartedAt = Date.now();
     const posted = await ocs(recipient, `/apps/spreed/api/v1/chat/${roomToken}`, {message: inboundMarker});
     const fileMessage = await eventually('automatic native file share', async () => (await history(recipient, roomToken)).find(message => !priorIds.has(String(message.id)) && message.actorId === user && message.messageParameters?.file && JSON.stringify(message).includes(caption)));
     assert.equal(inference.length, 1, 'unexpected additional model turn before native share');
@@ -240,26 +242,50 @@ export async function proveAutomaticReply({root, evidence, entry, env, origin, u
       await delay(250);
     }
     const echoObservationMs = Date.now() - echoWindowStart;
+    const completedTurn = async (chatId, label, startedAt) => {
+      const id = String(chatId);
+      assert.match(id, /^\d+$/);
+      const outcome = await eventually(label, async () => {
+        const log = await fs.readFile(path.join(evidence, 'automatic-gateway.log'), 'utf8');
+        const match = log.match(new RegExp(`message processed: channel=nextcloud-talk .*?messageId=${id}\\b.*? outcome=(\\w+)`));
+        return match ? {chatId: id, outcome: match[1], diagnostic: match[0]} : undefined;
+      });
+      const described = JSON.parse(await command(process.execPath, [entry, 'gateway', 'call', 'sessions.describe', '--params', JSON.stringify({key: `agent:main:nextcloud-talk:group:${roomToken}`}), '--json'], `automatic-session-${id}`, gatewayEnv));
+      outcome.session = described.session;
+      outcome.triggerStartedAt = startedAt;
+      terminal.push(outcome);
+      return outcome;
+    };
+    await completedTurn(posted.id, 'triggering automatic turn terminal outcome', triggerStartedAt);
     // The API actor is deliberately authorized. Show that only owned file echoes
     // are suppressed, rather than passing via a blanket apiUser exclusion.
-    await ocs(user, `/apps/spreed/api/v1/chat/${roomToken}`, {message: actorMarker});
+    const actorStartedAt = Date.now();
+    const actorPosted = await ocs(user, `/apps/spreed/api/v1/chat/${roomToken}`, {message: actorMarker});
     const ordinaryReply = await eventually('API-account ordinary text automatic reply', async () => (await history(recipient, roomToken)).find(message => JSON.stringify(message).includes(actorAnswer)));
     assert.equal(inference.length, 2);
     assert(inference[1].sawApiActorMarker);
     assert(callbacks.some(item => item.actor === `users/${recipient}` && item.hasInboundMarker && item.gatewayStatus === 200 && item.accepted === 'durable'));
     assert(callbacks.some(item => item.actor === `users/${user}` && item.hasApiActorMarker && item.gatewayStatus === 200 && item.accepted === 'durable'));
+    await completedTurn(actorPosted.id, 'API-account ordinary turn terminal outcome', actorStartedAt);
     assert.equal(errors.length, 0, errors.join('\n'));
-    result = {status: 'PASS', scope: 'Disposable official Nextcloud 35/Talk 25; installed Gateway automatic reply via real signed bot webhook and synthetic Responses model. No production server, deployment, UI or real-model proof.', nativeChatId: String(fileMessage.id), triggeringChatId: String(posted.id), ordinaryControlReplyId: String(ordinaryReply.id), recipientByteEquality: true, mediaSha256: sha(expectedBytes), captionAccepted: true, ownFileEcho: {objectId: String(ownEcho.objectId), durableAccepted: true, authorizedApiActor: true, observationMs: echoObservationMs, modelRequestsBeforeAndAfterWindow: [1, 1]}, apiActorOrdinaryTextAccepted: true, inference, utility, memorySearchDisabled: true, callbacks};
+    assert(terminal.every(turn => turn.outcome === 'completed'), `automatic turn did not complete cleanly: ${JSON.stringify(terminal)}`);
+    assert(terminal.every(turn => turn.session?.status === 'done' && turn.session.hasActiveRun === false && !turn.session.lastRunError && turn.session.endedAt >= turn.triggerStartedAt), `automatic session did not finish successfully: ${JSON.stringify(terminal)}`);
+    result = {status: 'PASS', scope: 'Disposable official Nextcloud 35/Talk 25; installed Gateway automatic reply via real signed bot webhook and synthetic Responses model. No production server, deployment, UI or real-model proof.', nativeChatId: String(fileMessage.id), triggeringChatId: String(posted.id), ordinaryControlReplyId: String(ordinaryReply.id), recipientByteEquality: true, mediaSha256: sha(expectedBytes), captionAccepted: true, ownFileEcho: {objectId: String(ownEcho.objectId), durableAccepted: true, authorizedApiActor: true, observationMs: echoObservationMs, modelRequestsBeforeAndAfterWindow: [1, 1]}, apiActorOrdinaryTextAccepted: true, inference, utility, terminal, memorySearchDisabled: true, callbacks};
   } catch (error) {
     failure = error;
   } finally {
+    try {
+      await fs.writeFile(path.join(evidence, 'automatic-chat-history.json'), JSON.stringify(await history(recipient, roomToken), null, 2));
+    } catch (error) {
+      if (!failure) failure = error;
+    }
     await stopProcess(gateway);
     if (gatewayLog) await new Promise(resolve => gatewayLog.end(resolve));
     if (relay) await closeServer(relay);
     if (mock) await closeServer(mock);
     await fs.writeFile(configPath, beforeConfig);
     await fs.writeFile(secretPath, beforeSecret, {mode: 0o600});
-    await fs.writeFile(path.join(evidence, 'automatic-reply.json'), JSON.stringify(failure ? {status: 'FAIL', error: String(failure), errors, inference, utility, callbacks, ownedProcessesClosed: true} : {...result, ownedProcessesClosed: true, isolatedConfigRestored: true}, null, 2));
+    await fs.writeFile(path.join(evidence, 'automatic-reply.json'), JSON.stringify(failure ? {status: 'FAIL', error: String(failure), errors, inference, utility, terminal, callbacks, ownedProcessesClosed: true} : {...result, ownedProcessesClosed: true, isolatedConfigRestored: true}, null, 2));
   }
   if (failure) throw failure;
   return result;
