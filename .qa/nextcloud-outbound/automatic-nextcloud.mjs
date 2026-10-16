@@ -7,6 +7,7 @@ import http from 'node:http';
 import net from 'node:net';
 import path from 'node:path';
 import {pathToFileURL} from 'node:url';
+import {inspectReplyCompletion} from './completion-inspector.mjs';
 import {spawn} from 'node:child_process';
 import {setTimeout as delay} from 'node:timers/promises';
 
@@ -93,7 +94,7 @@ export async function proveAutomaticReply({root, evidence, entry, env, origin, u
   const mainModel = 'gpt-5.6-luna';
   const utilityModel = 'gpt-5.6-luna-utility';
   let gateway, gatewayLog, result, failure;
-  let mock, relay;
+  let mock, relay, inspector;
   try {
     // This is the exact canonical fixture from the candidate checkout; do not
     // copy a guessed provider/model/runtime config into this standalone proof.
@@ -212,7 +213,7 @@ export async function proveAutomaticReply({root, evidence, entry, env, origin, u
     const botId = installed.match(/^ID:\s*(\d+)\s*$/m)?.[1];
     assert(botId, 'official occ bot install did not return an ID');
     gatewayLog = createWriteStream(path.join(evidence, 'automatic-gateway.log'));
-    gateway = spawn(process.execPath, [entry, 'gateway', 'run', '--port', String(gatewayPort), '--bind', 'loopback'], {env: gatewayEnv, stdio: ['ignore', 'pipe', 'pipe']});
+    gateway = spawn(process.execPath, ['--inspect=127.0.0.1:0', entry, 'gateway', 'run', '--port', String(gatewayPort), '--bind', 'loopback'], {env: gatewayEnv, stdio: ['ignore', 'pipe', 'pipe']});
     gateway.stdout.pipe(gatewayLog, {end: false});
     gateway.stderr.pipe(gatewayLog, {end: false});
     gateway.once('error', error => errors.push(`gateway: ${String(error)}`));
@@ -221,6 +222,7 @@ export async function proveAutomaticReply({root, evidence, entry, env, origin, u
       assert.equal(errors.length, 0, errors.join('\n'));
       try { return (await fetch(`http://127.0.0.1:${gatewayPort}/readyz`, {signal: AbortSignal.timeout(2000)})).ok; } catch { return false; }
     });
+    inspector = await inspectReplyCompletion({entry,evidence,gatewayLog:path.join(evidence,'automatic-gateway.log'),expectedPid:gateway.pid});
     await ocs(user, `/apps/spreed/api/v1/bot/${roomToken}/${botId}`, {});
     const priorIds = new Set((await history(recipient, roomToken)).map(message => String(message.id)));
     const triggerStartedAt = Date.now();
@@ -279,6 +281,7 @@ export async function proveAutomaticReply({root, evidence, entry, env, origin, u
     } catch (error) {
       if (!failure) failure = error;
     }
+    if (inspector) await inspector.close();
     await stopProcess(gateway);
     if (gatewayLog) await new Promise(resolve => gatewayLog.end(resolve));
     if (relay) await closeServer(relay);
