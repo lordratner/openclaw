@@ -266,7 +266,6 @@ function resolveExactHistoryMedia(params: {
   };
 }
 
-
 async function fetchNextcloudTalkWebDavFileId(params: {
   fetchGuarded: NextcloudTalkGuardedFetch;
   url: string;

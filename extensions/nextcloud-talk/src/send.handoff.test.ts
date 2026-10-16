@@ -113,52 +113,49 @@ afterEach(() => {
   transport.beforeLookup = undefined;
 });
 
-it(
-  "blocks text cancelled during DNS without cancelling a concurrent delivery",
-  async () => {
-    const send = sendText;
-    const cancelled = createHandoff();
-    const current = createHandoff();
-    const started = createDeferred<void>();
-    const resume = createDeferred<void>();
-    transport.beforeLookup = async (url) => {
-      if (url.includes("/held/")) {
-        started.resolve();
-        await resume.promise;
-      }
-    };
-    const requests = await withTalkServer(async (ctx) => {
-      const result = Promise.resolve(
-        send({ ...ctx, ...cancelled.callbacks, to: "room:held" }),
-      ).catch((error: unknown) => error);
-      try {
-        expect(
-          await Promise.race([started.promise.then(() => true), result.then(() => false)]),
-        ).toBe(true);
-        cancelled.cancel();
-        await expect(send({ ...ctx, ...current.callbacks })).resolves.toMatchObject({
-          messageId: "42",
-          receipt: { platformMessageIds: ["42"], replyToId: "parent-1" },
-        });
-      } finally {
-        resume.resolve();
-        await result;
-      }
-      expect(await result).toBe(cancelled.error);
-    });
-    expect(requests).toEqual([
-      {
-        method: "POST",
-        url: MESSAGE_PATH,
-        body: JSON.stringify({
-          message: "hello",
-          replyTo: "parent-1",
-        }),
-      },
-    ]);
-    expect(current.callbacks.onPlatformSendDispatch).toHaveBeenCalledOnce();
-  },
-);
+it("blocks text cancelled during DNS without cancelling a concurrent delivery", async () => {
+  const send = sendText;
+  const cancelled = createHandoff();
+  const current = createHandoff();
+  const started = createDeferred<void>();
+  const resume = createDeferred<void>();
+  transport.beforeLookup = async (url) => {
+    if (url.includes("/held/")) {
+      started.resolve();
+      await resume.promise;
+    }
+  };
+  const requests = await withTalkServer(async (ctx) => {
+    const result = Promise.resolve(send({ ...ctx, ...cancelled.callbacks, to: "room:held" })).catch(
+      (error: unknown) => error,
+    );
+    try {
+      expect(await Promise.race([started.promise.then(() => true), result.then(() => false)])).toBe(
+        true,
+      );
+      cancelled.cancel();
+      await expect(send({ ...ctx, ...current.callbacks })).resolves.toMatchObject({
+        messageId: "42",
+        receipt: { platformMessageIds: ["42"], replyToId: "parent-1" },
+      });
+    } finally {
+      resume.resolve();
+      await result;
+    }
+    expect(await result).toBe(cancelled.error);
+  });
+  expect(requests).toEqual([
+    {
+      method: "POST",
+      url: MESSAGE_PATH,
+      body: JSON.stringify({
+        message: "hello",
+        replyTo: "parent-1",
+      }),
+    },
+  ]);
+  expect(current.callbacks.onPlatformSendDispatch).toHaveBeenCalledOnce();
+});
 
 it("rejects a redirect after delivery cancellation", async () => {
   const handoff = createHandoff();

@@ -297,14 +297,14 @@ SDK acknowledgement remain release-time responsibilities.
 
 ## Capabilities
 
-| Feature         | Status                                 |
-| --------------- | -------------------------------------- |
-| Direct messages | Supported                              |
-| Rooms           | Supported                              |
-| Threads         | Not supported                          |
-| Media           | Inbound and outbound file shares       |
-| Reactions       | Supported                              |
-| Native commands | Not supported                          |
+| Feature         | Status                           |
+| --------------- | -------------------------------- |
+| Direct messages | Supported                        |
+| Rooms           | Supported                        |
+| Threads         | Not supported                    |
+| Media           | Inbound and outbound file shares |
+| Reactions       | Supported                        |
+| Native commands | Not supported                    |
 
 ## Configuration reference (Nextcloud Talk)
 

@@ -34,4 +34,3 @@ export function parseWebDavFileId(xml: string): string | undefined {
   const id = ids[0];
   return !invalid && ids.length === 1 && id && /^\d+$/u.test(id) ? id : undefined;
 }
-
