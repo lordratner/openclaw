@@ -52,6 +52,17 @@ candidate checkout's canonical model helper and the same admitted package.
    writer's `meta.lastTouchedAt/lastTouchedVersion` stamps are excluded. Secret
    and authored-workspace hashes remain exact. No direct
    install-record edits, manual plugin deletion, load-path rewrite or state reset.
+   With the owned Gateway stopped, back up the stable-created agent database
+   through SQLite's backup API and record schema/session identities read-only.
+   Run the documented candidate command
+   `doctor --fix --non-interactive --no-workspace-suggestions`: schema24 migrates
+   canonically to27. No manual SQL, fresh state, ID remapping or session reset.
+   Require unchanged session-key/current-session-ID pairs, exact authored-config
+   semantics above, secret/workspace hashes and selected plugin install owners.
+   The doctor child alone uses the supported service-repair policy
+   `OPENCLAW_SERVICE_REPAIR_POLICY=external`, preventing service installation,
+   start or restart. Doctor is the full repair owner, not claimed DB-only; these strict
+   postconditions reject unrelated state/config/source-selection changes.
    Validate existing settings and actual runtime selection; repeat CLI/Gateway
    URL delivery in the same room and stable-created session. Preserve old bot
    message IDs and session ID. Require both exact successful completions.
@@ -123,3 +134,10 @@ workflow. No install, container, model, Gateway or CI execution occurred locally
 The recipe is not qualified until its actual bound GitHub run succeeds. It may
 surface a real released-package/setup or migration defect; do not weaken oracles
 or relabel an unexecuted/failed phase as passing.
+
+Run38933333660 passed the exact config migrations and paired runtime selection,
+but correctly stopped at candidate boot: stable agent schema24 requires offline
+`doctor --fix` before schema27 can start. That failed packet remains preserved;
+the recipe now performs the documented migration on its stopped disposable
+fixture only. The live installation is not upgraded or migrated. Existing strict
+Gateway session-ID and room-history preservation assertions remain unchanged.

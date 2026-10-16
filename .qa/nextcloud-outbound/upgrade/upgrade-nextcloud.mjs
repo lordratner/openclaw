@@ -48,9 +48,9 @@ await fs.mkdir(evidence, {recursive: true});
 await fs.mkdir(state, {recursive: true});
 await fs.mkdir(workspace, {recursive: true});
 
-async function command(executable, args, label, expected = 0) {
+async function command(executable, args, label, expected = 0, processEnv = env) {
   const started = Date.now();
-  const child = spawn(executable, args, {env, stdio: ['ignore', 'pipe', 'pipe']});
+  const child = spawn(executable, args, {env: processEnv, stdio: ['ignore', 'pipe', 'pipe']});
   const output = [], errors = [];
   child.stdout.on('data', chunk => output.push(chunk));
   child.stderr.on('data', chunk => errors.push(chunk));
@@ -175,6 +175,24 @@ function assertAuthoredPreserved(before, after) {
   assert.deepEqual(after.authoredConfig, expected, 'settings differ beyond the exact canonical host migrations');
   for (const [name, hash] of Object.entries(before.hashes)) if (name !== path.relative(root, configPath)) assert.equal(after.hashes[name], hash, `authored file changed: ${name}`);
   return {derivedAllowlist, primaryModel: defaults.model.primary, utilityModel: defaults.utilityModel, exactAddedPaths: ['/agents/defaults/modelPolicy', '/meta/migrations'], allOtherAuthoredKeysUnchanged: true};
+}
+async function agentDatabaseSnapshot(label, backup = false) {
+  assert.equal(gateway, undefined, 'database proof requires the owned Gateway stopped');
+  const dbPath = path.join(state, 'agents/main/agent/openclaw-agent.sqlite');
+  const script = `import json,sqlite3,sys
+from pathlib import Path
+source=sqlite3.connect(Path(sys.argv[1]).resolve().as_uri()+'?mode=ro',uri=True)
+version=source.execute('PRAGMA user_version').fetchone()[0]
+rows=source.execute('SELECT session_key,current_session_id FROM session_nodes ORDER BY session_key').fetchall()
+if len(sys.argv)>2:
+    target=sqlite3.connect(sys.argv[2]); source.backup(target); target.close()
+source.close()
+print(json.dumps({'schemaVersion':version,'sessionIdentities':rows}))`;
+  const args = ['-c', script, dbPath];
+  if (backup) args.push(path.join(evidence, 'stable-agent-before-doctor.sqlite'));
+  const observed = JSON.parse(await command('python3', args, label));
+  await jsonFile(label + '.json', observed);
+  return observed;
 }
 async function describe(label) {
   const described = JSON.parse(await cli(['gateway', 'call', 'sessions.describe', '--params', JSON.stringify({key: `agent:main:nextcloud-talk:group:${roomToken}`}), '--json'], label));
@@ -341,6 +359,20 @@ try {
   assert.equal(candidatePlugins['nextcloud-talk'].install?.source, 'path');
   assert.equal(candidatePlugins['nextcloud-talk'].install?.spec, 'nextcloud-talk');
   assert.equal(await fs.realpath(candidatePlugins['nextcloud-talk'].install.installPath), await fs.realpath(path.join(path.dirname(entry), 'dist/extensions/nextcloud-talk')));
+  const databaseBefore = await agentDatabaseSnapshot('before-offline-doctor', true);
+  assert.equal(databaseBefore.schemaVersion, 24, 'released fixture schema changed');
+  assert(databaseBefore.sessionIdentities.some(row => row[1] === stable.session.sessionId));
+  // The candidate refuses older schemas at boot. Use its documented offline
+  // repair owner, never manual SQL or a fresh state/session directory.
+  await command(process.execPath, [entry, 'doctor', '--fix', '--non-interactive', '--no-workspace-suggestions'], 'candidate-offline-doctor', 0, {...env, OPENCLAW_SERVICE_REPAIR_POLICY: 'external'});
+  const databaseAfter = await agentDatabaseSnapshot('after-offline-doctor');
+  assert.equal(databaseAfter.schemaVersion, 27, 'canonical migration did not reach candidate schema');
+  assert.deepEqual(databaseAfter.sessionIdentities, databaseBefore.sessionIdentities, 'doctor changed existing session identities');
+  const afterDoctor = await snapshot('after-offline-doctor-settings');
+  assertAuthoredPreserved(before, afterDoctor);
+  const doctorPlugins = await inspectPlugins('candidate-after-doctor');
+  assert.deepEqual(doctorPlugins, candidatePlugins, 'doctor changed the selected runtime/plugin install owner');
+  const canonicalAgentDatabaseMigration = {supportedCommand: 'doctor --fix --non-interactive --no-workspace-suggestions', stoppedOwnedGateway: true, serviceRepairPolicy: 'external', beforeSchema: databaseBefore.schemaVersion, afterSchema: databaseAfter.schemaVersion, existingSessionIdentitiesUnchanged: true, backup: 'stable-agent-before-doctor.sqlite', authoredSettingsPreserved: true, selectedPluginOwnersUnchanged: true};
   const candidate = await proveUrlPhase('candidate', gatewayPort);
   assert.equal(candidate.existingSessionBeforeTurn?.sessionId, stable.session.sessionId, 'existing stable-created session was not loaded');
   assert.equal(candidate.session.sessionId, stable.session.sessionId, 'upgrade replaced existing conversation/session');
@@ -384,7 +416,7 @@ try {
     nativeControl = {status: 'PASS', deliberateConfigChangeAfterPreservationProof: true, messageId: String(message.id), recipientByteEquality: true, replyToId: candidate.automaticMessageId, readOnlyRoomShare: true};
   }
   assert.equal(errors.length, 0, errors.join('\n'));
-  result = {status: 'PASS', scope: 'Actual published official 2026.10.4 plus official managed Talk, upgraded in the same disposable prefix/state/room to the qualified candidate and explicitly selected paired Talk through its public installer; synthetic provider, no production/UI proof.', stableTagCommit, stablePublishWorkflowCommit, candidate: process.env.CANDIDATE_SHA, packageCandidate: admission.packageCandidate, productionBytesUnchanged: admission.productionBytesUnchanged, retainedProducerRun: admission.retainedProducerRun, producerRun: Number(process.env.QUALIFIED_RUN_ID), packageSha256: admission.packageSha256, publicUrl: webUrl, samePrefix: true, sameStateDirectory: true, stableCreatedSessionPreserved: true, existingBotReceiptsPreserved: true, coreInstallPreservedConfigBytes: true, authoredConfigSemanticsPreserved: true, secretAndAuthoredWorkspaceHashesPreserved: true, canonicalHostConfigMigrations, pluginSourceTransition: {stable: stablePlugins['nextcloud-talk'], candidateBeforeSelection: {rootDir: beforeSelection.plugin?.rootDir, install: beforeSelection.install}, supportedCommand: 'plugins install nextcloud-talk --force', candidate: candidatePlugins['nextcloud-talk']}, noNativeIOInBotOnlyPhases: true, rejectedReferences: negatives, phases, configuredNativeControl: nativeControl};
+  result = {status: 'PASS', scope: 'Actual published official 2026.10.4 plus official managed Talk, upgraded in the same disposable prefix/state/room to the qualified candidate and explicitly selected paired Talk through its public installer; synthetic provider, no production/UI proof.', stableTagCommit, stablePublishWorkflowCommit, candidate: process.env.CANDIDATE_SHA, packageCandidate: admission.packageCandidate, productionBytesUnchanged: admission.productionBytesUnchanged, retainedProducerRun: admission.retainedProducerRun, producerRun: Number(process.env.QUALIFIED_RUN_ID), packageSha256: admission.packageSha256, publicUrl: webUrl, samePrefix: true, sameStateDirectory: true, stableCreatedSessionPreserved: true, existingBotReceiptsPreserved: true, coreInstallPreservedConfigBytes: true, authoredConfigSemanticsPreserved: true, secretAndAuthoredWorkspaceHashesPreserved: true, canonicalHostConfigMigrations, canonicalAgentDatabaseMigration, pluginSourceTransition: {stable: stablePlugins['nextcloud-talk'], candidateBeforeSelection: {rootDir: beforeSelection.plugin?.rootDir, install: beforeSelection.install}, supportedCommand: 'plugins install nextcloud-talk --force', candidate: candidatePlugins['nextcloud-talk']}, noNativeIOInBotOnlyPhases: true, rejectedReferences: negatives, phases, configuredNativeControl: nativeControl};
 } catch (error) {failure = error;}
 finally {
   await stopGateway(); await closeServer(relay); await closeServer(mock); await closeServer(proxy);
