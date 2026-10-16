@@ -229,11 +229,20 @@ the main Gateway port keeps its existing JSON check responses.
 
 ## Outbound attachments
 
+Bot-only accounts keep the existing URL-text delivery for HTTP(S) attachment
+links; OpenClaw does not fetch or upload those links. This is not a native file
+share. Local files and non-web locations require the API account below and are
+never posted as local path text. URLs containing embedded credentials are not
+eligible for bot-only delivery.
+
 Native attachments require `apiUser` and `apiPassword` (or `apiPasswordFile`) for
 that channel account. The bot shared secret alone cannot upload or share files.
 Use a dedicated Nextcloud user with an app password, writable Files storage and
 sufficient quota, and add it as a participant with permission to chat in every
 target room. OpenClaw does not add the user to rooms or create public-link shares.
+Partially configured or unavailable API credentials produce an error rather
+than silently falling back to URL delivery. Native upload/share failures also
+never trigger a second bot send.
 
 Files appear as messages from the **API user**, not the webhook bot. Text-only
 replies continue to use the bot. Captions and reply references are included in the

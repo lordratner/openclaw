@@ -36,6 +36,18 @@ afterEach(() => {
 const send = (ctx: ChannelMessageSendMediaContext) =>
   nextcloudTalkPlugin.message!.send!.media!(ctx);
 
+function botOnlyConfig(ctx: ChannelMessageSendMediaContext) {
+  const cfg = structuredClone(ctx.cfg) as CoreConfig;
+  const account = cfg.channels?.["nextcloud-talk"]?.accounts?.work;
+  if (!account) {
+    throw new Error("expected work fixture account");
+  }
+  delete account.apiUser;
+  delete account.apiPassword;
+  delete account.apiPasswordFile;
+  return cfg;
+}
+
 it.each(["The report", ""])("delivers a real file share with caption %j", async (text) => {
   await withTalk(async ({ ctx, requests, bytes }) => {
     const result = await send({ ...ctx, text });
@@ -79,6 +91,48 @@ it("requires API credentials before reading or uploading the attachment", async 
       /apiUser.*apiPassword/,
     );
     expect(mediaReadFile).not.toHaveBeenCalled();
+    expect(requests).toEqual([]);
+  });
+});
+
+it.each(["The report", ""])("preserves bot-only web attachment links with caption %j", async (text) => {
+  await withTalk(async ({ ctx, requests }) => {
+    const mediaUrl = "https://example.com/report.pdf?download=1";
+    const mediaReadFile = vi.fn(async () => { throw new Error("must not read link bytes"); });
+    const result = await send({ ...ctx, cfg: botOnlyConfig(ctx), text, mediaUrl, mediaReadFile });
+    expect(result).toMatchObject({ messageId: "900", receipt: { platformMessageIds: ["900"], replyToId: "41" } });
+    expect(requests).toHaveLength(1);
+    expect(requests[0]?.url.pathname).toBe("/cloud/ocs/v2.php/apps/spreed/api/v1/bot/allowed/message");
+    expect(JSON.parse(requests[0]!.body.toString())).toEqual({ message: `${text}\n\nAttachment: ${mediaUrl}`.trim(), replyTo: "41" });
+    expect(requests[0]?.authorization).toBeUndefined();
+    expect(mediaReadFile).not.toHaveBeenCalled();
+  });
+});
+
+it.each(["/private/report.pdf", "file:///private/report.pdf", "report.pdf", "data:text/plain,private", "https://user:password@example.com/report.pdf"])("does not expose a non-web bot-only attachment %s", async (mediaUrl) => {
+  await withTalk(async ({ ctx, requests }) => {
+    await expect(send({ ...ctx, cfg: botOnlyConfig(ctx), mediaUrl })).rejects.toThrow(/apiUser.*apiPassword/u);
+    expect(requests).toEqual([]);
+  });
+});
+
+it.each([
+  { apiUser: "configured-user" },
+  { apiPassword: "configured-password" },
+  { apiUser: "configured-user", apiPasswordFile: "/missing/synthetic-app-password" },
+])("does not silently fall back for incomplete or unavailable API configuration %j", async (apiConfig) => {
+  await withTalk(async ({ ctx, requests }) => {
+    const cfg = botOnlyConfig(ctx);
+    Object.assign(cfg.channels!["nextcloud-talk"]!.accounts!.work!, apiConfig);
+    await expect(send({ ...ctx, cfg, mediaUrl: "https://example.com/report.pdf" })).rejects.toThrow(/apiUser.*apiPassword/u);
+    expect(requests).toEqual([]);
+  });
+});
+
+it("cancels a bot-only URL send after dispatch admission but before HTTP", async () => {
+  await withTalk(async ({ ctx, requests }) => {
+    const controller = new AbortController();
+    await expect(send({ ...ctx, cfg: botOnlyConfig(ctx), mediaUrl: "https://example.com/report.pdf", signal: controller.signal, onPlatformSendDispatch: async () => { controller.abort(new Error("URL send stopped")); } })).rejects.toThrow("URL send stopped");
     expect(requests).toEqual([]);
   });
 });
@@ -127,17 +181,29 @@ it("never follows an authenticated redirect", async () => {
   });
 });
 
-it.each([401, 507])("does not share after a rejected upload (%s)", async (status) => {
+it.each([
+  { status: 401, recovery: /apiUser.*app password.*before retrying/u },
+  { status: 507, recovery: /Files storage.*quota.*before retrying/u },
+  { status: 403, recovery: /Nextcloud server logs.*write access/u },
+  { status: 500, recovery: /Nextcloud server logs.*write access/u },
+])("explains recovery without sharing after a rejected upload ($status)", async ({ status, recovery }) => {
   await withTalk(async (fixture) => {
     fixture.respond = (request, response) => {
       if (request.method !== "PUT") {
         return false;
       }
       response.writeHead(status);
-      response.end();
+      response.end("private server diagnostics must not reach the error message");
       return true;
     };
-    await expect(send(fixture.ctx)).rejects.toThrow(/upload failed/);
+    const error = await send(fixture.ctx).then(
+      () => { throw new Error("rejected upload unexpectedly succeeded"); },
+      (failure: unknown) => failure,
+    );
+    expect(error).toBeInstanceOf(Error);
+    expect((error as Error).message).toContain(`upload failed (${status})`);
+    expect((error as Error).message).toMatch(recovery);
+    expect((error as Error).message).not.toContain("private server diagnostics");
     expect(fixture.requests.some(({ url }) => url.pathname.endsWith("/shares"))).toBe(false);
     expect(fixture.requests.some(({ method }) => method === "DELETE")).toBe(false);
   });
