@@ -29,10 +29,12 @@ export const nextcloudTalkMessageAdapter = defineChannelMessageAdapter({
   },
   send: {
     text: sendNextcloudTalkMessage,
-    media: (ctx) =>
-      sendNextcloudTalkMessage(
-        ctx,
-        ctx.mediaUrl ? `${ctx.text}\n\nAttachment: ${ctx.mediaUrl}` : ctx.text,
-      ),
+    media: async (ctx) => {
+      if (!ctx.mediaUrl) {
+        return sendNextcloudTalkMessage(ctx);
+      }
+      const { sendMediaNextcloudTalk } = await import("./outbound-media.js");
+      return sendMediaNextcloudTalk(ctx);
+    },
   },
 });
