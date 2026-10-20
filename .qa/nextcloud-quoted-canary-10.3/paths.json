@@ -1,0 +1,17 @@
+[
+  "extensions/nextcloud-talk/runtime-api.ts",
+  "extensions/nextcloud-talk/src/guarded-response.ts",
+  "extensions/nextcloud-talk/src/inbound.behavior.test.ts",
+  "extensions/nextcloud-talk/src/inbound.ts",
+  "extensions/nextcloud-talk/src/message-adapter.ts",
+  "extensions/nextcloud-talk/src/outbound-media.test-harness.ts",
+  "extensions/nextcloud-talk/src/outbound-media.test.ts",
+  "extensions/nextcloud-talk/src/outbound-media.ts",
+  "extensions/nextcloud-talk/src/reply.ts",
+  "extensions/nextcloud-talk/src/send.handoff.test.ts",
+  "extensions/nextcloud-talk/src/types.ts",
+  "extensions/nextcloud-talk/src/webdav.ts",
+  "extensions/nextcloud-talk/src/webhook-spool-state.ts",
+  "extensions/nextcloud-talk/src/webhook-spool.test.ts",
+  "extensions/nextcloud-talk/src/webhook-spool.ts"
+]

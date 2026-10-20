@@ -1,0 +1,110 @@
+{
+  "status": "PREPARED_NOT_QUALIFIED_NOT_INSTALLED",
+  "baselineVersion": "2026.10.3",
+  "baselineCommit": "59cb44796b0f1f0daa0e37af8b1495abb45d9bc1",
+  "quotedUpstreamHead": "8243d25dc84a6328869d6c36890eb5629791fcce",
+  "attachmentProducerRun": 38940720388,
+  "attachmentSourceManifestSha256": "bdd9bca580c3344d0d949688f9db0ba7c0af37e43d36593ed672b71baf91a69d",
+  "productionChangedFromDailyCanary": [
+    "extensions/nextcloud-talk/src/inbound.ts",
+    "extensions/nextcloud-talk/src/types.ts",
+    "extensions/nextcloud-talk/src/webhook-spool-state.ts",
+    "extensions/nextcloud-talk/src/webhook-spool.ts"
+  ],
+  "testsChangedFromDailyCanary": [
+    "extensions/nextcloud-talk/src/inbound.behavior.test.ts",
+    "extensions/nextcloud-talk/src/webhook-spool.test.ts"
+  ],
+  "files": {
+    "extensions/nextcloud-talk/runtime-api.ts": {
+      "candidateSha256": "d2971a093f9cbf4d1abaf389e159ae8d4a3c01f48ad1d1f00aba33796493ca04",
+      "releaseSha256": "53233d7959d7cbf7edebb9c1df436e26cc344b6dcaca30fc1cf38d5d847cf216",
+      "dailyAttachmentSha256": "d2971a093f9cbf4d1abaf389e159ae8d4a3c01f48ad1d1f00aba33796493ca04",
+      "quoteDelta": false
+    },
+    "extensions/nextcloud-talk/src/guarded-response.ts": {
+      "candidateSha256": "939d9e57065b17a14768cdc93a80d16950da126c94541b3307978d1f68f2d668",
+      "releaseSha256": "77b37a2bf4d637b745401e92d60b6c96086cc34570ab4b12c96b41305b684f6c",
+      "dailyAttachmentSha256": "939d9e57065b17a14768cdc93a80d16950da126c94541b3307978d1f68f2d668",
+      "quoteDelta": false
+    },
+    "extensions/nextcloud-talk/src/inbound.behavior.test.ts": {
+      "candidateSha256": "aad5da86883ef6c45f8eab90ba173a43f570b077748f8b898a486e23ceca6501",
+      "releaseSha256": "ebe8af9e1aad1623ee843b964e8b6fdb435f211f663da99d3cd35ea334b602d7",
+      "dailyAttachmentSha256": "70d02e8fd45ac50b312279b47da7d4ce73fe04fd0e44afb202ac116c93cd4bbd",
+      "quoteDelta": true
+    },
+    "extensions/nextcloud-talk/src/inbound.ts": {
+      "candidateSha256": "8f6613283f22f6fc8336f6c39dfd1757a2627c202c7107f4702b56e88bfd5092",
+      "releaseSha256": "ece6f882010289a9148c055628b7ab476a98f2f85a43fa7440071084a6e05d88",
+      "dailyAttachmentSha256": "e774ccc7fda1e339fe9660212c03b63ca9003b1e12c08b73240858f4800e8ea0",
+      "quoteDelta": true
+    },
+    "extensions/nextcloud-talk/src/message-adapter.ts": {
+      "candidateSha256": "3e83abd0f15aa813452b4d5970326a49c75604c19cd8de4c566706a02c510efb",
+      "releaseSha256": "8ba0a5bf3d0b5fd3b09925495ac37380928af78adfbdbddad2943458f183d148",
+      "dailyAttachmentSha256": "3e83abd0f15aa813452b4d5970326a49c75604c19cd8de4c566706a02c510efb",
+      "quoteDelta": false
+    },
+    "extensions/nextcloud-talk/src/outbound-media.test-harness.ts": {
+      "candidateSha256": "d495da820479f882688b5e5bea7cc9714a438ce9e7fbffa9b092dc22de04ef6c",
+      "releaseSha256": null,
+      "dailyAttachmentSha256": "d495da820479f882688b5e5bea7cc9714a438ce9e7fbffa9b092dc22de04ef6c",
+      "quoteDelta": false
+    },
+    "extensions/nextcloud-talk/src/outbound-media.test.ts": {
+      "candidateSha256": "2ad1e5ef9c486543a26ec6b380f6e4aee60495d148143baaa5ae971ad8b1aec8",
+      "releaseSha256": null,
+      "dailyAttachmentSha256": "2ad1e5ef9c486543a26ec6b380f6e4aee60495d148143baaa5ae971ad8b1aec8",
+      "quoteDelta": false
+    },
+    "extensions/nextcloud-talk/src/outbound-media.ts": {
+      "candidateSha256": "07b36c9127e677a7a8b45bfdbe75d1725902d2ba70a32221bf6709e59aa1d8c5",
+      "releaseSha256": null,
+      "dailyAttachmentSha256": "07b36c9127e677a7a8b45bfdbe75d1725902d2ba70a32221bf6709e59aa1d8c5",
+      "quoteDelta": false
+    },
+    "extensions/nextcloud-talk/src/reply.ts": {
+      "candidateSha256": "d4eb72c1e55beac9d22f482fbb02452c49923554ae1d7aca8cafcf44984820d0",
+      "releaseSha256": null,
+      "dailyAttachmentSha256": "d4eb72c1e55beac9d22f482fbb02452c49923554ae1d7aca8cafcf44984820d0",
+      "quoteDelta": false
+    },
+    "extensions/nextcloud-talk/src/send.handoff.test.ts": {
+      "candidateSha256": "5325aac9d9d55071fcf9761e52b143e3caca2f565c60ae258c1987db666afae3",
+      "releaseSha256": "2ec53e8bda43bb0e64ee05d8bf1f09107230927dd47e68d57683a093701ccd6f",
+      "dailyAttachmentSha256": "5325aac9d9d55071fcf9761e52b143e3caca2f565c60ae258c1987db666afae3",
+      "quoteDelta": false
+    },
+    "extensions/nextcloud-talk/src/types.ts": {
+      "candidateSha256": "d43ef74e8d8cf3476cc881ab9f0a05bae285cf77c98bb005cf09685419af77e9",
+      "releaseSha256": "ae92af2cfec98524b34991f7c62775ad9004922cddcc64c242386e9a3f29bb60",
+      "dailyAttachmentSha256": "ae92af2cfec98524b34991f7c62775ad9004922cddcc64c242386e9a3f29bb60",
+      "quoteDelta": true
+    },
+    "extensions/nextcloud-talk/src/webdav.ts": {
+      "candidateSha256": "22efffac7e8b82c4e9c3d6989fa32627b1c2cbb2c149518d866a9f8c0b16c05d",
+      "releaseSha256": null,
+      "dailyAttachmentSha256": "22efffac7e8b82c4e9c3d6989fa32627b1c2cbb2c149518d866a9f8c0b16c05d",
+      "quoteDelta": false
+    },
+    "extensions/nextcloud-talk/src/webhook-spool-state.ts": {
+      "candidateSha256": "9fa59715858c9968074cc075010a8d7b5f527b03721249d33f85907842d33572",
+      "releaseSha256": "f4db784692a9f935134999eb5fede596d3f60306debbe244e7d24d9ee9138081",
+      "dailyAttachmentSha256": "f4db784692a9f935134999eb5fede596d3f60306debbe244e7d24d9ee9138081",
+      "quoteDelta": true
+    },
+    "extensions/nextcloud-talk/src/webhook-spool.test.ts": {
+      "candidateSha256": "8eed12ae6d21ba8ed74d493fa65e37bdef71a7044ecba661cd327ef02ddaa24f",
+      "releaseSha256": "2b753119dc370a010ad5046fd6dcf1f733b940f957a19f87abe9ed255ba64d3e",
+      "dailyAttachmentSha256": "2b753119dc370a010ad5046fd6dcf1f733b940f957a19f87abe9ed255ba64d3e",
+      "quoteDelta": true
+    },
+    "extensions/nextcloud-talk/src/webhook-spool.ts": {
+      "candidateSha256": "256b86b99e53e11a4ff9e9e7c92be6627f70977f2d459cb9c3bedd0a6208efee",
+      "releaseSha256": "54b9bf3a76739107e75c0e5e31831edf9aef59ad06f8bd67cede633f1bcdca0d",
+      "dailyAttachmentSha256": "54b9bf3a76739107e75c0e5e31831edf9aef59ad06f8bd67cede633f1bcdca0d",
+      "quoteDelta": true
+    }
+  }
+}

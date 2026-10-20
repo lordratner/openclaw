@@ -1,0 +1,49 @@
+name: Qualify composed quoted-reply Talk canary freshly on exact 10.3
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+env:
+  CI: 'true'
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: 'true'
+jobs:
+  qualify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          repository: openclaw/openclaw
+          ref: 59cb44796b0f1f0daa0e37af8b1495abb45d9bc1
+          persist-credentials: false
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          repository: lordratner/openclaw
+          ref: ${{ github.sha }}
+          path: .proof-tools
+          sparse-checkout: .qa/nextcloud-quoted-canary-10.3
+          persist-credentials: false
+      - uses: ./.github/actions/setup-node-env
+        with:
+          node-version: 24.19.0
+          install-bun: 'false'
+          semantic-checks: 'true'
+          frozen-lockfile: 'true'
+          cache-mode: restore
+      - name: Qualify exact-release quote plus attachment source and dist
+        env:
+          CANARY_INPUT_ROOT: .proof-tools/.qa/nextcloud-quoted-canary-10.3
+        run: node .proof-tools/.qa/nextcloud-quoted-canary-10.3/qa/qualify.mjs
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        if: always()
+        with:
+          name: nextcloud-quoted-canary-10.3-${{ github.run_id }}
+          path: |
+            ${{ runner.temp }}/nextcloud-quoted-canary-10.3/
+            !${{ runner.temp }}/nextcloud-quoted-canary-10.3/parser-build-inputs/**
+            !${{ runner.temp }}/nextcloud-quoted-canary-10.3/stock-prefix/**
+            !${{ runner.temp }}/nextcloud-quoted-canary-10.3/consumer-home/**
+            !${{ runner.temp }}/nextcloud-quoted-canary-10.3/consumer-workspace/**
+          if-no-files-found: error
+          retention-days: 14
+          compression-level: 0

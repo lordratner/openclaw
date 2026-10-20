@@ -1,0 +1,11 @@
+{
+  "producerRun": 38940720388,
+  "producerQaHead": "754eb4bda906c5a3f7470ddc29b3357e6f98256c",
+  "baselineCommit": "59cb44796b0f1f0daa0e37af8b1495abb45d9bc1",
+  "files": {
+    "extensions/nextcloud-talk/src/inbound.ts": "e774ccc7fda1e339fe9660212c03b63ca9003b1e12c08b73240858f4800e8ea0",
+    "extensions/nextcloud-talk/src/types.ts": "ae92af2cfec98524b34991f7c62775ad9004922cddcc64c242386e9a3f29bb60",
+    "extensions/nextcloud-talk/src/webhook-spool-state.ts": "f4db784692a9f935134999eb5fede596d3f60306debbe244e7d24d9ee9138081",
+    "extensions/nextcloud-talk/src/webhook-spool.ts": "54b9bf3a76739107e75c0e5e31831edf9aef59ad06f8bd67cede633f1bcdca0d"
+  }
+}
