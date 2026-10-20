@@ -13,7 +13,7 @@
   },
   {
     "path": "extensions/nextcloud-talk/src/inbound.ts",
-    "sha256": "782c539a351e16d73efc342b4dab9d4579fa6097dd217bb635f29c779ca464b9",
+    "sha256": "a15b438e68e7e01a854e4859bf750e8030f7fc61b46992de4ed491b363d660c8",
     "additions": 32,
     "deletions": 0
   },
