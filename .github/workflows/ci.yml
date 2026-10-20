@@ -42,7 +42,9 @@ jobs:
           frozen-lockfile: 'true'
           cache-mode: restore
       - name: Qualify original controls, repaired boundaries and scoped checks
-        run: python3 .proof-tools/.qa/nextcloud-quotes/qualify.py
+        run: |
+          git fetch --no-tags --depth=1 origin "$BASE_SHA"
+          python3 .proof-tools/.qa/nextcloud-quotes/qualify.py
       - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
         if: always()
         with:
