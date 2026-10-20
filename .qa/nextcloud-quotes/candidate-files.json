@@ -1,0 +1,44 @@
+[
+  {
+    "path": "extensions/nextcloud-talk/src/webhook-spool-state.ts",
+    "sha256": "694ec721a7c67e55d0dc1b7969eeb1185a95a9ed99a5b8dc02a5dc7ed30c0fad",
+    "additions": 54,
+    "deletions": 1
+  },
+  {
+    "path": "extensions/nextcloud-talk/src/types.ts",
+    "sha256": "b950249498a2636f783fa6b2a0ac49077c912eb73e81521cf9575f1a70eb8d96",
+    "additions": 8,
+    "deletions": 0
+  },
+  {
+    "path": "extensions/nextcloud-talk/src/inbound.ts",
+    "sha256": "782c539a351e16d73efc342b4dab9d4579fa6097dd217bb635f29c779ca464b9",
+    "additions": 32,
+    "deletions": 0
+  },
+  {
+    "path": "extensions/nextcloud-talk/src/inbound.behavior.test.ts",
+    "sha256": "b721095308f34958b3efe65f1e2581b44e12db203c2fc3ef4a7ac28453c38a5e",
+    "additions": 97,
+    "deletions": 2
+  },
+  {
+    "path": "extensions/nextcloud-talk/src/webhook-spool.ts",
+    "sha256": "0c5dc6554ac04bc17da1d4edf85c67c18f6fb63e8393736af4e5dca11e3249ea",
+    "additions": 3,
+    "deletions": 0
+  },
+  {
+    "path": "extensions/nextcloud-talk/src/webhook-spool.test.ts",
+    "sha256": "a7aca5204911f9afa889ebb66e74568b68c71672e8feba48eaa891426ab9b210",
+    "additions": 120,
+    "deletions": 2
+  },
+  {
+    "path": "docs/channels/nextcloud-talk.md",
+    "sha256": "eb924155ee9e9c883b117939337525aaad4ec12871972dedc796881a5921ed23",
+    "additions": 13,
+    "deletions": 0
+  }
+]
