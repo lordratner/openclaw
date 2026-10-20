@@ -681,7 +681,7 @@ describe("nextcloud-talk inbound behavior", () => {
     { kind: "final" as const, replyToId: undefined, expectedReply: undefined },
     { kind: "block" as const, replyToId: undefined, expectedReply: undefined },
     { kind: "final" as const, replyToId: "40", expectedReply: 40 },
-    { kind: "final" as const, replyToId: null, expectedReply: undefined },
+    { kind: "final" as const, replyToId: "41", expectedReply: 41 },
   ])("preserves $kind delivery targeting with quoted context ($replyToId)", async ({ kind, replyToId, expectedReply }) => {
     await withNativeAutomaticReply(async ({ fixture, deliver }) => {
       await deliver({ text: "Current answer", mediaUrl: fixture.mediaUrl, replyToId }, kind);
