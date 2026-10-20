@@ -91,9 +91,19 @@ it.each([
 ])("delivers $filename with audioAsVoice=$audioAsVoice as voice=$voice", async (row) => {
   await withTalk(async ({ ctx, directory, requests, bytes: pdf }) => {
     const bytes = row.filename.endsWith(".wav")
-      ? Buffer.concat([Buffer.from("RIFF"), Buffer.alloc(4), Buffer.from("WAVEfmt "), Buffer.alloc(48)])
+      ? Buffer.concat([
+          Buffer.from("RIFF"),
+          Buffer.alloc(4),
+          Buffer.from("WAVEfmt "),
+          Buffer.alloc(48),
+        ])
       : row.filename.endsWith(".ogg")
-        ? Buffer.concat([Buffer.from("OggS"), Buffer.alloc(24), Buffer.from("OpusHead"), Buffer.alloc(32)])
+        ? Buffer.concat([
+            Buffer.from("OggS"),
+            Buffer.alloc(24),
+            Buffer.from("OpusHead"),
+            Buffer.alloc(32),
+          ])
         : row.filename.endsWith(".mp3")
           ? Buffer.concat([Buffer.from("ID3"), Buffer.alloc(61)])
           : pdf;
