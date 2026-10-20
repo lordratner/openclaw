@@ -15,6 +15,7 @@ import {
 } from "openclaw/plugin-sdk/channel-outbound";
 import { resolveChannelContextVisibilityMode } from "openclaw/plugin-sdk/context-visibility-runtime";
 import { resolveAgentRoute } from "openclaw/plugin-sdk/routing";
+import { expandAllowFromWithAccessGroups } from "openclaw/plugin-sdk/security-runtime";
 import {
   isRecord,
   normalizeOptionalString,
@@ -530,7 +531,31 @@ export async function handleNextcloudTalkInbound(params: {
       }
     }
 
-    if (performedAsyncMediaWork) {
+    const quote = message.quote;
+    let quoteAllowFrom = hasAllowEntries(outerGroupAllowFrom) ? outerGroupAllowFrom : roomAllowFrom;
+    let quoteRoomAllowFrom = roomAllowFrom;
+    const hasQuotePolicyWork = quote !== undefined && isGroup && groupPolicy === "allowlist";
+    if (hasQuotePolicyWork) {
+      const expandQuoteAllowFrom = async (entries: string[]) =>
+        await expandAllowFromWithAccessGroups({
+          cfg: config as OpenClawConfig,
+          allowFrom: entries,
+          channel: CHANNEL_ID,
+          accountId: account.accountId,
+          senderId: quote.senderId,
+          isSenderAllowed: (candidateId, candidates) =>
+            resolveNextcloudTalkAllowlistMatch({
+              allowFrom: candidates,
+              senderId: candidateId,
+            }).allowed,
+        });
+      [quoteAllowFrom, quoteRoomAllowFrom] = await Promise.all([
+        expandQuoteAllowFrom(quoteAllowFrom),
+        expandQuoteAllowFrom(roomAllowFrom),
+      ]);
+    }
+
+    if (performedAsyncMediaWork || hasQuotePolicyWork) {
       throwIfIngressAborted();
       access = await resolveAccess(isGroup ? wasMentioned : undefined, contextBinding);
       throwIfIngressAborted();
@@ -562,7 +587,6 @@ export async function handleNextcloudTalkInbound(params: {
 
     const groupSystemPrompt = normalizeOptionalString(roomConfig?.systemPrompt);
     const blockStreamingEnabled = resolveChannelStreamingBlockEnabled(account.config);
-    const quote = message.quote;
     const visibleQuote = quote
       ? filterChannelInboundQuoteContext(
           resolveChannelContextVisibilityMode({
@@ -577,15 +601,15 @@ export async function handleNextcloudTalkInbound(params: {
             senderAllowed: resolveInboundSupplementalSenderAllowed({
               isGroup,
               groupPolicy,
-              allowFrom: hasAllowEntries(outerGroupAllowFrom) ? outerGroupAllowFrom : roomAllowFrom,
-              isSenderAllowed: (quoteAllowFrom) =>
+              allowFrom: quoteAllowFrom,
+              isSenderAllowed: (candidateAllowFrom) =>
                 resolveNextcloudTalkAllowlistMatch({
-                  allowFrom: [...quoteAllowFrom],
+                  allowFrom: [...candidateAllowFrom],
                   senderId: quote.senderId,
                 }).allowed &&
-                (!hasAllowEntries(roomAllowFrom) ||
+                (!hasAllowEntries(quoteRoomAllowFrom) ||
                   resolveNextcloudTalkAllowlistMatch({
-                    allowFrom: roomAllowFrom,
+                    allowFrom: quoteRoomAllowFrom,
                     senderId: quote.senderId,
                   }).allowed),
             }),
