@@ -1,0 +1,54 @@
+name: Talk voice replies focused qualification
+on:
+  workflow_dispatch:
+    inputs:
+      source:
+        description: Immutable reviewed candidate commit
+        required: true
+        type: string
+permissions:
+  contents: read
+env:
+  CI: 'true'
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: 'true'
+  SOURCE_SHA: ${{ inputs.source }}
+  BASE_SHA: 8fd697560b5f8b71e2056e78dd42d0cb1b5d3c0b
+  NODE_OPTIONS: --max-old-space-size=8192
+  OPENCLAW_VITEST_MAX_WORKERS: '1'
+  OPENCLAW_BUNDLED_PLUGIN_BUILD_IDS: nextcloud-talk
+jobs:
+  reproduce:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          repository: lordratner/openclaw
+          ref: ${{ inputs.source }}
+          persist-credentials: false
+          fetch-depth: 2
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          repository: lordratner/openclaw
+          ref: ${{ github.sha }}
+          path: .proof-tools
+          sparse-checkout: .qa/nextcloud-voice-replies
+          persist-credentials: false
+      - uses: ./.github/actions/setup-node-env
+        with:
+          node-version: 24.19.0
+          install-bun: 'false'
+          semantic-checks: 'true'
+          frozen-lockfile: 'true'
+          cache-mode: restore
+      - name: Qualify original controls, repaired boundaries and scoped checks
+        run: |
+          git fetch --no-tags --depth=1 origin "$BASE_SHA"
+          python3 .proof-tools/.qa/nextcloud-voice-replies/qualify.py
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        if: always()
+        with:
+          name: voice-replies-qualified-${{ github.run_id }}
+          path: ${{ runner.temp }}/voice-replies-qualified/
+          if-no-files-found: error
+          retention-days: 14

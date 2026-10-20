@@ -1,0 +1,7 @@
+{
+  "extensions/nextcloud-talk/src/outbound-media.test.ts": "5ac8305777abc32e4fd6529ce1837348f1eade651902c9e4d3524e33db55ed52",
+  "extensions/nextcloud-talk/src/channel.ts": "0eb9dd5a52560c50a74ad4e2ce48617ca61b4030d3e77fb577914e47e5150ca5",
+  "extensions/nextcloud-talk/src/outbound-media.ts": "3976cfac18b6623b482b775c6bb2b1803c97cdb5e6f884a9dd2ded285051d6ad",
+  "extensions/nextcloud-talk/src/outbound-media.test-harness.ts": "6848dfa4715aa80be0b8d8f91cda1e4346210f575db31ee81c42cda3038eacef",
+  "docs/channels/nextcloud-talk.md": "f43d53d39f4dd5a9a2006c23e3a53520a1522616e9656714b42b7f3f39c81012"
+}
