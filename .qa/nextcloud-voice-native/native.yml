@@ -1,0 +1,88 @@
+name: Talk native voice installed Gateway and real server proof
+on:
+  workflow_dispatch:
+    inputs:
+      source:
+        required: true
+        type: string
+      qualificationRun:
+        required: true
+        type: string
+permissions:
+  contents: read
+  actions: read
+env:
+  CI: 'true'
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: 'true'
+  SOURCE_SHA: ${{ inputs.source }}
+  QUALIFICATION_RUN: ${{ inputs.qualificationRun }}
+  NODE_OPTIONS: --max-old-space-size=8192
+jobs:
+  prove:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          repository: lordratner/openclaw
+          ref: ${{ inputs.source }}
+          persist-credentials: false
+          fetch-depth: 2
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          repository: lordratner/openclaw
+          ref: ${{ github.sha }}
+          path: .proof-tools
+          sparse-checkout: .qa/nextcloud-voice-native
+          persist-credentials: false
+      - uses: ./.github/actions/setup-node-env
+        with:
+          node-version: 24.19.0
+          install-bun: 'false'
+          semantic-checks: 'true'
+          frozen-lockfile: 'true'
+          cache-mode: restore
+      - name: Admit retained successful qualification
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh api "repos/lordratner/openclaw/actions/runs/$QUALIFICATION_RUN" > "$RUNNER_TEMP/retained-run.json"
+          python3 -c 'import json,os; r=json.load(open(os.environ["RUNNER_TEMP"]+"/retained-run.json")); assert r["conclusion"]=="success" and r["status"]=="completed" and r["head_sha"]=="038af2966945f1274a90fe19d2043515626275ca"'
+          gh run download "$QUALIFICATION_RUN" --repo lordratner/openclaw --name "voice-replies-qualified-$QUALIFICATION_RUN" --dir .retained-qualification
+      - name: Check proof syntax and runner audio tooling
+        run: |
+          node --check .proof-tools/.qa/nextcloud-voice-native/voice-proof.mjs
+          command -v ffmpeg
+          command -v ffprobe
+      - name: Prepare pinned Chromium for actual Talk presentation capture
+        run: node --import ./scripts/tsx.mjs scripts/ensure-playwright-chromium.mts --require-playwright-chromium
+      - name: Build exact qualified package
+        run: python3 .proof-tools/.qa/nextcloud-voice-native/package-proof.py
+      - name: Start disposable official Nextcloud and released Talk
+        run: bash .proof-tools/.qa/nextcloud-voice-native/start-nextcloud.sh
+      - name: Prove native voice and ordinary audio through installed Gateway message tool
+        env:
+          CANDIDATE_TARBALL: ${{ runner.temp }}/nextcloud-voice-package/voice-replies.tgz
+        run: node .proof-tools/.qa/nextcloud-voice-native/voice-proof.mjs
+      - name: Collect container diagnostics and close owned server
+        if: always()
+        run: |
+          mkdir -p "$RUNNER_TEMP/nextcloud-voice-live/evidence"
+          docker logs nextcloud-voice-proof > "$RUNNER_TEMP/nextcloud-voice-live/evidence/container.log" 2>&1 || true
+          if docker inspect nextcloud-voice-proof > /dev/null 2>&1; then
+            docker rm --force nextcloud-voice-proof
+          fi
+          if docker inspect nextcloud-voice-proof > /dev/null 2>&1; then
+            exit 1
+          fi
+          python3 -c 'import json,os,pathlib; p=pathlib.Path(os.environ["RUNNER_TEMP"])/"nextcloud-voice-live/evidence/container-cleanup.json"; p.write_text(json.dumps({"containerAbsent":True})+"\n")' 
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        if: always()
+        with:
+          name: voice-replies-native-${{ github.run_id }}
+          path: |
+            ${{ runner.temp }}/nextcloud-voice-package/*.json
+            ${{ runner.temp }}/nextcloud-voice-package/*.log
+            ${{ runner.temp }}/nextcloud-voice-live/evidence/
+          if-no-files-found: error
+          retention-days: 14
