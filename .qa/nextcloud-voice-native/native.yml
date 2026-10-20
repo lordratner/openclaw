@@ -49,6 +49,17 @@ jobs:
           gh api "repos/lordratner/openclaw/actions/runs/$QUALIFICATION_RUN" > "$RUNNER_TEMP/retained-run.json"
           python3 -c 'import json,os; r=json.load(open(os.environ["RUNNER_TEMP"]+"/retained-run.json")); assert r["conclusion"]=="success" and r["status"]=="completed" and r["head_sha"]=="038af2966945f1274a90fe19d2043515626275ca"'
           gh run download "$QUALIFICATION_RUN" --repo lordratner/openclaw --name "voice-replies-qualified-$QUALIFICATION_RUN" --dir .retained-qualification
+      - name: Prepare version-bound runner audio fixture tooling
+        run: |
+          sudo apt-get update
+          audio_fixture_version="$(apt-cache policy ffmpeg | awk '/Candidate:/ {print $2; exit}')"
+          test -n "$audio_fixture_version"
+          test "$audio_fixture_version" != '(none)'
+          sudo apt-get install --yes --no-install-recommends "ffmpeg=$audio_fixture_version"
+          mkdir -p "$RUNNER_TEMP/nextcloud-voice-live/evidence"
+          dpkg-query -W -f='${Version}\n' ffmpeg > "$RUNNER_TEMP/nextcloud-voice-live/evidence/runner-audio-version.log"
+          ffmpeg -version >> "$RUNNER_TEMP/nextcloud-voice-live/evidence/runner-audio-version.log"
+          ffprobe -version >> "$RUNNER_TEMP/nextcloud-voice-live/evidence/runner-audio-version.log"
       - name: Check proof syntax and runner audio tooling
         run: |
           node --check .proof-tools/.qa/nextcloud-voice-native/voice-proof.mjs
