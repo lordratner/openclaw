@@ -1,0 +1,50 @@
+{
+  "status": "DELTA_REPAIR_PREPARED_NOT_EXECUTED",
+  "baselineCommit": "59cb44796b0f1f0daa0e37af8b1495abb45d9bc1",
+  "sourcePortManifestSha256": "3352e61f2d49d9bab3ff047f19e8be5ec8ed6a487c8aa3b5ae942b40074a2077",
+  "sourceFiles": 15,
+  "freshOnly": false,
+  "expectedFreshPassingTests": 68,
+  "expectedFreshNegativeControls": 2,
+  "expectedQuoteBaselinePassingControls": 5,
+  "expectedPositiveSuites": {
+    "outbound-media.test.ts": 31,
+    "send.handoff.test.ts": 6,
+    "inbound.behavior.test.ts": 42,
+    "inbound.authz.test.ts": 2,
+    "inbound.room-info-retry.test.ts": 3,
+    "webhook-spool.test.ts": 21
+  },
+  "rootInputs": {
+    "port-manifest.json": "3352e61f2d49d9bab3ff047f19e8be5ec8ed6a487c8aa3b5ae942b40074a2077",
+    "paths.json": "16ea5158bd6cb2349d3c999346fafd6668cd0a4a837fbece9ea385ea9e9070a9",
+    "release-manifest.json": "4b899e678266920e1ca50f3465655d4aa09a5d1f2249bebcfaa8f461c79efaac",
+    "attachment-source-manifest.json": "bdd9bca580c3344d0d949688f9db0ba7c0af37e43d36593ed672b71baf91a69d"
+  },
+  "files": {
+    "README.md": "2ac4290a0965e6665ac13b6e4b2ae95b48442905ada3c6fc0b2c7d0ee29035b4",
+    "fork-profile.ts": "9d0ee172e5bf86cbdb537a13893792de895ba80a2a67d55cbe6dd99d4ca1d945",
+    "legal/saxes-6.0.0-LICENSE.txt": "0fac2374380621b22e6b50451057721a9c52935b02d16d106a9f04897f061d0e",
+    "negative-controls.mjs": "e29b79c9c2056dd66e5332abfc667d02664311a7f1006ae486508590cf01e459",
+    "parser-build-inputs.json": "7d2e2d0fee523a898046951baa3b80ee331b147a5b7bf0c3e5e465d70c09dfec",
+    "prior-attachment/extensions/nextcloud-talk/src/inbound.ts": "e774ccc7fda1e339fe9660212c03b63ca9003b1e12c08b73240858f4800e8ea0",
+    "prior-attachment/extensions/nextcloud-talk/src/types.ts": "ae92af2cfec98524b34991f7c62775ad9004922cddcc64c242386e9a3f29bb60",
+    "prior-attachment/extensions/nextcloud-talk/src/webhook-spool-state.ts": "f4db784692a9f935134999eb5fede596d3f60306debbe244e7d24d9ee9138081",
+    "prior-attachment/extensions/nextcloud-talk/src/webhook-spool.ts": "54b9bf3a76739107e75c0e5e31831edf9aef59ad06f8bd67cede633f1bcdca0d",
+    "prior-attachment/manifest.json": "d5d7c1c1647b075fc1727b744383bab8267d9124b5468b020009ef09c8e95370",
+    "prior-feature/extensions/nextcloud-talk/src/message-adapter.ts": "2b0d40e029cd175ce630b1da51164081a586743d75c27e78fc53ce90c34d8b92",
+    "prior-feature/extensions/nextcloud-talk/src/outbound-media.ts": "20812cb62901da7886cec48b0ebaa66e0cd53413fe15005fff2c8b20a1208e29",
+    "prior-feature/manifest.json": "22d4173c0497db5baff83cda1caf191e0d1d91ea20cc314cf371249637a43f65",
+    "prior-feature/producer-source-manifest.json": "b0d65239d6ad7a7b644f52667eaeb4826492ebf8beb4ecdf5b21465d027449c9",
+    "qualify.mjs": "9a66516b105ed1905342269b7a1d797471b7e4d3a5c53c8d2cf8e5be99173547",
+    "retained-39416877283.json": "2cc972d6fe7418eba91cfce48c36b8eb0d114e1bd02af1421923552be3acfabb",
+    "stock-consumer.mjs": "4f21c42b32a7188245457c88d283051b6bb0c3694d51ce147d85f7db66640a64",
+    "stock-ingress.mjs": "757a0724d43db1b5eed9ebdaa8b1fbe36fe98ff249099ba6bd731c88c0c6897e",
+    "workflow.yml": "0fc4145d11d00263a9f4cadbda0b4b83134cfef27f95233b2d99797f4f545f08"
+  },
+  "qualificationMode": "bounded-test-only-delta",
+  "requiredRetainedProducerRun": 39416877283,
+  "expectedQualifiedPassingTests": 105,
+  "expectedRetainedPassingTests": 37,
+  "expectedRetainedNegativeControls": 14
+}

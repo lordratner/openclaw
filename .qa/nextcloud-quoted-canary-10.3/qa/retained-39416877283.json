@@ -1,0 +1,62 @@
+{
+  "producerRun": 39416877283,
+  "producerQaHead": "ce2a9e3b43102550b258d8cc705d66420dd953d0",
+  "producerConclusion": "failure",
+  "producerQualificationStatus": "FAIL",
+  "sourceManifestSha256": "7c39083716705f705179ad504d2bcb3d88b7a7cfda9c4062a32c9c7581278692",
+  "retainedFileSha256": {
+    "qualification.json": "0f900bbb3e181cdc8ad4ca25c18e85a671f10abe68c09faa8af0e55b2c6669b9",
+    "source-manifest.json": "7c39083716705f705179ad504d2bcb3d88b7a7cfda9c4062a32c9c7581278692",
+    "direct-tests.json": "73d54c5ffaf0549b6d79133771e856d6d09da54084a5310cc8491cdcd89b1095",
+    "baseline-direct.json": "faf6f8da5c55e32bc202f54073756eaab1e3147ba120e050c67da21d5106c280",
+    "baseline-automatic.json": "9838b339f5c4fd762f41d5bf182e1c72b7668080c949107302cb544760381e1a",
+    "review-baseline-direct.json": "823b87dd3d25e94336319e42f24f5d43f50aa2b4f49c0e6418e7105345553f80",
+    "review-baseline-automatic.json": "d4c0c9a51f3fda3d1f3db5760ff3b1b60dbf0a82750d864ced244375cb0eb785",
+    "production-types.log": "e3bdd9e44d58029cf436f34c6aca1d408d78b73d6e256bd5c63fb03b9d4ac76a"
+  },
+  "productionSourceFiles": {
+    "extensions/nextcloud-talk/runtime-api.ts": "d2971a093f9cbf4d1abaf389e159ae8d4a3c01f48ad1d1f00aba33796493ca04",
+    "extensions/nextcloud-talk/src/guarded-response.ts": "939d9e57065b17a14768cdc93a80d16950da126c94541b3307978d1f68f2d668",
+    "extensions/nextcloud-talk/src/inbound.ts": "4e83fe4c96cb0553b6729086cbfe3110712c0a40626703cc49977220ce544879",
+    "extensions/nextcloud-talk/src/message-adapter.ts": "3e83abd0f15aa813452b4d5970326a49c75604c19cd8de4c566706a02c510efb",
+    "extensions/nextcloud-talk/src/outbound-media.test-harness.ts": "d495da820479f882688b5e5bea7cc9714a438ce9e7fbffa9b092dc22de04ef6c",
+    "extensions/nextcloud-talk/src/outbound-media.ts": "07b36c9127e677a7a8b45bfdbe75d1725902d2ba70a32221bf6709e59aa1d8c5",
+    "extensions/nextcloud-talk/src/reply.ts": "d4eb72c1e55beac9d22f482fbb02452c49923554ae1d7aca8cafcf44984820d0",
+    "extensions/nextcloud-talk/src/types.ts": "d43ef74e8d8cf3476cc881ab9f0a05bae285cf77c98bb005cf09685419af77e9",
+    "extensions/nextcloud-talk/src/webdav.ts": "22efffac7e8b82c4e9c3d6989fa32627b1c2cbb2c149518d866a9f8c0b16c05d",
+    "extensions/nextcloud-talk/src/webhook-spool-state.ts": "9fa59715858c9968074cc075010a8d7b5f527b03721249d33f85907842d33572",
+    "extensions/nextcloud-talk/src/webhook-spool.ts": "256b86b99e53e11a4ff9e9e7c92be6627f70977f2d459cb9c3bedd0a6208efee"
+  },
+  "retainedTestFiles": {
+    "extensions/nextcloud-talk/src/outbound-media.test.ts": "2ad1e5ef9c486543a26ec6b380f6e4aee60495d148143baaa5ae971ad8b1aec8",
+    "extensions/nextcloud-talk/src/send.handoff.test.ts": "5325aac9d9d55071fcf9761e52b143e3caca2f565c60ae258c1987db666afae3"
+  },
+  "allowedChangedSourceFiles": [
+    "extensions/nextcloud-talk/src/inbound.behavior.test.ts",
+    "extensions/nextcloud-talk/src/webhook-spool.test.ts"
+  ],
+  "retainedGates": [
+    "negative-controls",
+    "review-negative-controls",
+    "direct-manual-custody-parser"
+  ],
+  "retainedProductionTypes": true,
+  "testOnlyRepairs": {
+    "extensions/nextcloud-talk/src/webhook-spool.test.ts": [
+      {
+        "before": "  if (params && Object.hasOwn(params, \"quote\")) payload.object.inReplyTo = params.quote;",
+        "after": "  if (params && Object.hasOwn(params, \"quote\")) {\n    payload.object.inReplyTo = params.quote;\n  }"
+      }
+    ],
+    "extensions/nextcloud-talk/src/inbound.behavior.test.ts": [
+      {
+        "before": "  if (!request) throw new Error(\"expected admitted quote request\");",
+        "after": "  if (!request) {\n    throw new Error(\"expected admitted quote request\");\n  }"
+      },
+      {
+        "before": "      if (calls === 2) account.config.groupAllowFrom = [\"quoted-author\"];",
+        "after": "      if (calls === 2) {\n        account.config.groupAllowFrom = [\"quoted-author\"];\n      }"
+      }
+    ]
+  }
+}

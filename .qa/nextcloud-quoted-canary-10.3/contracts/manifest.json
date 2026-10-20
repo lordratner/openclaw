@@ -1,0 +1,9 @@
+{
+  "src/plugin-sdk/channel-inbound.ts": "ee34b4c726d47349c3c27eb0521bd77753a268f09eaf82622521b4faf2397824",
+  "src/plugin-sdk/security-runtime.ts": "16d4e3b39b34a896bfd4b82af34808f2828962986738cc897b423e5dabf924c8",
+  "src/plugin-sdk/context-visibility-runtime.ts": "d6de02db1a5e2eb36925e09a633fdba356f70f6c3d2ed25257a36762a7fa56ac",
+  "src/security/context-visibility.ts": "3c537588ea77e9550dd3403891b4b685e92c4b38cb1f2e1e535018514cb52a0a",
+  "src/config/context-visibility.ts": "8f442302394827e1eb66cc93e0c9dead39b6dc1b5d1cb5b788d15c39b45a0467",
+  "src/plugin-sdk/access-groups.ts": "baf582d5c2912969e001b54161c984fbb5b078c73ee960b16f236df3874fb816",
+  "src/channels/inbound-event/context.ts": "e85059696403e57671cf075c998f15d560a0ef662d2ef79bec55e0ba5d014427"
+}

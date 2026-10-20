@@ -1,0 +1,17 @@
+{
+  "baselineCommit": "59cb44796b0f1f0daa0e37af8b1495abb45d9bc1",
+  "qaHead": "f3307129747bd75a3a99f591bf3fc9276aac6621",
+  "files": {
+    "extensions/nextcloud-talk/runtime-api.ts": "d2971a093f9cbf4d1abaf389e159ae8d4a3c01f48ad1d1f00aba33796493ca04",
+    "extensions/nextcloud-talk/src/guarded-response.ts": "939d9e57065b17a14768cdc93a80d16950da126c94541b3307978d1f68f2d668",
+    "extensions/nextcloud-talk/src/inbound.behavior.test.ts": "e36cf2b214e593a6c8c904ed9f7be689d3032b79f3d5b382432a12481aac2639",
+    "extensions/nextcloud-talk/src/inbound.ts": "e774ccc7fda1e339fe9660212c03b63ca9003b1e12c08b73240858f4800e8ea0",
+    "extensions/nextcloud-talk/src/message-adapter.ts": "2b0d40e029cd175ce630b1da51164081a586743d75c27e78fc53ce90c34d8b92",
+    "extensions/nextcloud-talk/src/outbound-media.test-harness.ts": "d495da820479f882688b5e5bea7cc9714a438ce9e7fbffa9b092dc22de04ef6c",
+    "extensions/nextcloud-talk/src/outbound-media.test.ts": "dd992095e02fad8601642ba662938683ed227216aea67cd3ca45e36116560fba",
+    "extensions/nextcloud-talk/src/outbound-media.ts": "20812cb62901da7886cec48b0ebaa66e0cd53413fe15005fff2c8b20a1208e29",
+    "extensions/nextcloud-talk/src/reply.ts": "d4eb72c1e55beac9d22f482fbb02452c49923554ae1d7aca8cafcf44984820d0",
+    "extensions/nextcloud-talk/src/send.handoff.test.ts": "5325aac9d9d55071fcf9761e52b143e3caca2f565c60ae258c1987db666afae3",
+    "extensions/nextcloud-talk/src/webdav.ts": "22efffac7e8b82c4e9c3d6989fa32627b1c2cbb2c149518d866a9f8c0b16c05d"
+  }
+}
