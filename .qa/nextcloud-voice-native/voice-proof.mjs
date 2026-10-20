@@ -21,7 +21,8 @@ const password = 'nextcloud-disposable-proof-password';
 const token = 'disposable-voice-proof-gateway-token';
 const authorization = actor => `Basic ${Buffer.from(`${actor}:${password}`).toString('base64')}`;
 const sha = value => createHash('sha256').update(value).digest('hex');
-const steps = [], cases = [], synthesis = [], errors = [];
+const steps = [], cases = [], synthesis = [], utility = [], errors = [];
+const mainModel = 'gpt-5.6-luna', utilityModel = 'gpt-5.6-luna-utility';
 const state = path.join(root, 'state'), workspace = path.join(root, 'workspace');
 const packageRoot = path.join(root, 'prefix/node_modules/openclaw');
 const entry = path.join(packageRoot, 'openclaw.mjs');
@@ -40,6 +41,22 @@ async function close(server) {
   if (!server?.listening) return;
   server.closeAllConnections?.();
   await new Promise(resolve => server.close(resolve));
+}
+function utilityResponseEvents(text, ordinal) {
+  const id = `resp_voice_utility_${ordinal}`, itemId = `msg_voice_utility_${ordinal}`;
+  const part = {type: 'output_text', text, annotations: []};
+  const item = {type: 'message', id: itemId, role: 'assistant', status: 'completed', phase: 'final_answer', content: [part]};
+  const position = {item_id: itemId, output_index: 0, content_index: 0};
+  return [
+    {type: 'response.created', response: {id, object: 'response', status: 'in_progress', output: [], created_at: Math.floor(Date.now() / 1000)}},
+    {type: 'response.output_item.added', output_index: 0, item: {...item, content: [], status: 'in_progress'}},
+    {type: 'response.content_part.added', ...position, part: {...part, text: ''}},
+    {type: 'response.output_text.delta', ...position, delta: text},
+    {type: 'response.output_text.done', ...position, text},
+    {type: 'response.content_part.done', ...position, part},
+    {type: 'response.output_item.done', output_index: 0, item},
+    {type: 'response.completed', response: {id, object: 'response', status: 'completed', output: [item], usage: {input_tokens: 64, output_tokens: 16, total_tokens: 80}}},
+  ];
 }
 async function command(executable, args, label) {
   const started = Date.now();
@@ -85,7 +102,7 @@ try {
   assert.equal(build.commit, process.env.SOURCE_SHA);
   // The runner's existing encoder is fixture tooling, not a product dependency.
   const wav = path.join(workspace, 'reply.wav'), mp3 = path.join(workspace, 'reply.mp3'), ogg = path.join(workspace, 'reply.ogg');
-  await command('ffmpeg', ['-hide_banner', '-f', 'lavfi', '-i', 'sine=frequency=440:duration=0.25', '-ar', '24000', '-codec:a', 'pcm_s16le', wav], 'generate-wav');
+  await command('ffmpeg', ['-hide_banner', '-f', 'lavfi', '-i', 'sine=frequency=440:duration=2', '-ar', '24000', '-codec:a', 'pcm_s16le', wav], 'generate-wav');
   await command('ffmpeg', ['-hide_banner', '-i', wav, '-codec:a', 'libmp3lame', mp3], 'generate-mp3');
   await command('ffmpeg', ['-hide_banner', '-i', wav, '-codec:a', 'libopus', ogg], 'generate-ogg-control');
   const mp3Bytes = await fs.readFile(mp3);
@@ -93,13 +110,22 @@ try {
     try {
       if (req.method === 'GET' && req.url === '/v1/models') {
         res.writeHead(200, {'content-type': 'application/json'});
-        return res.end(JSON.stringify({object: 'list', data: [{id: 'gpt-5.6-luna', object: 'model', owned_by: 'synthetic-proof'}]}));
+        return res.end(JSON.stringify({object: 'list', data: [mainModel, utilityModel].map(id => ({id, object: 'model', owned_by: 'synthetic-proof'}))}));
       }
       assert.equal(req.method, 'POST');
-      assert.equal(req.url, '/v1/audio/speech', 'no real inference should be needed to invoke the message tool');
+      assert(['/v1/audio/speech', '/v1/responses'].includes(req.url));
       const chunks = []; let size = 0;
-      for await (const chunk of req) {size += chunk.length; assert(size < 32_768); chunks.push(chunk);}
+      for await (const chunk of req) {size += chunk.length; assert(size < 4 * 1024 * 1024); chunks.push(chunk);}
       const body = JSON.parse(Buffer.concat(chunks).toString());
+      if (req.url === '/v1/responses') {
+        assert.equal(body.model, utilityModel, 'only separately configured synthetic utility inference is allowed');
+        utility.push({model: body.model, inputSha256: sha(JSON.stringify(body.input))});
+        const events = utilityResponseEvents('Synthetic voice-output protocol work completed.', utility.length);
+        res.writeHead(200, {'content-type': body.stream === false ? 'application/json' : 'text/event-stream'});
+        if (body.stream === false) return res.end(JSON.stringify(events.at(-1).response));
+        for (const event of events) res.write(`data: ${JSON.stringify(event)}\n\n`);
+        return res.end('data: [DONE]\n\n');
+      }
       assert.equal(body.response_format, 'mp3', 'Talk must select audio-file synthesis, not Opus voice-note synthesis');
       assert.equal(body.input, 'Synthetic voice-reply protocol proof.');
       synthesis.push({model: body.model, responseFormat: body.response_format, input: body.input, audioSha256: sha(mp3Bytes)});
@@ -125,7 +151,7 @@ try {
     logging: {level: 'debug', consoleLevel: 'debug', file: path.join(evidence, 'gateway-core.jsonl')},
   };
   const {applyMockOpenAiModelConfig} = await import(pathToFileURL(path.resolve('scripts/e2e/lib/fixtures/mock-openai-config.mjs')).href);
-  applyMockOpenAiModelConfig(cfg, {mockPort: speechPort});
+  applyMockOpenAiModelConfig(cfg, {mockPort: speechPort, modelRef: `openai/${mainModel}`, utilityModelRef: `openai/${utilityModel}`});
   await fs.writeFile(configPath, JSON.stringify(cfg));
   await cli(['plugins', 'enable', 'openai', 'nextcloud-talk', '--accept-capabilities'], 'admit-bundled-plugins');
   await cli(['config', 'validate'], 'validate-config');
@@ -211,8 +237,9 @@ finally {
   }
   if (log) await new Promise(resolve => log.end(resolve));
   await close(speech);
+  if (errors.length > 0) failure ??= new Error(`Unexpected fixture errors: ${errors.join('; ')}`);
   await fs.writeFile(path.join(evidence, 'qualification.json'), JSON.stringify({status: failure ? 'FAIL' : 'PASS', source: process.env.SOURCE_SHA,
     scope: 'Installed Gateway/message tool/TTS owner and real disposable Nextcloud35/Talk25.0.6; synthetic tone and local speech endpoint, plus actual headless Chromium presentation. Not human speech synthesis, a real LLM, production deployment, audible or mobile playback proof.',
-    error: failure ? String(failure) : undefined, cases, synthesis, steps, errors, presentation, ownedGatewayStopped: !gateway || gateway.exitCode !== null || gateway.signalCode !== null, speechServerClosed: !speech?.listening}, null, 2));
+    error: failure ? String(failure) : undefined, cases, synthesis, utility, steps, errors, presentation, ownedGatewayStopped: !gateway || gateway.exitCode !== null || gateway.signalCode !== null, speechServerClosed: !speech?.listening}, null, 2));
 }
 if (failure) throw failure;

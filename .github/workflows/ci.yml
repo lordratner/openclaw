@@ -69,6 +69,13 @@ jobs:
         run: node --import ./scripts/tsx.mjs scripts/ensure-playwright-chromium.mts --require-playwright-chromium
       - name: Build exact qualified package
         run: python3 .proof-tools/.qa/nextcloud-voice-native/package-proof.py
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: voice-replies-package-${{ github.run_id }}
+          path: ${{ runner.temp }}/nextcloud-voice-package/voice-replies.tgz
+          if-no-files-found: error
+          compression-level: 0
+          retention-days: 7
       - name: Start disposable official Nextcloud and released Talk
         run: bash .proof-tools/.qa/nextcloud-voice-native/start-nextcloud.sh
       - name: Prove native voice and ordinary audio through installed Gateway message tool
