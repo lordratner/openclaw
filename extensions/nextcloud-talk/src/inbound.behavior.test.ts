@@ -347,6 +347,35 @@ describe("nextcloud-talk inbound behavior", () => {
     expect(mocks.send).not.toHaveBeenCalled();
   });
 
+  it.each([
+    { senderId: "users/bob", roomAllowFrom: undefined, visible: true },
+    { senderId: "users/outsider", roomAllowFrom: undefined, visible: false },
+    { senderId: "users/bob", roomAllowFrom: ["users/alice"], visible: false },
+  ])("applies access-group quote visibility for $senderId (room=$roomAllowFrom)", async ({ senderId, roomAllowFrom, visible }) => {
+    mocks.roomKind.mockResolvedValue("group");
+    const account = createAccount({
+      groupPolicy: "allowlist",
+      groupAllowFrom: ["accessGroup:operators"],
+      rooms: { "room-1": { requireMention: false, allowFrom: roomAllowFrom } },
+    });
+    const request = await allowedInbound({
+      account,
+      message: {
+        ...createMessage({ senderId: "users/alice", senderName: "Alice", isGroupChat: true, text: "What about this?" }),
+        quote: { id: "parent", senderId, senderName: "Quoted author", body: "Group member quote" },
+      },
+      config: {
+        accessGroups: {
+          operators: { type: "message.senders", members: { "nextcloud-talk": ["users/alice", "users/bob"] } },
+        },
+        channels: { defaults: { contextVisibility: "allowlist" }, "nextcloud-talk": account.config },
+      },
+    });
+    expect(request.ctxPayload.SenderId).toBe("users/alice");
+    expect(request.ctxPayload.ReplyChain?.[0]?.body).toBe(visible ? "Group member quote" : undefined);
+    expect(request.ctxPayload.ReplyToId).toBeUndefined();
+  });
+
   it("issues a DM pairing challenge and sends the challenge text", async () => {
     const issueChallenge = vi.fn(
       async (params: { sendPairingReply: (text: string) => Promise<void> }) => {
