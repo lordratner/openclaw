@@ -538,7 +538,7 @@ export async function handleNextcloudTalkInbound(params: {
     if (hasQuotePolicyWork) {
       const expandQuoteAllowFrom = (entries: string[]) =>
         expandAllowFromWithAccessGroups({
-          cfg: config as OpenClawConfig,
+          cfg: config,
           allowFrom: entries,
           channel: CHANNEL_ID,
           accountId: account.accountId,
