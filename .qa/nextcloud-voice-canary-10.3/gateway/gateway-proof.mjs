@@ -38,7 +38,7 @@ for (const key of Object.keys(env)) {
 env.npm_config_registry = 'https://registry.npmjs.org';
 env.npm_config_prefix = prefix;
 const secret = 'synthetic-nextcloud-quoted-parent-proof-secret-20261019';
-const room = 'quoted-proof-room', currentSender = 'users/alice', parentSender = 'users/bob';
+const room = 'voiceproofroom', currentSender = 'users/alice', parentSender = 'users/bob';
 const nonce = randomUUID(), parentMarker = `ONLY_IN_PARENT_${nonce}`, parentName = `Quoted author ${nonce}`;
 const ordinaryMarker = `ORDINARY_UNQUOTED_${nonce}`;
 const currentMarker = `CURRENT_MESSAGE_${nonce}`, controlMarker = `OUTSIDER_CONTROL_${nonce}`;
