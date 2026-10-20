@@ -11,7 +11,7 @@ def run(label,args,env=None):
  steps.append({'label':label,'code':r.returncode,'wallSeconds':round(time.monotonic()-start,3)});(proof/'steps.json').write_text(json.dumps(steps,indent=2)+'\n')
  return r.returncode
 env=dict(os.environ);env.pop('OPENCLAW_BUNDLED_PLUGIN_BUILD_IDS',None)
-package=proof/'quoted-replies.tgz';args=['node','scripts/package-openclaw-for-docker.mjs','--bundle-plugin','nextcloud-talk','--bundle-plugin','openai','--allow-unreleased-changelog','--output-dir',str(proof),'--output-name',package.name,'--pack-json',str(proof/'pack.json')];assert run('canonical-package',args,env)==0
+package=proof/'quoted-replies.tgz';args=['node','scripts/package-openclaw-for-docker.mjs','--bundle-plugin','nextcloud-talk','--allow-unreleased-changelog','--output-dir',str(proof),'--output-name',package.name,'--pack-json',str(proof/'pack.json')];assert run('canonical-package',args,env)==0
 with tarfile.open(package) as archive:
  build=json.load(archive.extractfile('package/dist/build-info.json'));assert build['commit']==source,build
  for plugin in ['nextcloud-talk','openai']:assert json.load(archive.extractfile('package/dist/extensions/'+plugin+'/openclaw.plugin.json'))['id']==plugin
