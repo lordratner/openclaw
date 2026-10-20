@@ -1,4 +1,4 @@
-name: Qualify composed voice-reply Talk canary freshly on exact 10.3
+name: Admit exact10.3 voice canary after semantic validator-only repair
 on:
   workflow_dispatch:
 permissions:
@@ -8,43 +8,33 @@ env:
   CI: 'true'
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: 'true'
 jobs:
-  qualify:
+  admit:
     runs-on: ubuntu-24.04
-    timeout-minutes: 60
+    timeout-minutes: 10
     steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
-        with:
-          repository: openclaw/openclaw
-          ref: 59cb44796b0f1f0daa0e37af8b1495abb45d9bc1
-          persist-credentials: false
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
           repository: lordratner/openclaw
           ref: ${{ github.sha }}
-          path: .proof-tools
-          sparse-checkout: .qa/nextcloud-voice-canary-10.3
+          sparse-checkout: .qa/nextcloud-voice-canary-10.3/validator
           persist-credentials: false
-      - uses: ./.github/actions/setup-node-env
+      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c
         with:
-          node-version: 24.19.0
-          install-bun: 'false'
-          semantic-checks: 'true'
-          frozen-lockfile: 'true'
-          cache-mode: restore
-      - name: Qualify exact-release quote plus attachment source and dist
+          github-token: ${{ github.token }}
+          repository: lordratner/openclaw
+          run-id: 39462358474
+          name: nextcloud-voice-canary-10.3-39462358474
+          path: ${{ runner.temp }}/original-voice-canary
+      - name: Revalidate exact negative-control assertions without rebuilding
         env:
-          CANARY_INPUT_ROOT: .proof-tools/.qa/nextcloud-voice-canary-10.3
-        run: node .proof-tools/.qa/nextcloud-voice-canary-10.3/qa/qualify.mjs
+          GH_TOKEN: ${{ github.token }}
+          RETAINED_PROOF_DIR: ${{ runner.temp }}/original-voice-canary
+        run: python3 .qa/nextcloud-voice-canary-10.3/validator/admit.py
       - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
         if: always()
         with:
           name: nextcloud-voice-canary-10.3-${{ github.run_id }}
-          path: |
-            ${{ runner.temp }}/nextcloud-voice-canary-10.3/
-            !${{ runner.temp }}/nextcloud-voice-canary-10.3/parser-build-inputs/**
-            !${{ runner.temp }}/nextcloud-voice-canary-10.3/stock-prefix/**
-            !${{ runner.temp }}/nextcloud-voice-canary-10.3/consumer-home/**
-            !${{ runner.temp }}/nextcloud-voice-canary-10.3/consumer-workspace/**
+          path: ${{ runner.temp }}/nextcloud-voice-canary-10.3/
           if-no-files-found: error
           retention-days: 14
           compression-level: 0
