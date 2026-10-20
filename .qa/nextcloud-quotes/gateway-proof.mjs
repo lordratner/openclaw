@@ -176,6 +176,10 @@ try {
   gateway = spawn(process.execPath, [entry, 'gateway', 'run', '--port', String(gatewayPort), '--bind', 'loopback'], {env, stdio: ['ignore', 'pipe', 'pipe']});
   gateway.stdout.pipe(logStream, {end: false}); gateway.stderr.pipe(logStream, {end: false}); gateway.once('error', error => errors.push(`Gateway: ${error}`));
   await eventually('installed Gateway ready', async () => { try { return (await fetch(`http://127.0.0.1:${gatewayPort}/readyz`, {signal: AbortSignal.timeout(2000)})).ok; } catch { return false; } });
+  await eventually('Talk durable webhook route ready', async () => {
+    try { return (await fs.readFile(path.join(evidence, 'gateway-core.jsonl'), 'utf8')).includes(`Gateway webhook route ready at port ${gatewayPort}/nextcloud-talk-webhook;`); }
+    catch { return false; }
+  });
   const parent = {type: 'Note', actor: {type: 'Person', id: parentSender, name: parentName}, object: {...note('101', parentMarker),
     inReplyTo: {type: 'Note', actor: {type: 'Person', id: 'users/ancestor', name: 'Ancestor'}, object: note('99', ancestorMarker)},
     url: `${origin}/${urlMarker}`}};
