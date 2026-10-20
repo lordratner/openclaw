@@ -1,0 +1,62 @@
+{
+  "status": "PASS",
+  "source": "8243d25dc84a6328869d6c36890eb5629791fcce",
+  "retainedBehaviorArtifactSource": "227300b7e3727d3b5c9f353e39d7282139dbdc30",
+  "runtimeEquivalence": {
+    "status": "PASS_TYPE_ONLY_REMOVAL_IDENTICAL_EMITTED_JS",
+    "source": "8243d25dc84a6328869d6c36890eb5629791fcce",
+    "testedArtifactSource": "227300b7e3727d3b5c9f353e39d7282139dbdc30",
+    "path": "extensions/nextcloud-talk/src/inbound.ts",
+    "onlyDelta": "Remove the new cfg type assertion; direct checked config argument",
+    "beforeSourceSha256": "a2b19e8383bd3045f5ed2f0a9a1a39d0899c741120508d42f6a6cf642628e682",
+    "afterSourceSha256": "a59b4968c0ec4e9d7b30e6613aebb8c73b5bf97c8e14c5aa574bdf379f7e0713",
+    "beforeEmittedJsSha256": "58e64864f3ac992d39d28e193c0f8f79e5ed1a73f2d6258bde6d0010ff96d9df",
+    "afterEmittedJsSha256": "58e64864f3ac992d39d28e193c0f8f79e5ed1a73f2d6258bde6d0010ff96d9df",
+    "emittedJsBytes": 24537,
+    "sourceMaps": false,
+    "compiler": {
+      "name": "esbuild",
+      "version": "0.28.2"
+    }
+  },
+  "steps": [
+    {
+      "label": "runtime-equivalence",
+      "code": 0,
+      "wallSeconds": 0.074
+    },
+    {
+      "label": "production-types",
+      "code": 0,
+      "wallSeconds": 19.85
+    },
+    {
+      "label": "test-types",
+      "code": 0,
+      "wallSeconds": 27.63
+    },
+    {
+      "label": "assertion-safety",
+      "code": 0,
+      "wallSeconds": 20.722
+    },
+    {
+      "label": "affected-lint",
+      "code": 0,
+      "wallSeconds": 90.659
+    },
+    {
+      "label": "format",
+      "code": 0,
+      "wallSeconds": 0.137
+    },
+    {
+      "label": "whitespace",
+      "code": 0,
+      "wallSeconds": 0.698
+    }
+  ],
+  "retainedBehaviorProof": "78 focused tests + installed/relocated Gateway + 2 genuine native-model turns; no runtime JS change",
+  "qualificationCi": "https://github.com/lordratner/openclaw/actions/runs/39382405571",
+  "scope": "One type-assertion removal only; identical esbuild-emitted module JavaScript and fresh type/safety/lint/format checks. Retains runtime proof from227300, not a claim of a rebuilt package."
+}
