@@ -87,7 +87,9 @@ export function parseNextcloudTalkQuotedReply(
     }
     body = structured.message.replace(/\{([^{}]+)\}/gu, (placeholder, key: string) => {
       const parameter = Object.hasOwn(parameters, key) ? parameters[key] : undefined;
-      return isRecord(parameter) && typeof parameter.name === "string" ? parameter.name : placeholder;
+      return isRecord(parameter) && typeof parameter.name === "string"
+        ? parameter.name
+        : placeholder;
     });
   } else if (Array.isArray(structured)) {
     return undefined;

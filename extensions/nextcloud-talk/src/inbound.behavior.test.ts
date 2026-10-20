@@ -206,7 +206,10 @@ async function withNativeAutomaticReply(
     const onPlatformSendDispatch = vi.fn(async () => {});
     try {
       await handleNextcloudTalkInbound({
-        message: { ...createMessage({ roomToken: "allowed" }), ...(options.quote ? { quote: options.quote } : {}) },
+        message: {
+          ...createMessage({ roomToken: "allowed" }),
+          ...(options.quote ? { quote: options.quote } : {}),
+        },
         account: resolveNextcloudTalkAccount({ cfg: config, accountId: "work" }),
         config,
         runtime: createRuntimeSpies(),
@@ -682,16 +685,27 @@ describe("nextcloud-talk inbound behavior", () => {
     { kind: "block" as const, replyToId: undefined, expectedReply: undefined },
     { kind: "final" as const, replyToId: "40", expectedReply: 40 },
     { kind: "final" as const, replyToId: "41", expectedReply: 41 },
-  ])("preserves $kind delivery targeting with quoted context ($replyToId)", async ({ kind, replyToId, expectedReply }) => {
-    await withNativeAutomaticReply(async ({ fixture, deliver }) => {
-      await deliver({ text: "Current answer", mediaUrl: fixture.mediaUrl, replyToId }, kind);
-      const share = fixture.requests.find(({ url }) => url.pathname.endsWith("/shares"));
-      const body = new URLSearchParams(share?.body.toString());
-      expect(JSON.parse(body.get("talkMetaData") ?? "{}").replyTo).toBe(expectedReply);
-    }, {
-      quote: { id: "40", senderId: "users/quoted", senderName: "Quoted author", body: "Earlier message" },
-    });
-  });
+  ])(
+    "preserves $kind delivery targeting with quoted context ($replyToId)",
+    async ({ kind, replyToId, expectedReply }) => {
+      await withNativeAutomaticReply(
+        async ({ fixture, deliver }) => {
+          await deliver({ text: "Current answer", mediaUrl: fixture.mediaUrl, replyToId }, kind);
+          const share = fixture.requests.find(({ url }) => url.pathname.endsWith("/shares"));
+          const body = new URLSearchParams(share?.body.toString());
+          expect(JSON.parse(body.get("talkMetaData") ?? "{}").replyTo).toBe(expectedReply);
+        },
+        {
+          quote: {
+            id: "40",
+            senderId: "users/quoted",
+            senderName: "Quoted author",
+            body: "Earlier message",
+          },
+        },
+      );
+    },
+  );
 
   it("keeps a warning-only automatic reply invisible after sanitation", async () => {
     await withNativeAutomaticReply(async ({ fixture, deliver }) => {

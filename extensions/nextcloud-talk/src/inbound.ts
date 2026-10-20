@@ -565,7 +565,11 @@ export async function handleNextcloudTalkInbound(params: {
     const quote = message.quote;
     const visibleQuote = quote
       ? filterChannelInboundQuoteContext(
-          resolveChannelContextVisibilityMode({ cfg: config, channel: CHANNEL_ID, accountId: account.accountId }),
+          resolveChannelContextVisibilityMode({
+            cfg: config,
+            channel: CHANNEL_ID,
+            accountId: account.accountId,
+          }),
           {
             id: quote.id,
             body: quote.body,
@@ -575,8 +579,15 @@ export async function handleNextcloudTalkInbound(params: {
               groupPolicy,
               allowFrom: hasAllowEntries(outerGroupAllowFrom) ? outerGroupAllowFrom : roomAllowFrom,
               isSenderAllowed: (quoteAllowFrom) =>
-                resolveNextcloudTalkAllowlistMatch({ allowFrom: [...quoteAllowFrom], senderId: quote.senderId }).allowed &&
-                (!hasAllowEntries(roomAllowFrom) || resolveNextcloudTalkAllowlistMatch({ allowFrom: roomAllowFrom, senderId: quote.senderId }).allowed),
+                resolveNextcloudTalkAllowlistMatch({
+                  allowFrom: [...quoteAllowFrom],
+                  senderId: quote.senderId,
+                }).allowed &&
+                (!hasAllowEntries(roomAllowFrom) ||
+                  resolveNextcloudTalkAllowlistMatch({
+                    allowFrom: roomAllowFrom,
+                    senderId: quote.senderId,
+                  }).allowed),
             }),
           },
         )
@@ -618,15 +629,19 @@ export async function handleNextcloudTalkInbound(params: {
         GroupSubject: isGroup ? roomName || roomToken : undefined,
         GroupSystemPrompt: isGroup ? groupSystemPrompt : undefined,
         // ReplyChain carries quoted identity without changing the outgoing ReplyToId fallback.
-        ...(quote && visibleQuote ? {
-          ReplyChain: [{
-            messageId: visibleQuote.id,
-            senderId: quote.senderId,
-            sender: visibleQuote.sender,
-            body: visibleQuote.body,
-            isQuote: true,
-          }],
-        } : {}),
+        ...(quote && visibleQuote
+          ? {
+              ReplyChain: [
+                {
+                  messageId: visibleQuote.id,
+                  senderId: quote.senderId,
+                  sender: visibleQuote.sender,
+                  body: visibleQuote.body,
+                  isQuote: true,
+                },
+              ],
+            }
+          : {}),
       },
     });
 
