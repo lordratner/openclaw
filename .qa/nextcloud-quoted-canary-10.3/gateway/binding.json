@@ -1,0 +1,69 @@
+{
+  "baselineCommit": "59cb44796b0f1f0daa0e37af8b1495abb45d9bc1",
+  "producerRepository": "lordratner/openclaw",
+  "producerRun": "39419125625",
+  "producerQaHead": "221d1e9af6445a3a0721a050bf8a94602b062fde",
+  "artifactName": "nextcloud-quoted-canary-10.3-39419125625",
+  "sourceManifestSha256": "52c30dbfd9977c7f85db7dc5392b726b46cabe68fbcb8b90a67271dcfd508a14",
+  "distArtifactSha256": "69f806df9cd586b72161a3e0e3d7ca82aebcef6a80765455bef1bcb1874f3384",
+  "qualificationSha256": "7232dcc23fd3815c612ebf610ef0257fff73185e89cc82ab4fb02c449960d94d",
+  "requiredGates": [
+    "automatic-auth-stock-ingress",
+    "canonical-plugin-artifact",
+    "direct-manual-custody-parser",
+    "lint",
+    "negative-controls",
+    "parser-build-inputs",
+    "prepare-and-format",
+    "quote-negative-controls",
+    "review-negative-controls",
+    "runtime-prerequisites",
+    "stock-sdk-lazy-consumer",
+    "types"
+  ],
+  "gateEvidence": {
+    "prepare-and-format": "fresh",
+    "parser-build-inputs": "fresh",
+    "runtime-prerequisites": "fresh",
+    "types": "mixed",
+    "lint": "fresh",
+    "negative-controls": "retained",
+    "review-negative-controls": "retained",
+    "quote-negative-controls": "fresh",
+    "direct-manual-custody-parser": "retained",
+    "automatic-auth-stock-ingress": "fresh",
+    "canonical-plugin-artifact": "fresh",
+    "stock-sdk-lazy-consumer": "fresh"
+  },
+  "producerFreshOnly": false,
+  "receiptAssertions": {
+    "totalQualifiedPassingTests": 105,
+    "freshPassingTests": 68,
+    "retainedPassingTests": 37,
+    "freshOriginalNegativeControls": 0,
+    "freshReviewNegativeControls": 0,
+    "retainedOriginalNegativeControls": 5,
+    "retainedReviewNegativeControls": 9,
+    "freshQuoteNegativeControls": 2,
+    "freshQuoteBaselineControls": 5,
+    "retainedProducerRun": 39416877283,
+    "retainedProducerConclusion": "failure",
+    "qualificationMode": "bounded-test-only-delta"
+  },
+  "expectedFailureCommands": [
+    "quote-baseline-durable",
+    "quote-baseline-inbound"
+  ],
+  "testReports": {
+    "direct-tests.json": {
+      "outbound-media.test.ts": 31,
+      "send.handoff.test.ts": 6
+    },
+    "fork-tests.json": {
+      "inbound.behavior.test.ts": 42,
+      "inbound.authz.test.ts": 2,
+      "inbound.room-info-retry.test.ts": 3,
+      "webhook-spool.test.ts": 21
+    }
+  }
+}

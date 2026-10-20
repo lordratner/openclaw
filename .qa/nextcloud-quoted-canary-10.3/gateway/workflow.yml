@@ -1,0 +1,69 @@
+name: Exact official10.3 managed Talk quoted canary Gateway proof
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+  actions: read
+env:
+  CI: 'true'
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: 'true'
+jobs:
+  gateway:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          repository: openclaw/openclaw
+          ref: 59cb44796b0f1f0daa0e37af8b1495abb45d9bc1
+          persist-credentials: false
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          repository: lordratner/openclaw
+          ref: ${{ github.sha }}
+          path: .proof-tools
+          sparse-checkout: .qa/nextcloud-quoted-canary-10.3/gateway
+          persist-credentials: false
+      - uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444
+        with:
+          node-version: 24.19.0
+          package-manager-cache: false
+      - name: Pin producer identity before download
+        id: binding
+        shell: bash
+        run: |
+          test "$(git rev-parse HEAD)" = 59cb44796b0f1f0daa0e37af8b1495abb45d9bc1
+          python3 - <<'PY'
+          import json,os,re
+          from pathlib import Path
+          b=json.loads(Path('.proof-tools/.qa/nextcloud-quoted-canary-10.3/gateway/binding.json').read_text())
+          assert re.fullmatch(r'[0-9]+',str(b['producerRun']))
+          assert re.fullmatch(r'[a-f0-9]{40}',b['producerQaHead'])
+          assert b['producerRepository']=='lordratner/openclaw'
+          assert b['artifactName']=='nextcloud-quoted-canary-10.3-'+b['producerRun']
+          with open(os.environ['GITHUB_OUTPUT'],'a') as f:
+              f.write('run='+b['producerRun']+'\nartifact='+b['artifactName']+'\n')
+          PY
+      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c
+        with:
+          github-token: ${{ github.token }}
+          repository: lordratner/openclaw
+          run-id: ${{ steps.binding.outputs.run }}
+          name: ${{ steps.binding.outputs.artifact }}
+          path: ${{ runner.temp }}/nextcloud-quotes-artifact
+      - name: Admit immutable successful producer and all dist members
+        env:
+          CANARY_ARTIFACT_DIR: ${{ runner.temp }}/nextcloud-quotes-artifact
+          GH_TOKEN: ${{ github.token }}
+        run: python3 .proof-tools/.qa/nextcloud-quoted-canary-10.3/gateway/admit-artifact.py
+      - name: Prove official10.3 managed-dist overlay through signed Gateway and provider boundary
+        env:
+          OPENCLAW_QA_SOURCE_ROOT: ${{ github.workspace }}
+        run: node .proof-tools/.qa/nextcloud-quoted-canary-10.3/gateway/gateway-proof.mjs
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        if: always()
+        with:
+          name: nextcloud-quoted-canary-10.3-gateway-${{ github.run_id }}
+          path: ${{ runner.temp }}/nextcloud-quotes-live/evidence/
+          if-no-files-found: error
+          retention-days: 14
