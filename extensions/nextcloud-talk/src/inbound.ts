@@ -536,23 +536,18 @@ export async function handleNextcloudTalkInbound(params: {
     let quoteRoomAllowFrom = roomAllowFrom;
     const hasQuotePolicyWork = quote !== undefined && isGroup && groupPolicy === "allowlist";
     if (hasQuotePolicyWork) {
-      const expandQuoteAllowFrom = async (entries: string[]) =>
-        await expandAllowFromWithAccessGroups({
+      const expandQuoteAllowFrom = (entries: string[]) =>
+        expandAllowFromWithAccessGroups({
           cfg: config as OpenClawConfig,
           allowFrom: entries,
           channel: CHANNEL_ID,
           accountId: account.accountId,
           senderId: quote.senderId,
-          isSenderAllowed: (candidateId, candidates) =>
-            resolveNextcloudTalkAllowlistMatch({
-              allowFrom: candidates,
-              senderId: candidateId,
-            }).allowed,
+          isSenderAllowed: (id, allow) =>
+            resolveNextcloudTalkAllowlistMatch({ senderId: id, allowFrom: allow }).allowed,
         });
-      [quoteAllowFrom, quoteRoomAllowFrom] = await Promise.all([
-        expandQuoteAllowFrom(quoteAllowFrom),
-        expandQuoteAllowFrom(roomAllowFrom),
-      ]);
+      quoteAllowFrom = await expandQuoteAllowFrom(quoteAllowFrom);
+      quoteRoomAllowFrom = await expandQuoteAllowFrom(roomAllowFrom);
     }
 
     if (performedAsyncMediaWork || hasQuotePolicyWork) {
