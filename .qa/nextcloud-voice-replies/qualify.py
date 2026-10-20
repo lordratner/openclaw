@@ -34,9 +34,12 @@ def report(name, expected_failures=0, expected_passes=None):
     if expected_passes is not None:
         assert len(passed) == expected_passes
     if expected_failures:
-        assert all("AssertionError" in "\n".join(case["failureMessages"]) for case in failures)
-        assert sum("as voice=true" in case["fullName"] for case in failures) == 2
-        assert sum("requires native delivery" in case["fullName"] for case in failures) == 1
+        voice_failures = [case for case in failures if "as voice=true" in case["fullName"]]
+        bot_failures = [case for case in failures if "requires native delivery" in case["fullName"]]
+        assert len(voice_failures) == 2 and len(bot_failures) == 1
+        assert all("AssertionError" in "\n".join(case["failureMessages"]) and "to deeply equal" in "\n".join(case["failureMessages"]) for case in voice_failures)
+        bot_error = "\n".join(bot_failures[0]["failureMessages"])
+        assert "promise resolved" in bot_error and "instead of rejecting" in bot_error and "900" in bot_error
     else:
         assert len(active) == len(cases) and result["success"]
     return {"passed": len(passed), "failed": len(failures)}
