@@ -1,0 +1,18 @@
+{
+  "baselineCommit": "59cb44796b0f1f0daa0e37af8b1495abb45d9bc1",
+  "freshOnly": true,
+  "rootInputs": {
+    "port-manifest.json": "bb660133a295e67a7ae0ff04f9fb1089880e53b01e3ad1e2da289e23287a717d",
+    "paths.json": "14310ac61602ef7ae514a5c7c01484fcfaca807fd2e0d0910691c35ef31b1580",
+    "release-manifest.json": "4b899e678266920e1ca50f3465655d4aa09a5d1f2249bebcfaa8f461c79efaac"
+  },
+  "files": {
+    "fork-profile.ts": "9d0ee172e5bf86cbdb537a13893792de895ba80a2a67d55cbe6dd99d4ca1d945",
+    "legal/saxes-6.0.0-LICENSE.txt": "0fac2374380621b22e6b50451057721a9c52935b02d16d106a9f04897f061d0e",
+    "parser-build-inputs.json": "7d2e2d0fee523a898046951baa3b80ee331b147a5b7bf0c3e5e465d70c09dfec",
+    "qualify.mjs": "e5d95a7a408509b164810950967f4e9fe8dfc332273530e065def18babf32b33",
+    "stock-consumer.mjs": "fb8e6e9e04268af8255a09ec3cd75dbc3cb01ab68fab3481fef5313269a2267d",
+    "stock-ingress.mjs": "757a0724d43db1b5eed9ebdaa8b1fbe36fe98ff249099ba6bd731c88c0c6897e",
+    "workflow.yml": "c522b033a523c6df01a3d18842132edad58313b45786ceb7e6af0b8e81d73485"
+  }
+}
