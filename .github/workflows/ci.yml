@@ -1,4 +1,4 @@
-name: Admit exact10.3 voice canary after semantic validator-only repair
+name: Exact official10.3 managed Talk composed voice canary Gateway proof
 on:
   workflow_dispatch:
 permissions:
@@ -8,33 +8,73 @@ env:
   CI: 'true'
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: 'true'
 jobs:
-  admit:
+  gateway:
     runs-on: ubuntu-24.04
-    timeout-minutes: 10
+    timeout-minutes: 40
     steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          repository: openclaw/openclaw
+          ref: 59cb44796b0f1f0daa0e37af8b1495abb45d9bc1
+          persist-credentials: false
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
           repository: lordratner/openclaw
           ref: ${{ github.sha }}
-          sparse-checkout: .qa/nextcloud-voice-canary-10.3/validator
+          path: .proof-tools
+          sparse-checkout: .qa/nextcloud-voice-canary-10.3/gateway
           persist-credentials: false
+      - uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444
+        with:
+          node-version: 24.19.0
+          package-manager-cache: false
+      - name: Pin producer identity before download
+        id: binding
+        shell: bash
+        run: |
+          test "$(git rev-parse HEAD)" = 59cb44796b0f1f0daa0e37af8b1495abb45d9bc1
+          python3 - <<'PY'
+          import json,os,re
+          from pathlib import Path
+          b=json.loads(Path('.proof-tools/.qa/nextcloud-voice-canary-10.3/gateway/binding.json').read_text())
+          assert re.fullmatch(r'[0-9]+',str(b['producerRun']))
+          assert re.fullmatch(r'[a-f0-9]{40}',b['producerQaHead'])
+          assert b['producerRepository']=='lordratner/openclaw'
+          assert re.fullmatch(r'[A-Za-z0-9_.-]+',b['artifactName'])
+          with open(os.environ['GITHUB_OUTPUT'],'a') as f:
+              f.write('run='+b['producerRun']+'\nartifact='+b['artifactName']+'\n')
+          PY
       - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c
         with:
           github-token: ${{ github.token }}
           repository: lordratner/openclaw
-          run-id: 39462358474
-          name: nextcloud-voice-canary-10.3-39462358474
-          path: ${{ runner.temp }}/original-voice-canary
-      - name: Revalidate exact negative-control assertions without rebuilding
+          run-id: ${{ steps.binding.outputs.run }}
+          name: ${{ steps.binding.outputs.artifact }}
+          path: ${{ runner.temp }}/nextcloud-voice-canary-artifact
+      - name: Admit immutable successful producer and all dist members
         env:
+          CANARY_ARTIFACT_DIR: ${{ runner.temp }}/nextcloud-voice-canary-artifact
           GH_TOKEN: ${{ github.token }}
-          RETAINED_PROOF_DIR: ${{ runner.temp }}/original-voice-canary
-        run: python3 .qa/nextcloud-voice-canary-10.3/validator/admit.py
+        run: python3 .proof-tools/.qa/nextcloud-voice-canary-10.3/gateway/admit-artifact.py
+      - name: Prepare version-bound disposable audio fixture tooling
+        run: |
+          sudo apt-get update
+          audio_fixture_version="$(apt-cache policy ffmpeg | awk '/Candidate:/ {print $2; exit}')"
+          test -n "$audio_fixture_version"
+          test "$audio_fixture_version" != '(none)'
+          sudo apt-get install --yes --no-install-recommends "ffmpeg=$audio_fixture_version"
+          mkdir -p "$RUNNER_TEMP/nextcloud-voice-canary-live/evidence"
+          dpkg-query -W -f='${Version}\n' ffmpeg > "$RUNNER_TEMP/nextcloud-voice-canary-live/evidence/runner-audio-version.log"
+          ffmpeg -version >> "$RUNNER_TEMP/nextcloud-voice-canary-live/evidence/runner-audio-version.log"
+          ffprobe -version >> "$RUNNER_TEMP/nextcloud-voice-canary-live/evidence/runner-audio-version.log"
+      - name: Prove official10.3 managed overlay, message-tool voice and signed quote preservation
+        env:
+          OPENCLAW_QA_SOURCE_ROOT: ${{ github.workspace }}
+        run: node .proof-tools/.qa/nextcloud-voice-canary-10.3/gateway/gateway-proof.mjs
       - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
         if: always()
         with:
-          name: nextcloud-voice-canary-10.3-${{ github.run_id }}
-          path: ${{ runner.temp }}/nextcloud-voice-canary-10.3/
+          name: nextcloud-voice-canary-10.3-gateway-${{ github.run_id }}
+          path: ${{ runner.temp }}/nextcloud-voice-canary-live/evidence/
           if-no-files-found: error
           retention-days: 14
-          compression-level: 0

@@ -1,0 +1,66 @@
+{
+  "baselineCommit": "59cb44796b0f1f0daa0e37af8b1495abb45d9bc1",
+  "producerRepository": "lordratner/openclaw",
+  "producerRun": "39464360906",
+  "producerQaHead": "cd5c36fa5b5a6df468db7ddd880da4ce1dafd90c",
+  "sourceQaHead": "f134ca74e4bfda9174f563ccd261508d15f7527e",
+  "artifactName": "nextcloud-voice-canary-10.3-39464360906",
+  "sourceManifestSha256": "fa56c5703e47bc4570395c44127efeaaf5a6cb78503934a8320a6473bda8417b",
+  "distArtifactSha256": "3cb105ef90597b613eeee75dd3ec39272629e90b690b5e95884948fc4a5dab07",
+  "qualificationSha256": "fd31375d7102bce9e5f74608f5883c4e3d0bbf141ffca7b921d8aca09a188bc6",
+  "requiredGates": [
+    "prepare-and-format",
+    "parser-build-inputs",
+    "runtime-prerequisites",
+    "types",
+    "lint",
+    "voice-negative-controls",
+    "direct-manual-custody-parser",
+    "automatic-auth-stock-ingress",
+    "canonical-plugin-artifact",
+    "stock-sdk-lazy-consumer"
+  ],
+  "gateEvidence": {
+    "prepare-and-format": "retained",
+    "parser-build-inputs": "retained",
+    "runtime-prerequisites": "retained",
+    "types": "retained",
+    "lint": "retained",
+    "voice-negative-controls": "fresh-validation",
+    "direct-manual-custody-parser": "retained",
+    "automatic-auth-stock-ingress": "retained",
+    "canonical-plugin-artifact": "retained",
+    "stock-sdk-lazy-consumer": "retained"
+  },
+  "receiptAssertions": {
+    "freshOnly": false,
+    "qualificationMode": "artifact-only-semantic-validator-repair",
+    "builtQaHead": "f134ca74e4bfda9174f563ccd261508d15f7527e",
+    "freshPassingTests": 0,
+    "retainedPassingTests": 112,
+    "totalQualifiedPassingTests": 112,
+    "freshVoiceNegativeControls": 0,
+    "retainedVoiceNegativeControls": 3,
+    "freshVoiceBaselinePassingControls": 0,
+    "retainedVoiceBaselinePassingControls": 4,
+    "originalProducerRun": 39462358474,
+    "originalProducerConclusion": "failure",
+    "originalQualificationSha256": "c42930e54956de66bb9c587cb629814a00cfe03b94fb88b9c7edbc88c79194cf",
+    "validatorBindingSha256": "aa5e12a15ab759ecbcde2f1eaff8471c3b5e65638a4784e5e3d1c26b5a3c50e6"
+  },
+  "expectedFailureCommands": [
+    "voice-baseline"
+  ],
+  "testReports": {
+    "direct-tests.json": {
+      "outbound-media.test.ts": 38,
+      "send.handoff.test.ts": 6
+    },
+    "fork-tests.json": {
+      "inbound.behavior.test.ts": 42,
+      "inbound.authz.test.ts": 2,
+      "inbound.room-info-retry.test.ts": 3,
+      "webhook-spool.test.ts": 21
+    }
+  }
+}
