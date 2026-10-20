@@ -1,0 +1,87 @@
+{
+  "schemaVersion": 1,
+  "status": "PASS_REAL_NATIVE_MODEL_AND_INSTALLED_GATEWAY",
+  "recordedAt": "2026-10-20T06:27:01.554606+00:00",
+  "sourceCommit": "227300b7e3727d3b5c9f353e39d7282139dbdc30",
+  "candidateVersion": "2026.10.5",
+  "focusCi": "https://github.com/lordratner/openclaw/actions/runs/39377554758",
+  "installedPackageCi": "https://github.com/lordratner/openclaw/actions/runs/39378774002",
+  "installedPrefixArchiveSha256": "d0724336b7096920a57312af3ec7ed4ec37e3555fb574870f0636263de911887",
+  "fixture": {
+    "qaCommit": "5e117de4282bbd07763973c295a814356e8a6127",
+    "path": ".qa/nextcloud-quotes/native-gateway-proof.mjs",
+    "sha256": "7534d61daae24b51d3345d20f529b7257e5845bfe34596a45d85e6f841226699"
+  },
+  "runtime": {
+    "provider": "openai",
+    "model": "gpt-6-luna",
+    "agentRuntime": "codex",
+    "codexCliVersion": "codex-cli 0.160.0",
+    "existingCliSha256": "61b0194f3bb6534439c8d26a3ed57d0805f84b884588b761795323eeb92fcf70",
+    "nativeAuthMode": "Existing native account through documented user-home mode; no OpenClaw login/import/prepared credential injection"
+  },
+  "scope": {
+    "actualInstalledCandidateGateway": true,
+    "actualNativeAgentAndRealModel": true,
+    "syntheticModelServerOrRelay": false,
+    "signedSyntheticTalkOnly": true,
+    "realTalkServerOrClient": false,
+    "productionTalkPluginChanged": false,
+    "productionGatewayConfigChangedOrRestarted": false,
+    "directNativeProviderPayloadCapture": false,
+    "complementaryCiChecksActualProviderInput": true,
+    "rawPrivateAccountDiagnosticsPublished": false
+  },
+  "cases": [
+    {
+      "case": "allowed-access-group-parent",
+      "currentMessageId": "201",
+      "currentText": "What are the launch code and author in the quoted message? Reply with the code and the author’s displayed name only. Do not use tools.",
+      "quotedParent": {
+        "messageId": "101",
+        "senderId": "users/bob",
+        "senderName": "Bob Meridian",
+        "body": "Launch code: POLARIS_d7c0e963-0a14-4007-8c03-4e9ddeb96cb9"
+      },
+      "realModelAnswer": "POLARIS_d7c0e963-0a14-4007-8c03-4e9ddeb96cb9 — Bob Meridian",
+      "signedBotSend": {
+        "messageId": "900",
+        "replyTo": "201",
+        "hmacVerified": true
+      },
+      "run": {
+        "outcome": "completed",
+        "status": "done",
+        "hasActiveRun": false,
+        "runtimeMs": 4016
+      }
+    },
+    {
+      "case": "unallowed-outsider-parent",
+      "currentMessageId": "202",
+      "currentText": "For this message only, use only a quoted reply supplied alongside this exact message. If none is supplied, answer exactly NO_VISIBLE_QUOTE. Do not reuse any earlier quote. Do not use tools.",
+      "quotedParent": {
+        "messageId": "102",
+        "senderId": "users/outsider",
+        "senderName": "Outsider Cedar",
+        "body": "HIDDEN_a8e3f1fe-6acd-4970-a6b4-3e633782e757"
+      },
+      "realModelAnswer": "NO_VISIBLE_QUOTE",
+      "signedBotSend": {
+        "messageId": "901",
+        "replyTo": "202",
+        "hmacVerified": true
+      },
+      "run": {
+        "outcome": "completed",
+        "status": "done",
+        "hasActiveRun": false,
+        "runtimeMs": 1064
+      }
+    }
+  ],
+  "sameConversation": true,
+  "distinctModelRuns": true,
+  "ownedGatewayStopped": true,
+  "ownedTalkServerClosed": true
+}
