@@ -265,6 +265,82 @@ describe("nextcloud-talk inbound behavior", () => {
     mocks.warn.mockReturnValue(undefined);
   });
 
+  it("keeps quoted context separate from current command and reply targets", async () => {
+    const message = {
+      ...createMessage({ text: "What about this?" }),
+      quote: {
+        id: "quoted-parent",
+        senderId: "users/quoted-author",
+        senderName: "Quoted author",
+        body: "UNSEEN_QUOTED_CONTEXT /status @openclaw",
+      },
+    };
+    const request = await allowedInbound({ message });
+    expect(request.ctxPayload.ReplyChain).toEqual([
+      {
+        messageId: "quoted-parent",
+        senderId: "users/quoted-author",
+        sender: "Quoted author",
+        body: "UNSEEN_QUOTED_CONTEXT /status @openclaw",
+        isQuote: true,
+      },
+    ]);
+    expect(request.ctxPayload.RawBody).toBe("What about this?");
+    expect(request.ctxPayload.BodyForCommands).toBe("What about this?");
+    expect(request.ctxPayload.ReplyToId).toBeUndefined();
+    expect(request.ctxPayload.ReplyToIdFull).toBeUndefined();
+    expect(request.ctxPayload.MessageSid).toBe(message.messageId);
+  });
+
+  it.each([
+    { mode: "all" as const, visible: true },
+    { mode: "allowlist" as const, visible: false },
+    { mode: "allowlist_quote" as const, visible: true },
+  ])("honors $mode visibility for a quoted group sender", async ({ mode, visible }) => {
+    mocks.roomKind.mockResolvedValue("group");
+    const account = createAccount({
+      groupAllowFrom: ["user-1"],
+      rooms: { "room-1": { requireMention: false } },
+    });
+    const message = {
+      ...createMessage({ isGroupChat: true, text: "Current message" }),
+      quote: { id: "parent", senderId: "users/other", senderName: "Other", body: "Quoted" },
+    };
+    const request = await allowedInbound({
+      message,
+      account,
+      config: {
+        channels: {
+          defaults: { contextVisibility: mode },
+          "nextcloud-talk": account.config,
+        },
+      },
+    });
+    expect(request.ctxPayload.ReplyChain?.[0]?.body).toBe(visible ? "Quoted" : undefined);
+    expect(request.ctxPayload.SenderId).toBe("user-1");
+  });
+
+  it("does not count a quoted mention as addressing the current message", async () => {
+    mocks.roomKind.mockResolvedValue("group");
+    const core = installCommandRuntime((body) => body?.startsWith("/") ?? false, {
+      matchesMentionPatterns: (body) => /@openclaw/i.test(body),
+    });
+    installPairingController(vi.fn(async () => []));
+    const message = {
+      ...createMessage({ isGroupChat: true, text: "Current message" }),
+      quote: { id: "parent", senderId: "user-1", senderName: "Alice", body: "@openclaw /status" },
+    };
+    await inbound({
+      message,
+      account: createAccount({
+        groupAllowFrom: ["user-1"],
+        rooms: { "room-1": { requireMention: true } },
+      }),
+    });
+    expect(core.channel.inbound.dispatch).not.toHaveBeenCalled();
+    expect(mocks.send).not.toHaveBeenCalled();
+  });
+
   it("issues a DM pairing challenge and sends the challenge text", async () => {
     const issueChallenge = vi.fn(
       async (params: { sendPairingReply: (text: string) => Promise<void> }) => {
