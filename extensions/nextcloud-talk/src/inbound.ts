@@ -1,6 +1,8 @@
 import {
   createChannelInboundEnvelopeBuilderAsync,
+  filterChannelInboundQuoteContext,
   formatInboundMediaUnavailableText,
+  resolveInboundSupplementalSenderAllowed,
   type ChannelInboundTurnPlan,
 } from "openclaw/plugin-sdk/channel-inbound";
 import {
@@ -11,6 +13,7 @@ import {
   bindIngressLifecycleToReplyOptions,
   resolveChannelStreamingBlockEnabled,
 } from "openclaw/plugin-sdk/channel-outbound";
+import { resolveChannelContextVisibilityMode } from "openclaw/plugin-sdk/context-visibility-runtime";
 import { resolveAgentRoute } from "openclaw/plugin-sdk/routing";
 import {
   isRecord,
@@ -559,6 +562,25 @@ export async function handleNextcloudTalkInbound(params: {
 
     const groupSystemPrompt = normalizeOptionalString(roomConfig?.systemPrompt);
     const blockStreamingEnabled = resolveChannelStreamingBlockEnabled(account.config);
+    const quote = message.quote;
+    const visibleQuote = quote
+      ? filterChannelInboundQuoteContext(
+          resolveChannelContextVisibilityMode({ cfg: config, channel: CHANNEL_ID, accountId: account.accountId }),
+          {
+            id: quote.id,
+            body: quote.body,
+            sender: quote.senderName || quote.senderId,
+            senderAllowed: resolveInboundSupplementalSenderAllowed({
+              isGroup,
+              groupPolicy,
+              allowFrom: hasAllowEntries(outerGroupAllowFrom) ? outerGroupAllowFrom : roomAllowFrom,
+              isSenderAllowed: (allowFrom) =>
+                resolveNextcloudTalkAllowlistMatch({ allowFrom: [...allowFrom], senderId: quote.senderId }).allowed &&
+                (!hasAllowEntries(roomAllowFrom) || resolveNextcloudTalkAllowlistMatch({ allowFrom: roomAllowFrom, senderId: quote.senderId }).allowed),
+            }),
+          },
+        )
+      : undefined;
 
     const ctxPayload = core.channel.inbound.buildContext({
       channelIngress: access,
@@ -595,6 +617,16 @@ export async function handleNextcloudTalkInbound(params: {
       extra: {
         GroupSubject: isGroup ? roomName || roomToken : undefined,
         GroupSystemPrompt: isGroup ? groupSystemPrompt : undefined,
+        // ReplyChain carries quoted identity without changing the outgoing ReplyToId fallback.
+        ...(quote && visibleQuote ? {
+          ReplyChain: [{
+            messageId: visibleQuote.id,
+            senderId: quote.senderId,
+            sender: visibleQuote.sender,
+            body: visibleQuote.body,
+            isQuote: true,
+          }],
+        } : {}),
       },
     });
 
