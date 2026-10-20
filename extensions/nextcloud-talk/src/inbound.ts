@@ -574,8 +574,8 @@ export async function handleNextcloudTalkInbound(params: {
               isGroup,
               groupPolicy,
               allowFrom: hasAllowEntries(outerGroupAllowFrom) ? outerGroupAllowFrom : roomAllowFrom,
-              isSenderAllowed: (allowFrom) =>
-                resolveNextcloudTalkAllowlistMatch({ allowFrom: [...allowFrom], senderId: quote.senderId }).allowed &&
+              isSenderAllowed: (quoteAllowFrom) =>
+                resolveNextcloudTalkAllowlistMatch({ allowFrom: [...quoteAllowFrom], senderId: quote.senderId }).allowed &&
                 (!hasAllowEntries(roomAllowFrom) || resolveNextcloudTalkAllowlistMatch({ allowFrom: roomAllowFrom, senderId: quote.senderId }).allowed),
             }),
           },
