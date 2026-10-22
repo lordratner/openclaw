@@ -10,6 +10,8 @@ type NextcloudTalkOutboundRequest = {
   body: Buffer;
   authorization?: string;
   ifNoneMatch?: string;
+  botRandom?: string;
+  botSignature?: string;
 };
 export type NextcloudTalkOutboundFixture = {
   directory: string;
@@ -52,6 +54,8 @@ export async function withNextcloudTalkOutboundFixture(
         url: new URL(request.url ?? "/", "http://fixture.invalid"),
         body: Buffer.concat(chunks),
         authorization: request.headers.authorization,
+        botRandom: request.headers["x-nextcloud-talk-bot-random"]?.toString(),
+        botSignature: request.headers["x-nextcloud-talk-bot-signature"]?.toString(),
         ifNoneMatch:
           typeof request.headers["if-none-match"] === "string"
             ? request.headers["if-none-match"]
@@ -64,6 +68,8 @@ export async function withNextcloudTalkOutboundFixture(
       let data: unknown;
       if (recorded.url.pathname === "/cloud/ocs/v1.php/cloud/user") {
         data = { id: "canonical-user" };
+      } else if (recorded.url.pathname === "/cloud/ocs/v2.php/cloud/capabilities") {
+        data = { capabilities: { spreed: { features: ["media-caption"] } } };
       } else if (recorded.method === "MKCOL") {
         response.writeHead(201);
         response.end();
