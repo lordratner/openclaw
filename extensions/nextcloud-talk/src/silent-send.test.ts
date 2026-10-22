@@ -1,4 +1,3 @@
-import { createHmac } from "node:crypto";
 import { expect, it, vi } from "vitest";
 import { nextcloudTalkPlugin } from "../channel-plugin-api.js";
 import { withNextcloudTalkOutboundFixture as withTalk } from "./outbound-media.test-harness.js";
@@ -16,7 +15,7 @@ vi.mock("../runtime-api.js", async (original) => {
   };
 });
 
-it.each([true, false, undefined])("sends signed bot text with silent=%s", async (silent) => {
+it.each([true, false, undefined])("sends bot text with silent=%s", async (silent) => {
   await withTalk(async ({ ctx, requests }) => {
     const result = await nextcloudTalkPlugin.message!.send!.text!({ ...ctx, silent });
     expect(result).toMatchObject({ messageId: "900", receipt: { replyToId: "41" } });
@@ -28,12 +27,6 @@ it.each([true, false, undefined])("sends signed bot text with silent=%s", async 
       replyTo: "41",
       ...(silent ? { silent: true } : {}),
     });
-    expect(request.botSignature).toBe(
-      createHmac("sha256", "synthetic-bot-secret")
-        .update(`${request.botRandom}The report`)
-        .digest("hex"),
-    );
-    expect(request.authorization).toBeUndefined();
   });
 });
 

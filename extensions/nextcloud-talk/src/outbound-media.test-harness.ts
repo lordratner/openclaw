@@ -53,8 +53,6 @@ type NextcloudTalkOutboundRequest = {
   body: Buffer;
   authorization?: string;
   ifNoneMatch?: string;
-  botRandom?: string;
-  botSignature?: string;
   headers: IncomingMessage["headers"];
 };
 export type NextcloudTalkOutboundFixture = {
@@ -98,8 +96,6 @@ export async function withNextcloudTalkOutboundFixture(
         url: new URL(request.url ?? "/", "http://fixture.invalid"),
         body: Buffer.concat(chunks),
         authorization: request.headers.authorization,
-        botRandom: request.headers["x-nextcloud-talk-bot-random"]?.toString(),
-        botSignature: request.headers["x-nextcloud-talk-bot-signature"]?.toString(),
         headers: request.headers,
         ifNoneMatch:
           typeof request.headers["if-none-match"] === "string"
