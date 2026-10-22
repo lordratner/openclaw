@@ -1,0 +1,8 @@
+{
+  "extensions/nextcloud-talk/src/channel.ts": "bec99c81e30b58e0719cc3d34597b0f7dd07b3a7c028c15a8fa2dbad93083517",
+  "extensions/nextcloud-talk/src/send.ts": "d1de90da2328e173edb5f6acf1b24345ac633ed0d58bf2b480b17f86af398d4b",
+  "extensions/nextcloud-talk/src/outbound-media.ts": "d8e9c945624940ee37e61950a8e4e637c1096861aabadf6509ee553476e95a6f",
+  "extensions/nextcloud-talk/src/outbound-media.test-harness.ts": "ec2a09b76c5fdd6c08e35970fdb48d37a30d79ef05ca690fc685194cb261b674",
+  "extensions/nextcloud-talk/src/silent-send.test.ts": "381543586bfc5a64958510bdfcc8b5c4b239b375008496db11a0d5c2bcd50345",
+  "docs/channels/nextcloud-talk.md": "2c624a5a7b7a95b99d3a7d8f8fd75e2bdcc722e030a8d6e109f50fd94da09439"
+}
