@@ -1,0 +1,95 @@
+name: Talk silent sends real server notification proof
+on:
+  workflow_dispatch:
+    inputs:
+      source:
+        required: true
+        type: string
+      qualificationRun:
+        required: true
+        type: string
+permissions:
+  contents: read
+  actions: read
+env:
+  CI: 'true'
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: 'true'
+  SOURCE_SHA: ${{ inputs.source }}
+  QUALIFICATION_RUN: ${{ inputs.qualificationRun }}
+  NODE_OPTIONS: --max-old-space-size=8192
+jobs:
+  prove:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          repository: lordratner/openclaw
+          ref: ${{ inputs.source }}
+          persist-credentials: false
+          fetch-depth: 2
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          repository: lordratner/openclaw
+          ref: ${{ github.sha }}
+          path: .proof-tools
+          sparse-checkout: .qa/nextcloud-silent-native
+          persist-credentials: false
+      - uses: ./.github/actions/setup-node-env
+        with:
+          node-version: 24.19.0
+          install-bun: 'false'
+          semantic-checks: 'true'
+          frozen-lockfile: 'true'
+          cache-mode: restore
+      - name: Admit retained source qualification
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh api "repos/lordratner/openclaw/actions/runs/$QUALIFICATION_RUN" > "$RUNNER_TEMP/retained-run.json"
+          python3 -c 'import json,os; r=json.load(open(os.environ["RUNNER_TEMP"]+"/retained-run.json")); assert r["conclusion"]=="success" and r["status"]=="completed" and r["head_sha"]=="1691551900bc52aa091b52e333487f0070e6781b"'
+          gh run download "$QUALIFICATION_RUN" --repo lordratner/openclaw --name "silent-sends-qualified-$QUALIFICATION_RUN" --dir .retained-qualification
+      - name: Check proof scripts
+        run: |
+          node --check .proof-tools/.qa/nextcloud-silent-native/silent-proof.mjs
+          python3 -m py_compile .proof-tools/.qa/nextcloud-silent-native/package-proof.py
+      - name: Admit retained canonical package without rebuilding unchanged source
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh api repos/lordratner/openclaw/actions/runs/39710201330 > "$RUNNER_TEMP/retained-package-run.json"
+          python3 -c 'import json,os; r=json.load(open(os.environ["RUNNER_TEMP"]+"/retained-package-run.json")); assert r["status"]=="completed" and r["conclusion"]=="failure" and r["head_sha"]=="d8394c2642acef0f72126d23c9f6ed327c8d348f"'
+          gh run download 39710201330 --repo lordratner/openclaw --name silent-sends-package-39710201330 --dir "$RUNNER_TEMP/nextcloud-silent-package"
+          gh run download 39710201330 --repo lordratner/openclaw --name silent-sends-native-39710201330 --dir .retained-native
+          python3 .proof-tools/.qa/nextcloud-silent-native/admit-retained-package.py
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: silent-sends-package-${{ github.run_id }}
+          path: ${{ runner.temp }}/nextcloud-silent-package/silent-sends.tgz
+          if-no-files-found: error
+          compression-level: 0
+          retention-days: 7
+      - name: Start disposable official Nextcloud and released Talk
+        run: bash .proof-tools/.qa/nextcloud-silent-native/start-nextcloud.sh
+      - name: Prove quiet delivery through installed Gateway and recipient notifications
+        env:
+          CANDIDATE_TARBALL: ${{ runner.temp }}/nextcloud-silent-package/silent-sends.tgz
+        run: node .proof-tools/.qa/nextcloud-silent-native/silent-proof.mjs
+      - name: Close owned server and collect diagnostics
+        if: always()
+        run: |
+          mkdir -p "$RUNNER_TEMP/nextcloud-silent-live/evidence"
+          docker logs nextcloud-silent-proof > "$RUNNER_TEMP/nextcloud-silent-live/evidence/container.log" 2>&1 || true
+          if docker inspect nextcloud-silent-proof > /dev/null 2>&1; then docker rm --force nextcloud-silent-proof; fi
+          if docker inspect nextcloud-silent-proof > /dev/null 2>&1; then exit 1; fi
+          python3 -c 'import json,os,pathlib; p=pathlib.Path(os.environ["RUNNER_TEMP"])/"nextcloud-silent-live/evidence/container-cleanup.json"; p.write_text(json.dumps({"containerAbsent":True})+"\n")'
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        if: always()
+        with:
+          name: silent-sends-native-${{ github.run_id }}
+          path: |
+            ${{ runner.temp }}/nextcloud-silent-package/*.json
+            ${{ runner.temp }}/nextcloud-silent-package/*.log
+            ${{ runner.temp }}/nextcloud-silent-live/evidence/
+          if-no-files-found: error
+          retention-days: 14
