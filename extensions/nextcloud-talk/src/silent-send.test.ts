@@ -68,17 +68,20 @@ it.each(["The report", ""])("publishes a quiet native file with caption %j", asy
   });
 });
 
-it.each([false, undefined])("keeps ordinary native file sends unchanged with silent=%s", async (silent) => {
-  await withTalk(async ({ ctx, requests }) => {
-    await nextcloudTalkPlugin.message!.send!.media!({ ...ctx, silent });
-    expect(requests.some(({ url }) => url.pathname.endsWith("/capabilities"))).toBe(false);
-    const share = requests.find(({ url }) => url.pathname.endsWith("/shares"));
-    expect(JSON.parse(new URLSearchParams(share?.body.toString()).get("talkMetaData")!)).toEqual({
-      caption: "The report",
-      replyTo: 41,
+it.each([false, undefined])(
+  "keeps ordinary native file sends unchanged with silent=%s",
+  async (silent) => {
+    await withTalk(async ({ ctx, requests }) => {
+      await nextcloudTalkPlugin.message!.send!.media!({ ...ctx, silent });
+      expect(requests.some(({ url }) => url.pathname.endsWith("/capabilities"))).toBe(false);
+      const share = requests.find(({ url }) => url.pathname.endsWith("/shares"));
+      expect(JSON.parse(new URLSearchParams(share?.body.toString()).get("talkMetaData")!)).toEqual({
+        caption: "The report",
+        replyTo: 41,
+      });
     });
-  });
-});
+  },
+);
 
 it.each([
   { capabilities: { spreed: { features: ["silent-send", "silent-send-state"] } } },
@@ -86,7 +89,9 @@ it.each([
 ])("rejects unsupported quiet file publication before reading or uploading (%j)", async (data) => {
   await withTalk(async (fixture) => {
     fixture.respond = (request, response) => {
-      if (!request.url.pathname.endsWith("/capabilities")) return false;
+      if (!request.url.pathname.endsWith("/capabilities")) {
+        return false;
+      }
       response.writeHead(200, { "content-type": "application/json" });
       response.end(JSON.stringify({ ocs: { data } }));
       return true;
@@ -103,7 +108,9 @@ it.each([
 it("does not downgrade a quiet file send when capability lookup fails", async () => {
   await withTalk(async (fixture) => {
     fixture.respond = (request, response) => {
-      if (!request.url.pathname.endsWith("/capabilities")) return false;
+      if (!request.url.pathname.endsWith("/capabilities")) {
+        return false;
+      }
       response.writeHead(503);
       response.end();
       return true;
@@ -115,27 +122,34 @@ it("does not downgrade a quiet file send when capability lookup fails", async ()
   });
 });
 
-it.each(["cancel", "revoke"])("stops a quiet file send after capability lookup (%s)", async (mode) => {
-  await withTalk(async (fixture) => {
-    const controller = new AbortController();
-    let current = true;
-    fixture.respond = (request) => {
-      if (request.url.pathname.endsWith("/capabilities")) {
-        if (mode === "cancel") controller.abort(new Error("quiet send cancelled"));
-        current = false;
-      }
-      return false;
-    };
-    await expect(
-      nextcloudTalkPlugin.message!.send!.media!({
-        ...fixture.ctx,
-        silent: true,
-        signal: controller.signal,
-        assertDirectAdapterHandoff: () => {
-          if (!current) throw new Error("quiet send custody revoked");
-        },
-      }),
-    ).rejects.toThrow();
-    expect(fixture.requests.map(({ method }) => method)).toEqual(["GET"]);
-  });
-});
+it.each(["cancel", "revoke"])(
+  "stops a quiet file send after capability lookup (%s)",
+  async (mode) => {
+    await withTalk(async (fixture) => {
+      const controller = new AbortController();
+      let current = true;
+      fixture.respond = (request) => {
+        if (request.url.pathname.endsWith("/capabilities")) {
+          if (mode === "cancel") {
+            controller.abort(new Error("quiet send cancelled"));
+          }
+          current = false;
+        }
+        return false;
+      };
+      await expect(
+        nextcloudTalkPlugin.message!.send!.media!({
+          ...fixture.ctx,
+          silent: true,
+          signal: controller.signal,
+          assertDirectAdapterHandoff: () => {
+            if (!current) {
+              throw new Error("quiet send custody revoked");
+            }
+          },
+        }),
+      ).rejects.toThrow();
+      expect(fixture.requests.map(({ method }) => method)).toEqual(["GET"]);
+    });
+  },
+);
