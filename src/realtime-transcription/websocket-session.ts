@@ -1,9 +1,9 @@
 import { randomUUID } from "node:crypto";
 import { toErrorObject, toStringifiedError } from "@openclaw/normalization-core/error-coercion";
-import { createAmbientNodeProxyAgent } from "@openclaw/proxyline";
 import type WebSocket from "ws";
 import { RetrySupervisor } from "../../packages/retry/src/index.js";
 import { sleepWithAbort } from "../infra/backoff.js";
+import { createNodeProxyAgent } from "../infra/net/node-proxy-agent.js";
 import { createDebugProxyWebSocketAgent, resolveDebugProxySettings } from "../proxy-capture/env.js";
 import { captureWsEventAsync } from "../proxy-capture/runtime.js";
 import { createLazyRuntimeNamedExport } from "../shared/lazy-runtime.js";
@@ -328,16 +328,11 @@ class WebSocketRealtimeTranscriptionSession<Event> implements RealtimeTranscript
           }
 
           this.currentUrl = connection.url;
-          const protocol = URL.parse(connection.url)?.protocol;
           socket = new NpmWebSocket(this.currentUrl, {
             headers: connection.headers,
             maxPayload: REALTIME_TRANSCRIPTION_WS_MAX_PAYLOAD_BYTES,
-            // WebSocket clients do not inherit fetch's environment proxy routing.
-            agent:
-              proxyAgent ??
-              createAmbientNodeProxyAgent({
-                protocol: protocol === "wss:" || protocol === "https:" ? "https" : "http",
-              }),
+            // Share CIDR bypass and managed proxy trust with other Node transports.
+            agent: proxyAgent ?? createNodeProxyAgent({ mode: "env", targetUrl: connection.url }),
           });
           socket.binaryType = "nodebuffer";
           this.ws = socket;
