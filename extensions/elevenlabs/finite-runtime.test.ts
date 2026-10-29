@@ -1,16 +1,15 @@
 import { createServer } from "node:http";
-import type { OpenClawPluginApi } from "openclaw/plugin-sdk/plugin-entry";
+import type { OpenClawConfig, OpenClawPluginApi } from "openclaw/plugin-sdk/plugin-entry";
 import { expect, it, onTestFinished, vi } from "vitest";
 import { WebSocketServer } from "ws";
-import elevenlabs from "../../extensions/elevenlabs/index.js";
+import { createPluginMetadataSnapshotFixture } from "../../src/plugins/plugin-metadata.test-support.js";
+import { createEmptyPluginRegistry } from "../../src/plugins/registry-empty.js";
+import { withPluginRuntimeGenerationScope } from "../../src/plugins/runtime/generation-scope.js";
+import { createPluginRuntime } from "../../src/plugins/runtime/index.js";
+import { registerProviderPlugin } from "../../src/test-utils/plugin-registration.js";
+import { reserveTestPortListener } from "../../src/test-utils/port-claims.js";
 import { awaitGateBeforeSettlement, createDeferred } from "../../test/helpers/promise.js";
-import type { OpenClawConfig } from "../config/types.js";
-import { createPluginMetadataSnapshotFixture } from "../plugins/plugin-metadata.test-support.js";
-import { createEmptyPluginRegistry } from "../plugins/registry-empty.js";
-import { withPluginRuntimeGenerationScope } from "../plugins/runtime/generation-scope.js";
-import { createPluginRuntime } from "../plugins/runtime/index.js";
-import { registerProviderPlugin } from "../test-utils/plugin-registration.js";
-import { reserveTestPortListener } from "../test-utils/port-claims.js";
+import elevenlabs from "./index.js";
 
 type Stream = NonNullable<
   OpenClawPluginApi["runtime"]["mediaUnderstanding"]["transcribeAudioStream"]
@@ -82,12 +81,14 @@ async function protocolFixture() {
   }
   vi.stubEnv("OPENCLAW_DEBUG_PROXY_ENABLED", "0");
   vi.stubEnv("ELEVENLABS_API_KEY", "unused-ambient-key");
-  onTestFinished(() => vi.unstubAllEnvs());
+  onTestFinished(() => {
+    vi.unstubAllEnvs();
+  });
   const frames: Buffer[] = [];
   const commits: number[] = [];
   const requests: Array<{ url: URL; key: string | string[] | undefined }> = [];
-  const firstAudio = createDeferred<void>();
-  const closed = createDeferred<void>();
+  const firstAudio = createDeferred();
+  const closed = createDeferred();
   let batchRequests = 0;
   const reserved = await reserveTestPortListener({
     offsets: [0],
@@ -102,7 +103,9 @@ async function protocolFixture() {
     for (const socket of wss.clients) {
       socket.terminate();
     }
-    await new Promise<void>((resolve) => wss.close(() => resolve()));
+    await new Promise<void>((resolve) => {
+      wss.close(() => resolve());
+    });
     await reserved.releaseListener();
     await reserved.claim.release();
   });
@@ -148,7 +151,7 @@ async function protocolFixture() {
 it("streams through the public runtime and registered ElevenLabs provider before input ends", async () => {
   const fixture = await protocolFixture();
   await withRuntime(async (transcribe) => {
-    const release = createDeferred<void>();
+    const release = createDeferred();
     onTestFinished(() => release.resolve());
     let inputEnded = false;
     const chunks = Array.from({ length: 9 }, (_, index) => Buffer.alloc(32000, index + 1));
@@ -197,9 +200,9 @@ it("cancels the real provider socket without sending late input or replaying thr
   const fixture = await protocolFixture();
   await withRuntime(async (transcribe) => {
     const controller = new AbortController();
-    const release = createDeferred<void>();
+    const release = createDeferred();
     onTestFinished(() => release.resolve());
-    const sourceClosed = createDeferred<void>();
+    const sourceClosed = createDeferred();
     async function* audio() {
       try {
         yield Buffer.alloc(320);
