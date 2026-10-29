@@ -215,6 +215,7 @@ it("transcribes over TLS through the selected HTTP proxy", async () => {
   const upstreams: Socket[] = [];
   const tunnels: string[] = [];
   const frames: Buffer[] = [];
+  const trace: unknown[] = [];
   const transcript = createDeferred<string>();
   const onError = vi.fn();
   let wss: WebSocketServer | undefined;
@@ -237,6 +238,7 @@ it("transcribes over TLS through the selected HTTP proxy", async () => {
             : Buffer.from(data);
         if (isBinary) {
           frames.push(frame);
+          trace.push({ boundary: "tls-origin", receivedAudioBytes: frame.byteLength });
         }
         socket.send(JSON.stringify({ text: "complete synthetic transcript" }));
       });
@@ -246,6 +248,7 @@ it("transcribes over TLS through the selected HTTP proxy", async () => {
       createListener: () =>
         createServer().on("connect", (request, downstream, head) => {
           tunnels.push(request.url ?? "");
+          trace.push({ boundary: "http-proxy", method: request.method, target: request.url });
           const upstream = connect(origin.claim.port, "127.0.0.1", () => {
             downstream.write("HTTP/1.1 200 Connection Established\r\n\r\n");
             upstream.write(head);
@@ -263,7 +266,10 @@ it("transcribes over TLS through the selected HTTP proxy", async () => {
     session = createSession({
       url: `wss://127.0.0.1:${origin.claim.port}/transcribe`,
       callbacks: { onTranscript: transcript.resolve, onError },
-      onMessage: handleProviderEvent,
+      onMessage: (event, transport) => {
+        trace.push({ boundary: "wss-client", received: event });
+        handleProviderEvent(event, transport);
+      },
       onClose: (transport) => transport.closeNow(),
     });
     session.sendAudio(Buffer.from("synthetic PCM"));
@@ -272,6 +278,10 @@ it("transcribes over TLS through the selected HTTP proxy", async () => {
     expect(frames).toEqual([Buffer.from("synthetic PCM")]);
     expect(tunnels).toEqual([`127.0.0.1:${origin.claim.port}`]);
     expect(onError).not.toHaveBeenCalled();
+    console.info(
+      "PROXY_TRANSCRIPTION_BOUNDARY_TRACE",
+      JSON.stringify(trace).replaceAll(`127.0.0.1:${origin.claim.port}`, "<synthetic-origin>"),
+    );
   } finally {
     setDefaultCACertificates(previousCertificates);
     session?.close();
