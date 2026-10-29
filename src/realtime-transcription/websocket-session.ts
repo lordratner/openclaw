@@ -1,5 +1,6 @@
 import { randomUUID } from "node:crypto";
 import { toErrorObject, toStringifiedError } from "@openclaw/normalization-core/error-coercion";
+import { createAmbientNodeProxyAgent } from "@openclaw/proxyline";
 import type WebSocket from "ws";
 import { RetrySupervisor } from "../../packages/retry/src/index.js";
 import { sleepWithAbort } from "../infra/backoff.js";
@@ -327,10 +328,16 @@ class WebSocketRealtimeTranscriptionSession<Event> implements RealtimeTranscript
           }
 
           this.currentUrl = connection.url;
+          const protocol = URL.parse(connection.url)?.protocol;
           socket = new NpmWebSocket(this.currentUrl, {
             headers: connection.headers,
             maxPayload: REALTIME_TRANSCRIPTION_WS_MAX_PAYLOAD_BYTES,
-            ...(proxyAgent ? { agent: proxyAgent } : {}),
+            // WebSocket clients do not inherit fetch's environment proxy routing.
+            agent:
+              proxyAgent ??
+              createAmbientNodeProxyAgent({
+                protocol: protocol === "wss:" || protocol === "https:" ? "https" : "http",
+              }),
           });
           socket.binaryType = "nodebuffer";
           this.ws = socket;

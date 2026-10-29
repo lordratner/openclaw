@@ -1,10 +1,12 @@
 import { EventEmitter, once } from "node:events";
+import { createServer } from "node:http";
 import type { AddressInfo } from "node:net";
 import { setTimeout as delay } from "node:timers/promises";
 import { expectDefined } from "@openclaw/normalization-core";
 import { afterEach, expect, it, vi } from "vitest";
 import WebSocket, { WebSocketServer } from "ws";
 import { createDeferred } from "../../test/helpers/promise.js";
+import { reserveTestPortListener } from "../test-utils/port-claims.js";
 import {
   createRealtimeTranscriptionWebSocketSession,
   type RealtimeTranscriptionWebSocketSessionOptions as WebSocketOptions,
@@ -134,6 +136,69 @@ function encodeSequence(value: number): Buffer {
   frame.writeUInt16BE(value);
   return frame;
 }
+
+it.each(["ws", "wss", "bypass", "debug"] as const)(
+  "routes transcription handshakes through the selected proxy: %s",
+  async (route) => {
+    const targets: string[] = [];
+    const proxies: Array<Awaited<ReturnType<typeof reserveTestPortListener>>> = [];
+    async function proxy(status: number) {
+      const reserved = await reserveTestPortListener({
+        offsets: [0],
+        createListener: () =>
+          createServer().on("connect", (request, socket) => {
+            targets.push(`${status}:${request.url}`);
+            socket.end(`HTTP/1.1 ${status} Fixture proxy refusal\r\nContent-Length: 0\r\n\r\n`);
+          }),
+      });
+      proxies.push(reserved);
+      return `http://127.0.0.1:${reserved.claim.port}`;
+    }
+    try {
+      for (const key of [
+        "HTTP_PROXY",
+        "HTTPS_PROXY",
+        "ALL_PROXY",
+        "http_proxy",
+        "https_proxy",
+        "all_proxy",
+        "NO_PROXY",
+        "no_proxy",
+        "OPENCLAW_PROXY_ACTIVE",
+        "OPENCLAW_DEBUG_PROXY_URL",
+      ]) {
+        vi.stubEnv(key, undefined);
+      }
+      vi.stubEnv("OPENCLAW_DEBUG_PROXY_ENABLED", "0");
+      const { url, session, frames, waitFrames } = await setup(
+        route === "wss" ? { url: "wss://transcription.invalid/audio" } : {},
+      );
+      vi.stubEnv(route === "wss" ? "HTTPS_PROXY" : "HTTP_PROXY", await proxy(502));
+      if (route === "bypass") {
+        vi.stubEnv("NO_PROXY", "127.0.0.1");
+        await session.connect();
+        session.sendAudio(Buffer.from("direct audio"));
+        await waitFrames(1);
+        expect(frames).toEqual([Buffer.from("direct audio")]);
+        expect(targets).toEqual([]);
+      } else {
+        if (route === "debug") {
+          vi.stubEnv("OPENCLAW_DEBUG_PROXY_ENABLED", "1");
+          vi.stubEnv("OPENCLAW_DEBUG_PROXY_URL", await proxy(503));
+        }
+        const status = route === "debug" ? 503 : 502;
+        await expect(session.connect()).rejects.toThrow(String(status));
+        const target = route === "wss" ? "transcription.invalid:443" : new URL(url).host;
+        expect(targets).toEqual([`${status}:${target}`]);
+      }
+    } finally {
+      for (const reserved of proxies) {
+        await reserved.releaseListener();
+        await reserved.claim.release();
+      }
+    }
+  },
+);
 
 it.each(["closed", "reconnect"] as const)("retains the audio tail: %s", async (phase) => {
   const reconnect = phase === "reconnect";
