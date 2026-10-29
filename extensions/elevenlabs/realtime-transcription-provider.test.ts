@@ -244,12 +244,18 @@ describe("buildElevenLabsRealtimeTranscriptionProvider", () => {
         },
         undefined,
         (message, ws) => {
-          if (message.commit !== true) return;
-          if (outcome === "empty")
+          if (message.commit !== true) {
+            return;
+          }
+          if (outcome === "empty") {
             ws.send(JSON.stringify({ message_type: "committed_transcript", text: "" }));
-          if (outcome === "error")
+          }
+          if (outcome === "error") {
             ws.send(JSON.stringify({ message_type: "input_error", error: "invalid finite audio" }));
-          if (outcome === "disconnect") ws.close(1011, "upstream lost");
+          }
+          if (outcome === "disconnect") {
+            ws.close(1011, "upstream lost");
+          }
         },
       );
       await session.connect();

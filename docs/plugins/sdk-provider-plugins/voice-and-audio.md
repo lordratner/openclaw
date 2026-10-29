@@ -133,7 +133,8 @@ Register each capability inside `register(api)` alongside your existing
     succeeds for empty text, rejects further input, and is idempotent. `close()`
     cancels finite input; it is not an implicit successful finish.
 
-    Reuse `createFiniteRealtimeTranscriptionSession` from
+    Official provider plugins can reuse `createFiniteRealtimeTranscriptionSession`
+    from the private-local
     `openclaw/plugin-sdk/realtime-transcription-session` for serialized bounded
     writes and acknowledged segments. The provider supplies frame/segment limits,
     framing and commit messages; the common helper owns completion and cleanup.
@@ -141,9 +142,11 @@ Register each capability inside `register(api)` alongside your existing
     loss and overflow instead of reconnecting with incomplete audio. Existing
     continuous consumers keep their current VAD/close behavior.
 
-    Consumers use `transcribeAudioStream` from
-    `openclaw/plugin-sdk/realtime-transcription`. It selects the first configured
-    explicit audio model using the existing media selection rules, honors disabled/scope
+    Consumers use `api.runtime.mediaUnderstanding.transcribeAudioStream`
+    through the existing typed plugin runtime, not a private-local import. Check
+    for the optional method on older hosts and retain batch when absent. It selects
+    the first configured explicit audio model using existing media selection rules,
+    honors disabled/scope
     policy and configured byte/time limits, and does not choose another provider
     just to obtain streaming. Omitted models and batch-only profile, request,
     headers, prompt, or provider options retain the batch path without consuming

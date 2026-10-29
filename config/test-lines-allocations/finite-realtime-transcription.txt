@@ -1,2 +1,2 @@
-# Finite-input finalization, cancellation, admission, bounds, and real ElevenLabs wire protocol regressions.
-691
+# Finite completion, real public runtime/provider flow, cancellation, admission, bounds, and plugin ownership regressions.
+1020

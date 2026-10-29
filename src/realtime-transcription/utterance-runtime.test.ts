@@ -9,6 +9,7 @@ import {
 import { transcribeAudioStream } from "./utterance-runtime.js";
 
 const mocks = vi.hoisted(() => ({ getProvider: vi.fn() }));
+// mock-isolation: Resolve only synthetic providers; never discover installed plugins or stored credentials.
 vi.mock("./provider-registry.js", () => ({ getRealtimeTranscriptionProvider: mocks.getProvider }));
 // mock-isolation: provider discovery is fixture-owned; credentials and policy use their real owners.
 vi.mock("../media-understanding/provider-registry.js", async (importOriginal) => ({
@@ -90,8 +91,8 @@ describe("finite audio streaming runtime", () => {
     const pending = transcribeAudioStream({ ...args(), audio: delayed() });
     await sentGate;
     expect(session.finishInput).not.toHaveBeenCalled();
-    expect(createSession.mock.calls[0][0].agentId).toBe("voice");
-    expect(createSession.mock.calls[0][0].utterance?.format).toEqual(format);
+    expect(createSession.mock.calls[0]?.[0].agentId).toBe("voice");
+    expect(createSession.mock.calls[0]?.[0].utterance?.format).toEqual(format);
     releaseInput();
     expect(await pending).toMatchObject({
       supported: true,
@@ -122,7 +123,7 @@ describe("finite audio streaming runtime", () => {
       supported: false,
     });
     expect(mocks.getProvider).toHaveBeenCalledOnce();
-    expect(mocks.getProvider.mock.calls[0][0]).toBe("fixture");
+    expect(mocks.getProvider.mock.calls[0]?.[0]).toBe("fixture");
     expect(iterator).not.toHaveBeenCalled();
     mocks.getProvider.mockReturnValue(provider);
     expect(
@@ -154,7 +155,7 @@ describe("finite audio streaming runtime", () => {
       },
     };
     await transcribeAudioStream({ ...args(), cfg: selected });
-    expect(mocks.getProvider.mock.calls[0][0]).toBe("second");
+    expect(mocks.getProvider.mock.calls[0]?.[0]).toBe("second");
     const blocked: OpenClawConfig = { tools: { media: { audio: { scope: { default: "deny" } } } } };
     await expect(transcribeAudioStream({ ...args(), cfg: blocked })).rejects.toThrow(
       "disabled by policy",

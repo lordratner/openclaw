@@ -77,7 +77,9 @@ export async function transcribeAudioStream(
   }
   const assertAvailable = () => {
     assertRuntimeMediaRequestSecretOwnerAvailable({ capability: "audio", entry: selected });
-    if (selection?.secretOwnerId) assertSecretOwnerAvailable("capability", selection.secretOwnerId);
+    if (selection?.secretOwnerId) {
+      assertSecretOwnerAvailable("capability", selection.secretOwnerId);
+    }
   };
   assertAvailable();
   // This first finite contract cannot faithfully translate batch auth/request options.
@@ -133,7 +135,9 @@ export async function transcribeAudioStream(
       agentDir: resolveAgentDir(params.cfg, params.agentId),
       workspaceDir: resolveAgentWorkspaceDir(params.cfg, params.agentId),
     });
-    if (auth.kind === "api-key") apiKey = auth.apiKeys[0];
+    if (auth.kind === "api-key") {
+      apiKey = auth.apiKeys[0];
+    }
   } catch (error) {
     if (
       isProviderAuthError(error, "missing-provider-auth") ||
