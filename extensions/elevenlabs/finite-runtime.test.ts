@@ -1,14 +1,18 @@
 import { createServer } from "node:http";
+import { createDeferred } from "openclaw/plugin-sdk/concurrency-runtime";
 import type { OpenClawConfig, OpenClawPluginApi } from "openclaw/plugin-sdk/plugin-entry";
+import {
+  createCapturedPluginRegistration,
+  createEmptyPluginRegistry,
+  createPluginMetadataSnapshotFixture,
+  withPluginRuntimeGenerationScope,
+} from "openclaw/plugin-sdk/plugin-test-runtime";
+import {
+  awaitGateBeforeSettlement,
+  reserveTestPortListener,
+} from "openclaw/plugin-sdk/test-fixtures";
 import { expect, it, onTestFinished, vi } from "vitest";
 import { WebSocketServer } from "ws";
-import { createPluginMetadataSnapshotFixture } from "../../src/plugins/plugin-metadata.test-support.js";
-import { createEmptyPluginRegistry } from "../../src/plugins/registry-empty.js";
-import { withPluginRuntimeGenerationScope } from "../../src/plugins/runtime/generation-scope.js";
-import { createPluginRuntime } from "../../src/plugins/runtime/index.js";
-import { registerProviderPlugin } from "../../src/test-utils/plugin-registration.js";
-import { reserveTestPortListener } from "../../src/test-utils/port-claims.js";
-import { awaitGateBeforeSettlement, createDeferred } from "../../test/helpers/promise.js";
 import elevenlabs from "./index.js";
 
 type Stream = NonNullable<
@@ -18,14 +22,14 @@ const format = { encoding: "pcm_s16le", sampleRate: 16000, channels: 1 } as cons
 const apiKey = "synthetic-elevenlabs-integration-key";
 
 async function withRuntime(run: (transcribe: Stream) => Promise<void>) {
-  const registered = await registerProviderPlugin({
-    plugin: elevenlabs,
+  const registered = createCapturedPluginRegistration({
     id: "elevenlabs",
     name: "ElevenLabs Speech",
   });
+  elevenlabs.register(registered.api);
   const pluginRegistry = createEmptyPluginRegistry();
   pluginRegistry.mediaUnderstandingProviders.push(
-    ...registered.mediaProviders.map((provider) => ({
+    ...registered.mediaUnderstandingProviders.map((provider) => ({
       pluginId: "elevenlabs",
       source: "test",
       provider,
@@ -49,7 +53,7 @@ async function withRuntime(run: (transcribe: Stream) => Promise<void>) {
       },
     ],
   });
-  const runtime = createPluginRuntime();
+  const runtime = registered.api.runtime;
   await withPluginRuntimeGenerationScope({ metadataSnapshot, pluginRegistry }, () =>
     run((params) => {
       if (!runtime.mediaUnderstanding.transcribeAudioStream) {
