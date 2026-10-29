@@ -283,9 +283,11 @@ it("transcribes over TLS through the selected HTTP proxy", async () => {
     }
     const closingServer = wss;
     if (closingServer) {
-      await new Promise<void>((resolve) => closingServer.close(() => resolve()));
+      await new Promise<void>((resolve) => {
+        closingServer.close(() => resolve());
+      });
     }
-    for (const listener of listeners.reverse()) {
+    for (const listener of listeners.toReversed()) {
       await listener.releaseListener();
       await listener.claim.release();
     }
