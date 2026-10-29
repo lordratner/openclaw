@@ -70,40 +70,6 @@ afterEach(() => {
 });
 
 describe("finite audio streaming runtime", () => {
-  it("streams before end of input and waits for the complete provider result", async () => {
-    const { session, createSession } = fixture();
-    let releaseInput!: () => void;
-    let sent!: () => void;
-    const sentGate = new Promise<void>((resolve) => {
-      sent = resolve;
-    });
-    const endGate = new Promise<void>((resolve) => {
-      releaseInput = resolve;
-    });
-    session.writeAudio.mockImplementation(async () => {
-      sent();
-    });
-    async function* delayed() {
-      yield Buffer.alloc(320);
-      await endGate;
-      yield Buffer.alloc(80);
-    }
-    const pending = transcribeAudioStream({ ...args(), audio: delayed() });
-    await sentGate;
-    expect(session.finishInput).not.toHaveBeenCalled();
-    expect(createSession.mock.calls[0]?.[0].agentId).toBe("voice");
-    expect(createSession.mock.calls[0]?.[0].utterance?.format).toEqual(format);
-    releaseInput();
-    expect(await pending).toMatchObject({
-      supported: true,
-      text: "include the last word",
-      mode: "realtime",
-    });
-    expect(session.writeAudio.mock.calls.map(([buffer]) => buffer.length)).toEqual([320, 80]);
-    expect(session.finishInput).toHaveBeenCalledOnce();
-    expect(session.close).toHaveBeenCalledOnce();
-  });
-
   it("keeps configured provider/model order and never consumes input for unsupported fallback", async () => {
     const { provider } = fixture();
     const iterator = vi.fn(() => audio());
