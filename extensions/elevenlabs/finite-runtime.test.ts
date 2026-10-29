@@ -192,7 +192,8 @@ it("streams through the public runtime and registered ElevenLabs provider before
     expect(inputEnded).toBe(false);
     expect(fixture.commits).toEqual([]);
     release.resolve();
-    await expect(pending).resolves.toEqual({
+    const result = await pending;
+    expect(result).toEqual({
       supported: true,
       text: "First segment. Final starlight.",
       no_speech: false,
@@ -210,7 +211,7 @@ it("streams through the public runtime and registered ElevenLabs provider before
         connections: fixture.requests.length,
         audioBytes: Buffer.concat(fixture.frames).length,
         commits: fixture.commits,
-        text: "First segment. Final starlight.",
+        result,
       }),
     );
     expect(fixture.requests).toHaveLength(1);
@@ -259,6 +260,16 @@ it("cancels the real provider socket without sending late input or replaying thr
     expect(fixture.commits).toEqual([]);
     expect(fixture.requests).toHaveLength(1);
     expect(fixture.batchRequests()).toBe(0);
+    console.info(
+      "FINITE_STT_BOUNDARY_TRACE",
+      JSON.stringify({
+        scenario: "caller-cancellation",
+        connections: fixture.requests.length,
+        audioBytes: Buffer.concat(fixture.frames).length,
+        commits: fixture.commits,
+        batchRequests: fixture.batchRequests(),
+      }),
+    );
   });
 });
 

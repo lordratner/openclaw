@@ -12,6 +12,7 @@ import {
   resolveModelEntries,
   resolveScopeDecision,
 } from "../media-understanding/resolve.js";
+import { getPluginRuntimeGatewayRequestScope } from "../plugins/runtime/gateway-request-scope.js";
 import { assertSecretOwnerAvailable } from "../secrets/runtime-degraded-state.js";
 import { assertRuntimeMediaRequestSecretOwnerAvailable } from "../secrets/runtime-media-secret-owner.js";
 import { getRealtimeTranscriptionProvider } from "./provider-registry.js";
@@ -49,7 +50,15 @@ export type TranscribeAudioStreamResult =
 export async function transcribeAudioStream(
   params: TranscribeAudioStreamParams,
 ): Promise<TranscribeAudioStreamResult> {
-  params.signal.throwIfAborted();
+  const owner = getPluginRuntimeGatewayRequestScope()?.transcriptionOwner;
+  const callerSignal = owner?.signal
+    ? AbortSignal.any([params.signal, owner.signal])
+    : params.signal;
+  const assertCurrent = () => {
+    callerSignal.throwIfAborted();
+    owner?.assertCurrent();
+  };
+  assertCurrent();
   const config = params.cfg.tools?.media?.audio;
   if (
     config?.enabled === false ||
@@ -76,6 +85,7 @@ export async function transcribeAudioStream(
     return { supported: false, reason: "configured_audio_selection_requires_batch" };
   }
   const assertAvailable = () => {
+    assertCurrent();
     assertRuntimeMediaRequestSecretOwnerAvailable({ capability: "audio", entry: selected });
     if (selection?.secretOwnerId) {
       assertSecretOwnerAvailable("capability", selection.secretOwnerId);
@@ -161,6 +171,7 @@ export async function transcribeAudioStream(
   const configured = provider.isConfiguredAsync
     ? await provider.isConfiguredAsync(context)
     : provider.isConfigured(context);
+  assertCurrent();
   if (!configured) {
     return { supported: false, reason: "realtime_provider_not_configured" };
   }
@@ -182,7 +193,7 @@ export async function transcribeAudioStream(
     throw new Error("Invalid realtime transcription limits.");
   }
   const controller = new AbortController();
-  const signal = AbortSignal.any([params.signal, controller.signal]);
+  const signal = AbortSignal.any([callerSignal, controller.signal]);
   const timer = setTimeout(
     () => controller.abort(new Error("Realtime transcription timed out.")),
     timeoutMs,
@@ -218,6 +229,7 @@ export async function transcribeAudioStream(
     let connected = false;
     while (true) {
       const next = await wait(iterator.next());
+      assertCurrent();
       signal.throwIfAborted();
       if (next.done) {
         completedInput = true;
@@ -238,11 +250,14 @@ export async function transcribeAudioStream(
         await wait(session.connect());
         connected = true;
       }
+      assertAvailable();
       signal.throwIfAborted();
       await wait(session.writeAudio(Buffer.from(chunk)));
       bytes += chunk.byteLength;
     }
+    assertAvailable();
     const result = bytes ? await wait(session.finishInput()) : { text: "" };
+    assertAvailable();
     signal.throwIfAborted();
     return {
       supported: true,

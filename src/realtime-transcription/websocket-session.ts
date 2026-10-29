@@ -3,6 +3,7 @@ import { toErrorObject, toStringifiedError } from "@openclaw/normalization-core/
 import type WebSocket from "ws";
 import { RetrySupervisor } from "../../packages/retry/src/index.js";
 import { sleepWithAbort } from "../infra/backoff.js";
+import { getPluginRuntimeGatewayRequestScope } from "../plugins/runtime/gateway-request-scope.js";
 import { createDebugProxyWebSocketAgent, resolveDebugProxySettings } from "../proxy-capture/env.js";
 import { captureWsEventAsync } from "../proxy-capture/runtime.js";
 import { createLazyRuntimeNamedExport } from "../shared/lazy-runtime.js";
@@ -96,6 +97,7 @@ class WebSocketRealtimeTranscriptionSession<Event> implements RealtimeTranscript
   private readonly flowId = randomUUID();
   private readonly options: RealtimeTranscriptionWebSocketSessionOptions<Event>;
   private transport: RealtimeTranscriptionWebSocketTransport | undefined;
+  private readonly owner = getPluginRuntimeGatewayRequestScope()?.transcriptionOwner;
   private cancelConnecting: (() => void) | undefined;
 
   constructor(options: RealtimeTranscriptionWebSocketSessionOptions<Event>) {
@@ -111,7 +113,13 @@ class WebSocketRealtimeTranscriptionSession<Event> implements RealtimeTranscript
     );
   }
 
+  private assertOwnerCurrent(): void {
+    this.owner?.signal?.throwIfAborted();
+    this.owner?.assertCurrent();
+  }
+
   async connect(): Promise<void> {
+    this.assertOwnerCurrent();
     const previousSocket = this.ws;
     this.connectionGeneration += 1;
     this.cancelConnecting?.();
@@ -277,6 +285,7 @@ class WebSocketRealtimeTranscriptionSession<Event> implements RealtimeTranscript
           handleBackpressure();
           return false;
         }
+        this.assertOwnerCurrent();
         this.capture({ direction: "outbound", kind: "ws-frame", payload });
         socket.send(payload);
         return true;
@@ -333,6 +342,7 @@ class WebSocketRealtimeTranscriptionSession<Event> implements RealtimeTranscript
           }
 
           this.currentUrl = connection.url;
+          this.assertOwnerCurrent();
           socket = new NpmWebSocket(this.currentUrl, {
             headers: connection.headers,
             maxPayload: REALTIME_TRANSCRIPTION_WS_MAX_PAYLOAD_BYTES,

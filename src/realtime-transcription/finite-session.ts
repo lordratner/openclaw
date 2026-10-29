@@ -1,3 +1,4 @@
+import { getPluginRuntimeGatewayRequestScope } from "../plugins/runtime/gateway-request-scope.js";
 import type {
   RealtimeTranscriptionSession,
   RealtimeTranscriptionSessionCallbacks,
@@ -31,6 +32,7 @@ export function createFiniteRealtimeTranscriptionSession(
   writeAudio(audio: Buffer): Promise<void>;
   finishInput(): Promise<{ text: string }>;
 } {
+  const owner = getPluginRuntimeGatewayRequestScope()?.transcriptionOwner;
   const alignment = options.alignmentBytes ?? 1;
   if (
     !Number.isSafeInteger(options.segmentBytes) ||
@@ -95,6 +97,8 @@ export function createFiniteRealtimeTranscriptionSession(
   }
 
   function assertActive(): void {
+    options.signal.throwIfAborted();
+    owner?.assertCurrent();
     if (failure) {
       throw failure;
     }
@@ -206,6 +210,7 @@ export function createFiniteRealtimeTranscriptionSession(
               options.segmentBytes - segmentBytes,
               alignedLength - offset,
             );
+            assertActive();
             backend.session.sendAudio(input.subarray(offset, offset + count));
             assertActive();
             offset += count;
