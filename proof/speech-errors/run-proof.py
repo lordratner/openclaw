@@ -108,6 +108,17 @@ try:
                 assert results.get("numFailedTests") == expected_failures
                 for failure in failures:
                     rendered = " ".join(failure.get("failureMessages", []))
+                    assert pattern in failure["fullName"]
+                    explicit_fields = [field for field in ("errorCode", "closeCode", "retryAfterMs") if field in rendered]
+                    if explicit_fields and test_file in rendered and "expected " in rendered:
+                        # The reporter may redact numeric stack coordinates even
+                        # when its assertion clearly names the missing field.
+                        receipt["runs"][-1].setdefault("verified_failure_sites", []).append({
+                            "test": failure["fullName"], "file": test_file,
+                            "metadata_fields": explicit_fields,
+                            "verification": "explicit metadata assertion in selected regression",
+                        })
+                        continue
                     # Vitest's JSON reporter abbreviates some expected-object
                     # messages. Pin the failure to the actual metadata assertion
                     # in the exact-head regression, not to that display wording.

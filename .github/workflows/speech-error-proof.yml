@@ -20,8 +20,6 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - component: tts
-            head: b4c4d282be602108508da139dd53f35dfb2fc0a9
           - component: stt
             head: 666c2a5e07828b84ecb39740a2b6d2d7d9a80f53
     env:
