@@ -1,0 +1,72 @@
+name: Speech error metadata proof
+
+on:
+  push:
+    branches: [proof/speech-error-metadata-20261031]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: speech-error-proof-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  prove:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 40
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - component: tts
+            head: b4c4d282be602108508da139dd53f35dfb2fc0a9
+          - component: stt
+            head: 666c2a5e07828b84ecb39740a2b6d2d7d9a80f53
+    env:
+      FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
+      OPENCLAW_VITEST_RUNTIME: node
+    steps:
+      - name: Checkout exact published PR head and parent
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          repository: lordratner/openclaw
+          ref: ${{ matrix.head }}
+          fetch-depth: 2
+          persist-credentials: false
+      - name: Checkout immutable proof harness
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          repository: lordratner/openclaw
+          ref: ${{ github.sha }}
+          path: .speech-harness
+          sparse-checkout: proof/speech-errors
+          persist-credentials: false
+      - name: Prepare repository Node and frozen dependencies
+        uses: ./.github/actions/setup-node-env
+        with:
+          node-version: "24.22.1"
+          semantic-checks: "true"
+          install-bun: "false"
+          cache-mode: "off"
+      - name: Before and after shipped-provider transport and regression proof
+        run: python3 .speech-harness/proof/speech-errors/run-proof.py "${{ matrix.component }}"
+      - name: Publish proof summary
+        if: always()
+        run: |
+          if test -f .speech-proof-results/receipt.json; then
+            printf '## %s metadata proof\n\n' '${{ matrix.component }}' >> "$GITHUB_STEP_SUMMARY"
+            printf '```json\n' >> "$GITHUB_STEP_SUMMARY"
+            cat .speech-proof-results/receipt.json >> "$GITHUB_STEP_SUMMARY"
+            printf '\n```\n' >> "$GITHUB_STEP_SUMMARY"
+          fi
+      - name: Upload redacted synthetic proof
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+        with:
+          name: speech-error-${{ matrix.component }}-${{ matrix.head }}
+          path: .speech-proof-results/
+          include-hidden-files: true
+          if-no-files-found: warn
+          retention-days: 14
