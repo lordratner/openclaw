@@ -2,6 +2,7 @@
 import json
 import os
 from pathlib import Path
+import re
 import shutil
 import subprocess
 import sys
@@ -92,7 +93,7 @@ try:
             label = phase + "-regression-" + str(index)
             report = out / (label + ".json")
             args = ["pnpm", "test", test_file, "--maxWorkers=1", "-t", pattern,
-                    "--reporter=json", "--outputFile=" + str(report)]
+                    "--reporter=verbose", "--reporter=json", "--outputFile=" + str(report)]
             # Let the normal test harness own its environment; do not inherit the
             # transport demo's now-closed server/configuration into a test run.
             test_env = dict(os.environ)
@@ -107,7 +108,20 @@ try:
                 assert results.get("numFailedTests") == expected_failures
                 for failure in failures:
                     rendered = " ".join(failure.get("failureMessages", []))
-                    assert any(field in rendered for field in ("errorCode", "closeCode", "retryAfterMs", "status")), rendered
+                    # Vitest's JSON reporter abbreviates some expected-object
+                    # messages. Pin the failure to the actual metadata assertion
+                    # in the exact-head regression, not to that display wording.
+                    site = re.search(re.escape(test_file) + r":(\d+):\d+", rendered)
+                    assert site, "Failure has no stack at the selected regression: " + rendered
+                    line = int(site.group(1))
+                    source = (root / test_file).read_text().splitlines()
+                    excerpt = "\n".join(source[max(0, line - 2):line + 12])
+                    assert any(matcher in excerpt for matcher in ("toMatchObject", "toHaveProperty", "toHaveBeenCalledExactlyOnceWith")), excerpt
+                    assert any(field in excerpt for field in ("errorCode", "closeCode", "retryAfterMs")), excerpt
+                    receipt["runs"][-1].setdefault("verified_failure_sites", []).append({
+                        "test": failure["fullName"], "file": test_file, "line": line,
+                        "metadata_assertion": excerpt,
+                    })
             else:
                 assert code == 0 and results.get("numFailedTests") == 0
                 assert results.get("numPassedTests", 0) == expected_failures
