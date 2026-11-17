@@ -14,7 +14,7 @@ import {
 // Real token-authenticated WS ingress, agent/model transport, native child tools,
 // completion wake, and outbound delivery. Only provider and channel I/O are fixtures.
 it("delivers a completed child's followup result to its authenticated owner requester", async () => {
-  const marker = "owner_child_followup";
+  const marker = "PROVENANCE_SOURCE_owner_child_followup";
   const sessionKey = `agent:main:${marker}`;
   const recipient = "provenance-owner-child-followup";
   const childReply = `${marker}_CHILD_RESULT`;
