@@ -20,6 +20,8 @@ it("delivers a completed child's followup result to its authenticated owner requ
   const delivered = `${marker}_REQUESTER_RECEIVED`;
   let spawn: Record<string, unknown> | undefined;
   let followup: Record<string, unknown> | undefined;
+  let spawnSourceCalls = 0;
+  let sendSourceCalls = 0;
   let initialCalls = 0;
   let followupCalls = 0;
   let completionCalls = 0;
@@ -39,13 +41,15 @@ it("delivers a completed child's followup result to its authenticated owner requ
       return { text: `${marker}_INITIAL_DONE` };
     }
     if (request.prompt.includes(`${marker}_SEND`)) {
-      if (!request.result) {
+      sendSourceCalls += 1;
+      if (sendSourceCalls === 1) {
         return proofSend(spawn?.childSessionKey, `${marker}_CHILD_FOLLOWUP`, "followup");
       }
       followup = request.result;
       return { text: `${marker}_QUEUED` };
     }
-    if (!request.result) {
+    spawnSourceCalls += 1;
+    if (spawnSourceCalls === 1) {
       return proofSpawn(`${marker}_CHILD_INITIAL`, { expectsCompletionMessage: false });
     }
     spawn = request.result;

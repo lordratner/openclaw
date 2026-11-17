@@ -25,6 +25,7 @@ jobs:
           set -euo pipefail
           owner_file=src/gateway/server-plugin-in-process-authority.ts
           cp "$owner_file" "$RUNNER_TEMP/head-authority.ts"
+          git fetch --depth=1 origin ae6b903359e3d80a55c87794b3bfc04eb59119e7
           git show ae6b903359e3d80a55c87794b3bfc04eb59119e7:"$owner_file" > "$owner_file"
           set +e
           pnpm test src/gateway/server-plugin-in-process-dispatch.continuation.test.ts --maxWorkers=1 -t 'prepares owner followup' > "$RUNNER_TEMP/base.log" 2>&1
