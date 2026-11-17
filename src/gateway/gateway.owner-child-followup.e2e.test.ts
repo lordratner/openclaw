@@ -4,6 +4,7 @@ import {
   expectProofIdle,
   gateway,
   proofDeliveries,
+  providerErrors,
   proofSend,
   proofSpawn,
   registerProofModelScript,
@@ -63,7 +64,8 @@ it("delivers a completed child's followup result to its authenticated owner requ
       idempotencyKey: runId,
       deliver: false,
     }, { expectFinal: false });
-    expect(await waitForProofRun(runId)).toMatchObject({ status: "ok" });
+    const result = await waitForProofRun(runId);
+    expect(result.status, JSON.stringify({ result, providerErrors })).toBe("ok");
   };
   await runOwner(`${marker}_START`);
   expect(spawn).toMatchObject({ status: "accepted", childSessionKey: expect.any(String), runId: expect.any(String) });
