@@ -1,0 +1,48 @@
+name: Owner followup review proof
+on:
+  push:
+    branches: [proof/owner-followup-review]
+permissions:
+  contents: read
+jobs:
+  proof:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          fetch-depth: 2
+          persist-credentials: false
+      - uses: ./.github/actions/setup-node-env
+        with:
+          install-bun: 'false'
+      - name: Format proof test
+        run: pnpm exec oxfmt --write src/gateway/gateway.owner-child-followup.e2e.test.ts
+      - name: Head regression and custody consumers
+        run: pnpm test src/gateway/server-plugin-in-process-dispatch.continuation.test.ts src/agents/tools/sessions-send-followup.test.ts --maxWorkers=1
+      - name: Base regression must fail for missing caller policy
+        shell: bash
+        run: |
+          set -euo pipefail
+          owner_file=src/gateway/server-plugin-in-process-authority.ts
+          cp "$owner_file" "$RUNNER_TEMP/head-authority.ts"
+          git show ae6b903359e3d80a55c87794b3bfc04eb59119e7:"$owner_file" > "$owner_file"
+          set +e
+          pnpm test src/gateway/server-plugin-in-process-dispatch.continuation.test.ts --maxWorkers=1 -t 'prepares owner followup' > "$RUNNER_TEMP/base.log" 2>&1
+          result=$?
+          set -e
+          cp "$RUNNER_TEMP/head-authority.ts" "$owner_file"
+          cat "$RUNNER_TEMP/base.log"
+          test "$result" -ne 0
+          grep -F 'Followup has no retained original caller policy' "$RUNNER_TEMP/base.log"
+      - name: Authenticated owner child completion and requester delivery
+        run: pnpm test:e2e:gateway src/gateway/gateway.owner-child-followup.e2e.test.ts --maxWorkers=1
+      - name: Upload proof
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: owner-followup-proof
+          path: |
+            src/gateway/gateway.owner-child-followup.e2e.test.ts
+            ${{ runner.temp }}/base.log
+          if-no-files-found: warn
