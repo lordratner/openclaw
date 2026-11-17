@@ -406,7 +406,28 @@ beforeAll(async () => {
   );
   const endpoint = await startProviderAndSink();
   const sinkPlugin = await writeSinkPlugin(workspace, `${endpoint}/sink`);
-  const provider = buildMockOpenAiResponsesProvider(`${endpoint}/v1`, "proof-model");
+  const liveModel = process.env.OPENCLAW_OWNER_FOLLOWUP_LIVE_MODEL?.trim();
+  const provider = liveModel
+    ? {
+        providerId: "openai",
+        modelRef: `openai/${liveModel}`,
+        config: {
+          api: "openai-responses" as const,
+          apiKey: { source: "env" as const, provider: "default", id: "OPENAI_API_KEY" },
+          baseUrl: "https://api.openai.com/v1",
+          models: [
+            {
+              id: liveModel,
+              name: liveModel,
+              input: ["text" as const],
+              reasoning: true,
+              contextWindow: 128_000,
+              maxTokens: 2048,
+            },
+          ],
+        },
+      }
+    : buildMockOpenAiResponsesProvider(`${endpoint}/v1`, "proof-model");
   const cfg: OpenClawConfig = {
     agents: {
       ownership: "explicit",
@@ -453,6 +474,9 @@ beforeAll(async () => {
     },
     tools: {
       profile: "messaging",
+      ...(liveModel
+        ? { allow: ["sessions_spawn", "sessions_send", "sessions_yield", "message"] }
+        : {}),
       toolSearch: false,
       codeMode: false,
       toolsBySender: { "id:guest": { deny: ["message"] } },
