@@ -77,6 +77,8 @@ it("delivers a completed child's followup result to its authenticated owner requ
   expect(await waitForProofRun(followup?.runId)).toMatchObject({ status: "ok" });
   await expectProofIdle();
   expect(followupCalls).toBeGreaterThan(0);
+  await expect.poll(() => proofDeliveries(recipient), { timeout: 30_000 }).toEqual([
+    { to: recipient, text: delivered, accountId: "default" },
+  ]);
   expect(completionCalls).toBeGreaterThan(0);
-  expect(proofDeliveries(recipient)).toEqual([{ to: recipient, text: delivered, accountId: "default" }]);
 }, 120_000);

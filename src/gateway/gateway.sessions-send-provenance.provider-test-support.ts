@@ -84,6 +84,11 @@ export function lastUserText(body: Record<string, unknown>): string {
                 : [],
             )
             .join("\n");
+    // Completion carriers are model-visible input, not old user requests.
+    // Preserve the event so the scripted provider can consume its result.
+    if (content.includes("[Internal task completion event]")) {
+      return content;
+    }
     // Runtime carriers can quote child tasks after the actual source input.
     const text = stripInternalRuntimeContext(content);
     if (
