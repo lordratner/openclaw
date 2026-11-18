@@ -412,9 +412,16 @@ beforeAll(async () => {
         providerId: "openai",
         modelRef: `openai/${liveModel}`,
         config: {
-          api: "openai-responses" as const,
-          apiKey: { source: "env" as const, provider: "default", id: "OPENAI_API_KEY" },
-          baseUrl: "https://api.openai.com/v1",
+          // apiKey is the generic secret slot; this is a subscription OAuth bearer.
+          api: "openai-chatgpt-responses" as const,
+          auth: "oauth" as const,
+          apiKey: {
+            source: "env" as const,
+            provider: "default",
+            id: "OPENCLAW_OWNER_FOLLOWUP_OAUTH_ACCESS_TOKEN",
+          },
+          baseUrl: "https://chatgpt.com/backend-api/codex",
+          agentRuntime: { id: "openclaw" as const },
           models: [
             {
               id: liveModel,
